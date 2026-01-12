@@ -1,0 +1,6 @@
+# React Router
+/.react-router/
+/build/
+
+# Fumadocs
+/.source/

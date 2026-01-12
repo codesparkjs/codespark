@@ -1,0 +1,28 @@
+{
+  "name": "@codespark/plugin-remark",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Remark plugin for codespark ecosystem",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run"
+  },
+  "author": "TonyL1u",
+  "license": "MIT",
+  "dependencies": {
+    "estree-util-value-to-estree": "^3.3.2",
+    "unist-util-visit": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/node": "^22.19.2",
+    "mdast-util-mdx-jsx": "^3.2.0",
+    "remark-mdx": "^3.1.1",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "tsdown": "^0.17.3",
+    "unified": "^11.0.5"
+  }
+}

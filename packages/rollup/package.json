@@ -1,0 +1,31 @@
+{
+  "name": "@codespark/plugin-rollup",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Rollup plugin for codespark ecosystem",
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.mts",
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run"
+  },
+  "author": "TonyL1u",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/generator": "^7.28.5",
+    "@babel/parser": "^7.28.5",
+    "@babel/traverse": "^7.28.5",
+    "@babel/types": "^7.28.5",
+    "@codespark/analyzer": "workspace:*",
+    "rollup": "^4.54.0"
+  },
+  "devDependencies": {
+    "@codespark/react": "workspace:*",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.19.2",
+    "@types/react": "^19.2.7",
+    "tsdown": "^0.17.3"
+  }
+}

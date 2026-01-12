@@ -1,0 +1,161 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
+import type { CollectResult } from '_shared/types';
+import type { ImportDeclaration } from '@babel/types';
+
+import { generateDts } from './generate-dts';
+import { buildImportMap, collectIdentifiers, getDefinedNames, getUsedSources, parseCode } from './shared';
+
+const pkgPath = process.cwd();
+const tsconfigJson = JSON.parse(fs.readFileSync(path.resolve(pkgPath, 'tsconfig.json'), 'utf-8'));
+const aliases = Object.keys(tsconfigJson.compilerOptions?.paths || {}).map(p => p.replace('/*', ''));
+
+const resolveFile = (source: string, fromFile: string): string | null => {
+  const resolved = source.startsWith('.') ? path.resolve(path.dirname(fromFile), source) : resolveAlias(source);
+
+  const extensions = ['.tsx', '.ts', '.jsx', '.js', '/index.tsx', '/index.ts'];
+  for (const ext of extensions) {
+    const tryPath = resolved + ext;
+    if (fs.existsSync(tryPath)) return tryPath;
+  }
+  return fs.existsSync(resolved) ? resolved : null;
+};
+
+const resolveAlias = (source: string): string => {
+  for (const alias of aliases) {
+    if (source === alias || source.startsWith(alias + '/')) {
+      const aliasPath = tsconfigJson.compilerOptions.paths[alias + '/*'][0].replace('/*', '');
+      return source.replace(alias, path.resolve(pkgPath, aliasPath));
+    }
+  }
+  return source;
+};
+
+const isLocalImport = (source: string): boolean => {
+  if (source.startsWith('.') || source.startsWith('/')) return true;
+  return aliases.some(alias => source === alias || source.startsWith(alias + '/'));
+};
+
+interface FileInfo {
+  code: string;
+  resolved: string;
+  externals: string[];
+}
+
+const collectFromFile = (file: string, usedSources: Set<string>, result: Record<string, FileInfo>, visited: Set<string>): void => {
+  if (visited.has(file)) return;
+  visited.add(file);
+
+  const content = fs.readFileSync(file, 'utf-8');
+  const ast = parseCode(content);
+  const imports = ast.filter((node): node is ImportDeclaration => node.type === 'ImportDeclaration');
+
+  imports.forEach(imp => {
+    if (imp.importKind === 'type') return;
+    const source = imp.source.value;
+    if (!usedSources.has(source) || !isLocalImport(source)) return;
+
+    const resolved = resolveFile(source, file);
+    if (resolved && !result[source]) {
+      const childCode = fs.readFileSync(resolved, 'utf-8');
+      const childAst = parseCode(childCode);
+      const childImports = childAst.filter((n): n is ImportDeclaration => n.type === 'ImportDeclaration');
+      const childBody = childAst.filter(n => n.type !== 'ImportDeclaration');
+      const childUsedIds = collectIdentifiers(childBody);
+      const childImportMap = buildImportMap(childImports);
+      const childUsedSources = getUsedSources(childUsedIds, childImportMap);
+      const externals = childImports.filter(i => i.importKind !== 'type' && !isLocalImport(i.source.value) && childUsedSources.has(i.source.value)).map(i => i.source.value);
+
+      result[source] = { code: childCode, resolved, externals };
+      collectFromFile(resolved, childUsedSources, result, visited);
+    }
+  });
+};
+
+export function collectDependencies(code: string, hostFile: string): CollectResult {
+  const fileInfos: Record<string, FileInfo> = {};
+  const file = path.resolve(hostFile);
+  const visited = new Set<string>();
+
+  try {
+    const codeAst = parseCode(code);
+    const codeUsedIds = collectIdentifiers(codeAst);
+
+    const hostContent = fs.readFileSync(file, 'utf-8');
+    const hostAst = parseCode(hostContent);
+    const hostImports = hostAst.filter((node): node is ImportDeclaration => node.type === 'ImportDeclaration');
+    const importedNames = new Set(buildImportMap(hostImports).keys());
+
+    const localDefs = new Map<string, { node: (typeof hostAst)[0]; code: string }>();
+    hostAst.forEach(node => {
+      if (node.type === 'ImportDeclaration') return;
+      getDefinedNames(node).forEach(name => {
+        if (!importedNames.has(name)) {
+          localDefs.set(name, { node, code: hostContent.slice(node.start!, node.end!) });
+        }
+      });
+    });
+
+    const collectLocalDeps = (ids: Set<string>, collected: Set<string>): void => {
+      ids.forEach(id => {
+        if (collected.has(id) || !localDefs.has(id)) return;
+        collected.add(id);
+        collectLocalDeps(collectIdentifiers([localDefs.get(id)!.node]), collected);
+      });
+    };
+
+    const collectedNames = new Set<string>();
+    collectLocalDeps(codeUsedIds, collectedNames);
+
+    const locals: string[] = [];
+    hostAst.forEach(node => {
+      if (node.type === 'ImportDeclaration') return;
+      if (getDefinedNames(node).some(name => collectedNames.has(name))) {
+        locals.push(hostContent.slice(node.start!, node.end!));
+      }
+    });
+
+    const allUsedIds = new Set(codeUsedIds);
+    collectedNames.forEach(name => {
+      const def = localDefs.get(name);
+      if (def) collectIdentifiers([def.node]).forEach(id => allUsedIds.add(id));
+    });
+
+    const hostImportMap = buildImportMap(hostImports);
+    const usedSources = getUsedSources(allUsedIds, hostImportMap);
+    collectFromFile(file, usedSources, fileInfos, visited);
+
+    const files: Record<string, string> = {};
+    const dts: Record<string, string> = {};
+    for (const [alias, info] of Object.entries(fileInfos)) {
+      files[alias] = info.code;
+      dts[alias] = generateDts(info.resolved, info.externals);
+    }
+
+    const externalImports = hostImports
+      .filter(imp => imp.importKind !== 'type' && !isLocalImport(imp.source.value) && usedSources.has(imp.source.value))
+      .map(imp => {
+        const usedSpecifiers = imp.specifiers.filter(s => allUsedIds.has(s.local.name));
+        if (usedSpecifiers.length === 0) return null;
+        const names = usedSpecifiers.map(s => {
+          if (s.type === 'ImportDefaultSpecifier') return s.local.name;
+          if (s.type === 'ImportNamespaceSpecifier') return `* as ${s.local.name}`;
+          return s.imported && 'name' in s.imported && s.imported.name !== s.local.name ? `${s.imported.name} as ${s.local.name}` : s.local.name;
+        });
+        const hasDefault = usedSpecifiers.some(s => s.type === 'ImportDefaultSpecifier');
+        const hasNamespace = usedSpecifiers.some(s => s.type === 'ImportNamespaceSpecifier');
+        const named = names.filter((_, i) => usedSpecifiers[i].type === 'ImportSpecifier');
+        const parts: string[] = [];
+        if (hasDefault) parts.push(names.find((_, i) => usedSpecifiers[i].type === 'ImportDefaultSpecifier')!);
+        if (hasNamespace) parts.push(names.find((_, i) => usedSpecifiers[i].type === 'ImportNamespaceSpecifier')!);
+        if (named.length) parts.push(`{ ${named.join(', ')} }`);
+        return `import ${parts.join(', ')} from '${imp.source.value}';`;
+      })
+      .filter((s): s is string => s !== null);
+
+    return { entry: { code, locals, imports: externalImports }, files, dts };
+  } catch {
+    return { entry: { code, locals: [], imports: [] }, files: {}, dts: {} };
+  }
+}

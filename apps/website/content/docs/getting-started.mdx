@@ -1,0 +1,42 @@
+---
+title: Getting Started
+description: Create your first interactive code playground in minutes.
+---
+
+## Requirements
+
+- Node.js 18+
+- React 18+ or 19
+- Tailwind CSS (for styling)
+
+## Installation
+
+```npm
+npm install @codespark/react
+```
+
+## Tailwind CSS Configuration
+
+codespark is built with Tailwind CSS. Import the styles in your app:
+
+### Tailwind v4
+
+```css title="global.css"
+@source "../node_modules/@codespark/react/dist/*.js";
+```
+
+Make sure the path matches the location of your node_modules folder relative to your CSS file.
+
+### Tailwind v3
+
+Add Codespark to your content array in your tailwind.config.js:
+
+```ts title="tailwind.config.js"
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx,mdx}',
+    '../node_modules/@codespark/react/dist/*.js',
+  ],
+  // ... rest of your config
+}
+```
