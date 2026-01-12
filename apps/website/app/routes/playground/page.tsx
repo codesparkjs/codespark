@@ -10,14 +10,16 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/componen
 import type { Route } from './+types/page';
 import basicTemplate from './template/basic?raw';
 
+const { decompressFromEncodedURIComponent } = lz;
+
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const imports = url.searchParams.get('imports');
 
   return {
-    code: code ? lz.decompressFromEncodedURIComponent(code) : null,
-    imports: (imports ? JSON.parse(lz.decompressFromEncodedURIComponent(imports)) : {}) as Record<string, string>
+    code: code ? decompressFromEncodedURIComponent(code) : null,
+    imports: (imports ? JSON.parse(decompressFromEncodedURIComponent(imports)) : {}) as Record<string, string>
   };
 }
 
@@ -76,7 +78,6 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
             <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
           </CodesparkPreview>
         </ResizablePanel>
-        <ResizableHandle />
       </ResizablePanelGroup>
     </CodesparkProvider>
   );

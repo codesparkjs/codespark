@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router';
 import { Toggle } from '~/components/ui/toggle';
 import { devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
+const { compressToEncodedURIComponent } = lz;
+
 export const mdxComponents = {
   Codespark: ({ code }: CodesparkProps) => {
     const { theme } = useTheme();
@@ -44,7 +46,7 @@ export default function App() {
             onClick: () => {
               navigate({
                 pathname: '/playground',
-                search: `?code=${lz.compressToEncodedURIComponent(playgroundCode)}&imports=${lz.compressToEncodedURIComponent(JSON.stringify(imports))}`
+                search: `?code=${compressToEncodedURIComponent(playgroundCode)}&imports=${compressToEncodedURIComponent(JSON.stringify(imports))}`
               });
             }
           }

@@ -40,10 +40,10 @@ export default function Home() {
             <br />
             The Park for Your Codes
           </h1>
-          <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">Spark your React ideas to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
+          <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">Spark your ideas from code to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button asChild>
-              <Link to="/docs">Get Started</Link>
+              <Link to="/docs/getting-started">Get Started</Link>
             </Button>
             <Button asChild variant="ghost">
               <Link to="/docs">
@@ -55,6 +55,9 @@ export default function Home() {
         </section>
         <section className="mt-20">
           <Features />
+        </section>
+        <section className="border-border text-muted-foreground mt-20 space-x-1 border-t pt-10 text-center text-sm">
+          &copy; {new Date().getFullYear()} <span className="text-emerald-400">✦</span> codespark, Inc. All rights reserved.
         </section>
       </div>
     </main>

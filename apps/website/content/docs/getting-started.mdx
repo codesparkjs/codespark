@@ -17,11 +17,14 @@ npm install @codespark/react
 
 ## Tailwind CSS Configuration
 
-codespark is built with Tailwind CSS. Import the styles in your app:
+Codespark is built with Tailwind CSS and [shadcn/ui](https://ui.shadcn.com/) design system.
 
 ### Tailwind v4
 
+Import the styles in your app:
+
 ```css title="global.css"
+@import '@codespark/react/index.css';
 @source "../node_modules/@codespark/react/dist/*.js";
 ```
 
@@ -29,7 +32,13 @@ Make sure the path matches the location of your node_modules folder relative to 
 
 ### Tailwind v3
 
-Add Codespark to your content array in your tailwind.config.js:
+Import CSS file to your project. Take vite project as an example:
+
+```ts title="main.tsx"
+import '@codespark/react/index.css';
+```
+
+Add codespark to the content array in tailwind.config.js:
 
 ```ts title="tailwind.config.js"
 module.exports = {
