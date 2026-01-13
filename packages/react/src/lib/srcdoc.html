@@ -108,7 +108,7 @@
                 const done = new Promise(resolve => {
                   window.__next__ = resolve;
                 });
-                scriptEl.innerHTML = `${script}\nwindow.__next__ && window.__next__();`;
+                scriptEl.innerHTML = script;
                 document.head.appendChild(scriptEl);
                 scriptEl.onerror = err => send_error(err.message, err.stack);
                 scriptEls.push(scriptEl);

@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CodesparkProvider, type CodesparkProviderProps, type ConfigProviderProps } from '@/components/context';
 import { CodesparkEditor, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
 import { cn } from '@/lib/utils';
-import { Workspace } from '@/lib/workspace';
+import { useWorkspace } from '@/lib/workspace';
 
 export { CodesparkProvider, type CodesparkProviderProps, ConfigProvider, type ConfigProviderProps } from '@/components/context';
 export * from '@/components/editor';
@@ -23,8 +23,12 @@ export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick
 
 export function Codespark(props: CodesparkProps) {
   const { code, name = 'App.tsx', theme, template, showEditor = true, showPreview = true, readonly: readOnly, className, useToolbox, tailwindcss } = props;
-  const workspace = useMemo(() => new Workspace({ entry: name, files: { [name]: code }, template }), []);
+  const { workspace, compileError } = useWorkspace({ entry: name, files: { [name]: code }, template });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    setRuntimeError(compileError);
+  }, [compileError]);
 
   return (
     <CodesparkProvider workspace={workspace} theme={theme}>

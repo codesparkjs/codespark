@@ -3,7 +3,7 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "paths": { 
+    "paths": {
       "_shared/*": ["../_shared/*"]
     }
   },

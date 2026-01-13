@@ -48,23 +48,35 @@ export interface MonacoProps extends MonacoEditorProps {
   dts?: Record<string, string>;
 }
 
+const addedLibs = new Set<string>();
+
 export const Monaco = memo(function Monaco(props: MonacoProps) {
   const { value = '', options = {}, defaultLanguage = 'typescript', path = 'file:///index.tsx', theme, onChange, onMount, width, height, dts, ...rest } = props;
-  const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor>(void 0);
+  const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor>(null);
+  const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(null);
   const [MonacoEditor, setMonacoEditor] = useState<typeof import('@monaco-editor/react').default | null>(null);
-  const handleEditorDidMount: OnMount = (editor, monacoInstance) => {
-    onMount?.(editor, monacoInstance);
-    editorInstance.current = editor;
 
-    // Add custom types after editor mounts
-    Object.entries(dts || {}).forEach(([module, dts]) => {
-      const libContent = dts ? `declare module '${module}' {${dts}};` : `declare module '${module}';`;
-      monacoInstance.languages.typescript.typescriptDefaults.addExtraLib(libContent, `ts:${module}`);
-    });
+  const handleEditorDidMount: OnMount = (editor, monaco) => {
+    onMount?.(editor, monaco);
+    editorInstance.current = editor;
+    setMonacoInstance(monaco);
   };
 
   const handleEditorContentChange: OnChange = (value, evt) => {
     onChange?.(value, evt);
+  };
+
+  const addExtraLib = (libs: Record<string, string> = {}) => {
+    Object.entries(libs).forEach(([module, content]) => {
+      if (addedLibs.has(module)) return;
+
+      if (module.startsWith('http://') || module.startsWith('https://')) {
+        monacoInstance!.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
+      } else {
+        monacoInstance!.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, `file:///node_modules/@types/${module}/index.d.ts`);
+      }
+      addedLibs.add(module);
+    });
   };
 
   useEffect(() => {
@@ -75,6 +87,12 @@ export const Monaco = memo(function Monaco(props: MonacoProps) {
       }, 0);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!monacoInstance) return;
+
+    addExtraLib(dts);
+  }, [dts, monacoInstance]);
 
   if (!MonacoEditor) {
     return (

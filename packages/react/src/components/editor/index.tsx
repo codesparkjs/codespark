@@ -45,7 +45,9 @@ interface ToolboxItemConfig {
   render?: (ctx: ToolboxContext) => ReactNode;
 }
 
-export interface CodesparkEditorProps extends Pick<ConfigProviderProps, 'theme'>, Pick<MonacoProps, 'options' | 'width' | 'height' | 'onChange' | 'className'> {
+const dtsCacheMap = new Map<string, string>();
+
+export interface CodesparkEditorProps extends Pick<ConfigProviderProps, 'theme'>, Pick<MonacoProps, 'options' | 'width' | 'height' | 'onChange' | 'onMount' | 'className'> {
   value?: string;
   workspace?: Workspace;
   useToolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[];
@@ -60,7 +62,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   const { workspace: contextWorkspace, theme: contextTheme } = useCodespark();
   const {
     value = '',
-    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': value } }),
+    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' } }),
     theme = contextTheme ?? globalTheme ?? 'light',
     options,
     width,
@@ -73,11 +75,17 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     containerProps,
     onChange
   } = props;
-  const { entryFile, depFiles } = useWorkspace(workspace);
+  const { entryFile, depFiles, internalDeps, externalDeps, imports } = useWorkspace(workspace);
   const [currentFile, setCurrentFile] = useState(entryFile);
   const [expanded, setExpanded] = useState(defaultExpanded ?? depFiles.length > 0);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
+  const [dts, setDts] = useState<Record<string, string>>(() => {
+    const internalDts = Object.fromEntries(internalDeps.map(({ alias, dts }) => [alias, dts]));
+    const externalDts = Object.fromEntries(externalDeps.map(({ name }) => [name, '']));
+
+    return { ...internalDts, ...externalDts };
+  });
   const toolboxItems: Record<ToolboxItemId, ToolboxItemConfig> = {
     reset: {
       tooltip: 'Reset Document',
@@ -112,15 +120,43 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   };
 
   useEffect(() => {
+    if (!value) return;
+
+    workspace.setFile(entryFile.path, value);
+  }, [value]);
+
+  useEffect(() => {
     if (useOPFS) {
       workspace.initOPFS();
     }
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    Promise.all(
+      Object.entries(imports).map(async ([name, url]) => {
+        if (dtsCacheMap.has(name)) return [name, dtsCacheMap.get(name)!];
+
+        const { headers } = await fetch(url, { method: 'HEAD' });
+        const dtsUrl = headers.get('X-TypeScript-Types');
+        if (dtsUrl) {
+          const dtsContent = await fetch(dtsUrl).then(r => r.text());
+          dtsCacheMap.set(name, dtsContent);
+          return [name, dtsContent];
+        }
+
+        return [];
+      })
+    ).then(results => {
+      setDts(prev => ({ ...prev, ...Object.fromEntries(results) }));
+    });
+  }, [imports]);
+
   return (
     <div className="flex h-full w-full divide-x">
       {expanded ? (
-        <Tabs className="bg-sidebar w-50 border-border box-border p-2" orientation="vertical" value={currentFile.path} onValueChange={path => setCurrentFile(workspace.getFile(path) ?? entryFile)}>
+        <Tabs className="bg-sidebar border-border box-border w-50 p-2" orientation="vertical" value={currentFile.path} onValueChange={path => setCurrentFile(workspace.getFile(path) ?? entryFile)}>
           <TabsList className="bg-sidebar h-fit w-full flex-col items-start gap-2 p-0">
             <TabsTrigger value={entryFile.path} className="w-full justify-start">
               <Braces />
@@ -129,7 +165,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
             {depFiles.length > 0 ? (
               <Collapsible defaultOpen={currentFile.path !== entryFile.path} className="group/collapsible w-full">
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" className="px-2! h-7.5 hover:bg-sidebar-accent text-foreground w-full justify-between border border-transparent py-1">
+                  <Button variant="ghost" className="hover:bg-sidebar-accent text-foreground h-7.5 w-full justify-between border border-transparent px-2! py-1">
                     <div className="flex items-center gap-x-2">
                       <Codepen />
                       dependencies
@@ -204,9 +240,11 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
           </div>
         ) : null}
         <Monaco
+          value={value}
           defaultValue={currentFile.code}
           path={`file:///${workspace.id}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
           theme={AVAILABLE_THEMES[theme] ?? AVAILABLE_THEMES.light}
+          dts={dts}
           className={className}
           width={width}
           height={height}

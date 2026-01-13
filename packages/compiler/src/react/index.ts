@@ -105,7 +105,15 @@ export class ReactCompiler {
     }
 
     s.append(
-      `\nimport('react-dom/client').then(({ createRoot }) => { window.__root__ = window.__root__ || createRoot(document.getElementById('root')); window.__root__.render(${name ? `<${name} />` : 'null'}); requestIdleCallback(() => window.__render_complete__?.()); })`
+      `
+      import('react-dom/client').then(({ createRoot }) => {
+        window.__root__ = window.__root__ || createRoot(document.getElementById('root'));
+        window.__root__.render(${name ? `<${name} />` : 'null'});
+      }).then(() => {
+        window.__render_complete__?.();
+      }).finally(() => {
+        window.__next__?.(); 
+      })`
     );
     const { code } = transform(s.toString(), {
       filename: `${name}.ts`,
