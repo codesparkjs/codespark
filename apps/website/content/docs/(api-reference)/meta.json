@@ -1,5 +1,5 @@
 {
   "title": "API Reference",
-  "pages": ["codespark", "codespark-provider", "codespark-editor", "codespark-preview", "style", "script", "workspace"],
+  "pages": ["codespark", "codespark-provider", "codespark-editor", "codespark-preview", "style", "script"],
   "defaultOpen": true
 }
