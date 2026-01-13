@@ -1,0 +1,53 @@
+---
+title: Usage
+description: Learn how to use the Codespark component in your React application.
+---
+
+## Basic Usage
+
+Pass your code as a string to the `Codespark` component:
+
+```tsx
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} />;
+}
+```
+
+```tsx codespark
+export default function App() {
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}
+```
+
+## Customize Your Own
+
+Codespark features a modular architecture with composable components. Mix and match `CodesparkEditor`, `CodesparkPreview`, and other building blocks to create your own custom layout. [Try in playground](/playground?boilerplate=customizeCodespark).
+
+```tsx
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider } from '@codespark/react';
+
+export default function App() {
+  return (
+    <CodesparkProvider>
+      <CodesparkEditor />
+      <CodesparkPreview />
+    </CodesparkProvider>
+  );
+}
+```
