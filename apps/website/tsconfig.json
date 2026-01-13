@@ -10,10 +10,5 @@
       "fumadocs-mdx:collections/*": [".source/*"]
     }
   },
-  "include": [
-    "**/*",
-    "**/.server/**/*",
-    "**/.client/**/*",
-    ".react-router/types/**/*"
-  ]
+  "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"]
 }

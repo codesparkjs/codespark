@@ -6,20 +6,20 @@ import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/components/ui/resizable';
+import { devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 import type { Route } from './+types/page';
-import basicTemplate from './template/basic?raw';
+import { template } from './template';
 
 const { decompressFromEncodedURIComponent } = lz;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
-  const imports = url.searchParams.get('imports');
+  const boilerplate = url.searchParams.get('boilerplate');
 
   return {
-    code: code ? decompressFromEncodedURIComponent(code) : null,
-    imports: (imports ? JSON.parse(decompressFromEncodedURIComponent(imports)) : {}) as Record<string, string>
+    code: code ? decompressFromEncodedURIComponent(code) : boilerplate ? (template[boilerplate] ?? '') : null
   };
 }
 
@@ -35,11 +35,12 @@ const CUSTOM_STYLES = `
 `;
 
 export default function Playground({ loaderData }: Route.ComponentProps) {
-  const { code, imports } = loaderData;
+  const { code } = loaderData;
   const { theme, setTheme } = useTheme();
   const [isVertical, setIsVertical] = useState<boolean | null>(null);
   const isDark = theme === 'dark';
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? basicTemplate } });
+  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic } });
+  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');

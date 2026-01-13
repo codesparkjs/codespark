@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { Toggle } from '~/components/ui/toggle';
-import { devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 const { compressToEncodedURIComponent } = lz;
 
@@ -15,7 +14,6 @@ export const mdxComponents = {
     const { theme } = useTheme();
     const navigate = useNavigate();
     const [tailwindcss, setTailwindcss] = useState(false);
-    const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
     const playgroundCode = `import { Codespark } from '@codespark/react';
 
 const code = \`${code}\`;
@@ -46,7 +44,7 @@ export default function App() {
             onClick: () => {
               navigate({
                 pathname: '/playground',
-                search: `?code=${compressToEncodedURIComponent(playgroundCode)}&imports=${compressToEncodedURIComponent(JSON.stringify(imports))}`
+                search: `?code=${compressToEncodedURIComponent(playgroundCode)}`
               });
             }
           }

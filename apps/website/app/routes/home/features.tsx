@@ -51,7 +51,7 @@ const TailwindWorkspace = createWorkspace(() => {
         onMouseMove={handleMouseMove}
         onMouseLeave={() => setState(s => ({ ...s, x: 0, y: 0 }))}
         style={{ transform: `rotateX(${state.x}deg) rotateY(${state.y}deg)` }}
-        className="bg-linear-to-br relative overflow-hidden rounded-xl from-slate-800 to-slate-900 p-8 shadow-2xl transition-transform duration-200 ease-out">
+        className="relative overflow-hidden rounded-xl bg-linear-to-br from-slate-800 to-slate-900 p-8 shadow-2xl transition-transform duration-200 ease-out">
         <div
           className="pointer-events-none absolute inset-0 transition-opacity duration-200"
           style={{
@@ -84,11 +84,11 @@ function DemoPark({ workspace, title, description, icon, reverse }: { workspace:
             <span className="h-3 w-3 rounded-full bg-yellow-500" />
             <span className="h-3 w-3 rounded-full bg-green-500" />
           </div>
-          <CodesparkEditor height={360} useToolbox={false} />
+          <CodesparkEditor height={360} useToolbox={false} options={{ fixedOverflowWidgets: true }} />
         </div>
         <div
           className={cn(
-            'border-(--pattern-fg) [--pattern-fg:var(--color-black)]/5 dark:[--pattern-fg:var(--color-white)]/10 bg-size-[10px_10px] relative bg-[repeating-linear-gradient(315deg,var(--pattern-fg)_0,var(--pattern-fg)_1px,transparent_0,transparent_50%)] bg-fixed max-lg:h-64 max-lg:border-t',
+            'relative border-(--pattern-fg) bg-[repeating-linear-gradient(315deg,var(--pattern-fg)_0,var(--pattern-fg)_1px,transparent_0,transparent_50%)] bg-size-[10px_10px] bg-fixed [--pattern-fg:var(--color-black)]/5 max-lg:h-64 max-lg:border-t dark:[--pattern-fg:var(--color-white)]/10',
             reverse ? 'lg:order-1' : ''
           )}>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6">

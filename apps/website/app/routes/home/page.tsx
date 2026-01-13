@@ -13,15 +13,15 @@ export default function Home() {
   return (
     <main className="bg-background relative min-h-screen overflow-hidden">
       <div
-        className="bg-size-[4rem_4rem] pointer-events-none fixed inset-0 z-10 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)]"
+        className="pointer-events-none fixed inset-0 z-10 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-size-[4rem_4rem]"
         style={{ maskImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, black 70%, transparent 100%)' }}
       />
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="bg-primary/10 absolute -left-32 -top-32 h-96 w-96 rounded-full blur-3xl" />
-        <div className="bg-primary/5 absolute -right-32 top-1/4 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-primary/10 absolute -top-32 -left-32 h-96 w-96 rounded-full blur-3xl" />
+        <div className="bg-primary/5 absolute top-1/4 -right-32 h-80 w-80 rounded-full blur-3xl" />
         <div className="bg-primary/10 absolute bottom-0 left-1/3 h-64 w-64 rounded-full blur-3xl" />
       </div>
-      <div className="*:max-w-(--fd-layout-width) relative z-10 px-6 py-14 *:mx-auto">
+      <div className="relative z-10 px-6 py-14 *:mx-auto *:max-w-(--fd-layout-width)">
         <section className="flex flex-col items-center text-center">
           <div className="border-border bg-background/80 text-muted-foreground mb-4 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
@@ -40,7 +40,7 @@ export default function Home() {
             <br />
             The Park for Your Codes
           </h1>
-          <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">Spark your ideas from code to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
+          <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">A code playground sparks your ideas to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button asChild>
               <Link to="/docs/getting-started">Get Started</Link>
