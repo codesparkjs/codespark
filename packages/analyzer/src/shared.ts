@@ -69,7 +69,8 @@ export const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set
     const source = imp.source.value;
     if (!usedSources.has(source)) return;
 
-    const pkgName = source.startsWith('@') ? source.split('/').slice(0, 2).join('/') : source.split('/')[0];
+    const isUrl = source.startsWith('http://') || source.startsWith('https://');
+    const pkgName = isUrl ? source : source.startsWith('@') ? source.split('/').slice(0, 2).join('/') : source.split('/')[0];
     const version = allDependencies[pkgName] || '';
     const namedImports = imp.specifiers.filter(spec => spec.type === 'ImportSpecifier' && spec.importKind !== 'type').map(spec => ((spec as ImportSpecifier).imported as Identifier).name);
 

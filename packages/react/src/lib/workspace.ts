@@ -121,7 +121,7 @@ export class Workspace extends OPFS {
         ...this.externalDeps.reduce<Record<string, string>>((pre, { name, version, imported }) => {
           return {
             ...pre,
-            [name]: constructESMUrl({ pkg: name, version, deps: ['react@18.2.0', 'react-dom@18.2.0'], exports: imported.length ? imported : undefined })
+            [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
           };
         }, {}),
         react: constructESMUrl({ pkg: 'react', version: '18.2.0' }),
@@ -269,6 +269,16 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     () => workspace.deps,
     () => workspace.deps
   );
+  const internalDeps = useSyncExternalStore(
+    cb => workspace._subscribe(cb),
+    () => workspace.internalDeps,
+    () => workspace.internalDeps
+  );
+  const externalDeps = useSyncExternalStore(
+    cb => workspace._subscribe(cb),
+    () => workspace.externalDeps,
+    () => workspace.externalDeps
+  );
   const compiled = useSyncExternalStore(
     cb => workspace._subscribe(cb),
     () => workspace.compiled,
@@ -285,5 +295,16 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     () => workspace.compileError
   );
 
-  return { files, entryFile, depFiles, deps, compiled, compileError, imports, workspace };
+  return {
+    files,
+    entryFile,
+    depFiles,
+    deps,
+    internalDeps,
+    externalDeps,
+    compiled,
+    compileError,
+    imports,
+    workspace
+  };
 }

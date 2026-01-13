@@ -5,12 +5,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function constructESMUrl(config: { pkg: string; version?: string; deps?: string[]; exports?: string[]; standalone?: boolean; bundle?: boolean }) {
-  const { pkg, version, deps, exports, standalone, bundle } = config;
+export function constructESMUrl(config: { pkg: string; version?: string; deps?: string[]; external?: string[]; exports?: string[]; standalone?: boolean; bundle?: boolean }) {
+  const { pkg, version, deps, external, exports, standalone, bundle } = config;
   const params = new URLSearchParams();
 
   if (deps?.length) {
     params.set('deps', deps.join(','));
+  }
+  if (external?.length) {
+    params.set('external', external.join(','));
   }
   if (exports?.length) {
     params.set('exports', exports.join(','));
@@ -22,11 +25,17 @@ export function constructESMUrl(config: { pkg: string; version?: string; deps?: 
     params.set('bundle', '');
   }
 
-  const slashIndex = pkg.indexOf('/');
-  const pkgName = slashIndex > -1 ? pkg.slice(0, slashIndex) : pkg;
-  const subpath = slashIndex > -1 ? pkg.slice(slashIndex) : '';
+  const isUrl = pkg.startsWith('http://') || pkg.startsWith('https://');
+  let base: string;
 
-  const base = version ? `https://esm.sh/${pkgName}@${version}${subpath}` : `https://esm.sh/${pkg}`;
+  if (isUrl) {
+    base = pkg;
+  } else {
+    const slashIndex = pkg.indexOf('/');
+    const pkgName = slashIndex > -1 ? pkg.slice(0, slashIndex) : pkg;
+    const subpath = slashIndex > -1 ? pkg.slice(slashIndex) : '';
+    base = version ? `https://esm.sh/${pkgName}@${version}${subpath}` : `https://esm.sh/${pkg}`;
+  }
   const query = params.toString();
 
   return query ? `${base}?${query}` : base;

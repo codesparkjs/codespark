@@ -27,9 +27,16 @@ describe('analyzeReferences', () => {
   });
 
   it('should handle external deps in code', () => {
-    const code = "import { useState } from 'react';\n<div>{useState()}</div>";
+    const code = "import { useState } from 'react';\nuseState()";
     const deps = analyzeReferences(code, {});
     expect(deps).toHaveLength(1);
     expect(deps[0].name).toBe('react');
+  });
+
+  it('should handle external deps via URLs in code', () => {
+    const code = "import confetti from 'https://esm.sh/canvas-confetti@1.6.0';\nconfetti()";
+    const deps = analyzeReferences(code, {});
+    expect(deps).toHaveLength(1);
+    expect(deps[0].name).toBe('https://esm.sh/canvas-confetti@1.6.0');
   });
 });
