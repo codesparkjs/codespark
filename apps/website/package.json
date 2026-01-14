@@ -34,6 +34,8 @@
   },
   "devDependencies": {
     "@codespark/plugin-rollup": "workspace:*",
+    "@netlify/vite-plugin": "^2.7.19",
+    "@netlify/vite-plugin-react-router": "^2.1.2",
     "@react-router/dev": "7.10.1",
     "@tailwindcss/vite": "^4.1.13",
     "@types/mdx": "^2.0.13",
