@@ -4,3 +4,6 @@
 
 # Fumadocs
 /.source/
+
+# Local Netlify folder
+.netlify
