@@ -1,0 +1,4 @@
+[build.environment]
+  # increase to 4096 or 8192 if needed
+  NODE_OPTIONS = "--max-old-space-size=4096"
+  NODE_VERSION = "22"

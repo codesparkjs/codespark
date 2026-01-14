@@ -5,8 +5,10 @@
   "private": true,
   "description": "",
   "scripts": {
-    "build:packages": "pnpm --filter \"./packages/*\" -r build",
-    "test:run": "pnpm --filter \"./packages/*\" -r test"
+    "site:dev": "pnpm --filter @codespark/website... run dev",
+    "site:build": "pnpm --filter @codespark/website... run build",
+    "build": "pnpm --filter \"./packages/*\" -r build",
+    "test": "pnpm --filter \"./packages/*\" -r test"
   },
   "author": "TonyL1u",
   "license": "MIT",
