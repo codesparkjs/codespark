@@ -1,10 +1,16 @@
 {
   "root": true,
   "pages": [
-    "(introduction)",
-    "(api-reference)",
-    "(integrations)",
-    "(advanced)",
-    "(examples)"
+    "---Introduction---",
+    "index",
+    "getting-started",
+    "usage",
+    "---Advanced---",
+    "...(advanced)",
+    "---Integrations---",
+    "...(integrations)",
+    "---API Reference---",
+    "...(api-reference)",
+    "---Examples---"
   ]
 }

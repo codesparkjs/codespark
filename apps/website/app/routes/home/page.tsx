@@ -6,7 +6,7 @@ import { Button } from '~/components/ui/button';
 import { Features } from './features';
 
 export function meta() {
-  return [{ title: 'codespark - Spark Code to Your Life' }, { name: 'description', content: 'Edit and preview React components in real-time' }];
+  return [{ title: 'Spark Code to Your Life - codespark' }, { name: 'description', content: 'Edit and preview React components in real-time' }];
 }
 
 export default function Home() {
