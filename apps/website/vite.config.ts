@@ -10,7 +10,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import * as MdxConfig from './source.config';
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter({ edge: true }), netlify(), mdx(MdxConfig), codespark()],
+  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter(), netlify(), mdx(MdxConfig), codespark()],
   optimizeDeps: {
     include: ['react', 'react-dom']
   }

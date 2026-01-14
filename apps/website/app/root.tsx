@@ -67,7 +67,13 @@ const { rewrite: rewriteLLM } = rewritePath('/docs/{*path}.mdx', '/llms.mdx/docs
 const serverMiddleware: Route.MiddlewareFunction = async ({ request }, next) => {
   const url = new URL(request.url);
   const path = rewriteLLM(url.pathname);
-  if (path) return Response.redirect(new URL(path, url));
+  if (path) {
+    return new Response(null, {
+      status: 302,
+      headers: new Headers({ Location: new URL(path, url).toString() })
+    });
+  }
+
   return next();
 };
 
