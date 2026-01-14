@@ -1,5 +1,7 @@
 # Codespark
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/dca4fbba-de00-485a-8ec2-af401eb97815/deploy-status)](https://app.netlify.com/projects/teal-frangollo-c08833/deploys)
+
 A lightweight React playground for live code editing and instant preview in your documentation.
 
 ## Features
