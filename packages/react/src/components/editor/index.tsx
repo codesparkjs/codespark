@@ -4,14 +4,14 @@ import { Braces, Check, ChevronRight, Codepen, Copy, Maximize, RefreshCw, Remove
 import type * as monaco from 'monaco-editor';
 import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
 import { cn } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
+import { Button } from '@/ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/ui/collapsible';
+import { Tabs, TabsList, TabsTrigger } from '@/ui/tabs';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
-import { type ConfigProviderProps, useCodespark, useConfig } from '../context';
 import { getIconForLanguageExtension } from './icons';
 import { AVAILABLE_THEMES, Monaco, type MonacoProps } from './monaco';
 
@@ -120,16 +120,16 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   };
 
   useEffect(() => {
-    if (!value) return;
-
-    workspace.setFile(entryFile.path, value);
-  }, [value]);
-
-  useEffect(() => {
     if (useOPFS) {
       workspace.initOPFS();
     }
   }, []);
+
+  useEffect(() => {
+    if (!value) return;
+
+    workspace.setFile(entryFile.path, value);
+  }, [value]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

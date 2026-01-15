@@ -1,10 +1,10 @@
 import { type ReactNode, useEffect } from 'react';
 
+import { useInjections } from '@/components/inject';
+import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
 import { cn } from '@/lib/utils';
 import { useWorkspace, Workspace, type WorkspaceInit } from '@/lib/workspace';
 
-import { type ConfigProviderProps, useCodespark, useConfig } from '../context';
-import { useInjections } from '../inject';
 import { usePreview } from './use-preview';
 import { useTailwindCss } from './use-tailwindcss';
 

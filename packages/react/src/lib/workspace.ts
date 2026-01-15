@@ -4,7 +4,7 @@ import { ReactCompiler } from '@codespark/compiler';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
-import { useCodespark } from '@/components/context';
+import { useCodespark } from '@/context';
 
 import { OPFS } from './opfs';
 import { constructESMUrl, generateId } from './utils';

@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 
-import { CodesparkProvider, type CodesparkProviderProps, type ConfigProviderProps } from '@/components/context';
 import { CodesparkEditor, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
+import { CodesparkProvider, type CodesparkProviderProps, type ConfigProviderProps } from '@/context';
 import { cn } from '@/lib/utils';
 import { useWorkspace } from '@/lib/workspace';
 
-export { CodesparkProvider, type CodesparkProviderProps, ConfigProvider, type ConfigProviderProps } from '@/components/context';
 export * from '@/components/editor';
 export { Script, type ScriptProps, Style, type StyleProps } from '@/components/inject';
 export * from '@/components/preview';
+export { CodesparkProvider, type CodesparkProviderProps, ConfigProvider, type ConfigProviderProps } from '@/context';
 export * from '@/lib/workspace';
 
 export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick<CodesparkProviderProps, 'template'>, Pick<CodesparkEditorProps, 'useToolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {

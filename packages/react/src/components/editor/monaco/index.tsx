@@ -4,7 +4,7 @@ import type { EditorProps as MonacoEditorProps, OnChange, OnMount } from '@monac
 import type * as monaco from 'monaco-editor';
 import { memo, useEffect, useRef, useState } from 'react';
 
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/ui/skeleton';
 
 import { setup } from './setup';
 
