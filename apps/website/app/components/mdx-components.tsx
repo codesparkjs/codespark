@@ -1,13 +1,11 @@
 import { Codespark, CodesparkProps } from '@codespark/react';
 import { SquareArrowOutUpRight, Wind } from 'lucide-react';
-import lz from 'lz-string';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { Toggle } from '~/components/ui/toggle';
-
-const { compressToEncodedURIComponent } = lz;
+import { encodeBase64URL } from '~/lib/utils';
 
 export const mdxComponents = {
   Codespark: ({ code }: CodesparkProps) => {
@@ -41,10 +39,10 @@ export default function App() {
           {
             tooltip: 'Try in Playground',
             icon: <SquareArrowOutUpRight className="size-3.5!" />,
-            onClick: () => {
+            onClick: async () => {
               navigate({
                 pathname: '/playground',
-                search: `?code=${compressToEncodedURIComponent(playgroundCode)}`
+                search: `?code=${await encodeBase64URL(playgroundCode)}`
               });
             }
           }

@@ -15,6 +15,8 @@ interface WorkspaceFile {
   code: string;
 }
 
+export type { WorkspaceFile };
+
 export interface WorkspaceInit {
   id?: string;
   template?: 'react' | 'vue' | 'preact' | 'markdown';
@@ -35,6 +37,7 @@ export class Workspace extends OPFS {
   private _imports: Record<string, string> | null = null;
   private _compiled: string | null = null;
   private _compileError: Error | null = null;
+  private _currentFile: WorkspaceFile | null = null;
 
   constructor(private config: WorkspaceInit) {
     super();
@@ -151,6 +154,13 @@ export class Workspace extends OPFS {
     return this._compileError;
   }
 
+  get currentFile(): WorkspaceFile {
+    if (!this._currentFile) {
+      this._currentFile = this.entryFile;
+    }
+    return this._currentFile;
+  }
+
   _subscribe(listener: () => void) {
     this.listeners.add(listener);
 
@@ -166,6 +176,14 @@ export class Workspace extends OPFS {
 
   getFile(path: string): WorkspaceFile | undefined {
     return this.allFiles.find(f => f.path === path);
+  }
+
+  setCurrentFile(path: string) {
+    const file = this.getFile(path);
+    if (file) {
+      this._currentFile = file;
+      this.listeners.forEach(fn => fn());
+    }
   }
 
   getOriginalCode(path: string): string | undefined {
@@ -294,6 +312,11 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     () => workspace.compileError,
     () => workspace.compileError
   );
+  const currentFile = useSyncExternalStore(
+    cb => workspace._subscribe(cb),
+    () => workspace.currentFile,
+    () => workspace.currentFile
+  );
 
   return {
     files,
@@ -305,6 +328,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     compiled,
     compileError,
     imports,
+    currentFile,
     workspace
   };
 }

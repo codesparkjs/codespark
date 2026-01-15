@@ -1,17 +1,14 @@
-import { CodesparkEditor, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
+import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { Moon, Sun } from 'lucide-react';
-import lz from 'lz-string';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/components/ui/resizable';
-import { devModuleProxy, isDEV, isSSR } from '~/lib/utils';
+import { decodeBase64URL, devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 import type { Route } from './+types/page';
 import { template } from './template';
-
-const { decompressFromEncodedURIComponent } = lz;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -19,7 +16,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const boilerplate = url.searchParams.get('boilerplate');
 
   return {
-    code: code ? decompressFromEncodedURIComponent(code) : boilerplate ? (template[boilerplate] ?? '') : null
+    code: code ? await decodeBase64URL(code) : boilerplate ? (template[boilerplate] ?? '') : null
   };
 }
 
@@ -39,7 +36,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const { theme, setTheme } = useTheme();
   const [isVertical, setIsVertical] = useState<boolean | null>(null);
   const isDark = theme === 'dark';
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic } });
+  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic, './button.tsx': 'export const Button = () => <button>ok</button>' } });
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   useEffect(() => {
@@ -51,18 +48,22 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
     return () => mq.removeEventListener('change', handler);
   }, []);
 
+  if (isVertical === null) return <></>;
+
   return (
     <CodesparkProvider workspace={workspace} template="react" imports={imports} theme={theme as 'light' | 'dark'}>
       <ResizablePanelGroup className="h-screen" orientation={isVertical ? 'vertical' : 'horizontal'}>
-        <ResizablePanel>
+        <ResizablePanel collapsible defaultSize="200px" minSize="200px" maxSize="400px">
+          <CodesparkFileExplorer className="h-full w-full" />
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel minSize="400px">
           <CodesparkEditor
-            wrapperProps={{ className: 'flex-1' }}
             containerProps={{ className: 'flex flex-col' }}
-            defaultExpanded
+            wrapperProps={{ className: 'flex-1 pr-3' }}
             useToolbox={[
               'reset',
               'format',
-              'toggle-sidebar',
               'copy',
               {
                 tooltip: isDark ? 'dark' : 'light',
@@ -73,7 +74,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
           />
         </ResizablePanel>
         <ResizableHandle />
-        <ResizablePanel>
+        <ResizablePanel minSize="624px">
           <CodesparkPreview className="h-full">
             <Style>{CUSTOM_STYLES}</Style>
             <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
