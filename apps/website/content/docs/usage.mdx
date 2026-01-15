@@ -41,13 +41,11 @@ Codespark features a modular architecture with composable components. Mix and ma
 
 ```tsx
 import { CodesparkEditor, CodesparkPreview, CodesparkProvider } from '@codespark/react';
+```
 
-export default function App() {
-  return (
-    <CodesparkProvider>
-      <CodesparkEditor />
-      <CodesparkPreview />
-    </CodesparkProvider>
-  );
-}
+```tsx
+<CodesparkProvider>
+  <CodesparkEditor />
+  <CodesparkPreview />
+</CodesparkProvider>
 ```

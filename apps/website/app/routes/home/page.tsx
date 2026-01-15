@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 
+import { Icons } from '~/components/icons';
 import { Button } from '~/components/ui/button';
 
 import { Features } from './features';
@@ -34,7 +35,7 @@ export default function Home() {
             <span className="bg-linear-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">Code</span>
             <span className="relative mx-3 inline-block">
               <span className="absolute -inset-1 animate-pulse rounded-lg bg-emerald-500/20 blur-md" />
-              <span className="relative text-4xl text-emerald-400 md:text-6xl">✦</span>
+              <Icons.logo className="size-12 text-emerald-400" />
             </span>
             <span className="bg-linear-to-r from-teal-500 to-cyan-400 bg-clip-text text-transparent">Spark</span>
             <br />
