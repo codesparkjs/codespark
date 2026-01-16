@@ -45,8 +45,8 @@
     <!-- PRESET_TAG -->
     <script>
       (() => {
-          // Monitor module loading via PerformanceObserver
-          const observer = new PerformanceObserver((list) => {
+        // Monitor module loading via PerformanceObserver
+        const observer = new PerformanceObserver(list => {
           for (const entry of list.getEntries()) {
             if (entry.initiatorType === 'script' || entry.initiatorType === 'link') {
               const url = entry.name;
@@ -54,10 +54,13 @@
               const match = url.match(/esm\.sh\/([^\s?#]+)/);
               const name = match ? match[1] : url;
               loadingModules.delete(name);
-              parent.postMessage({
-                action: 'fetch_progress',
-                args: { loaded: name, remaining: [...loadingModules] }
-              }, '*');
+              parent.postMessage(
+                {
+                  action: 'fetch_progress',
+                  args: { loaded: name, remaining: [...loadingModules] }
+                },
+                '*'
+              );
             }
           }
         });

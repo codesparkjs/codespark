@@ -38,7 +38,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const { theme, setTheme } = useTheme();
   const [isVertical, setIsVertical] = useState<boolean | null>(null);
   const isDark = theme === 'dark';
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic, './button.tsx': 'export const Button = () => <button>ok</button>', './test/test1/index.tsx': '' } });
+  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic, './src/index.tsx': 'export const Button = () => <button>ok</button>;' } });
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   useEffect(() => {
@@ -54,33 +54,37 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
 
   return (
     <CodesparkProvider workspace={workspace} template="react" imports={imports} theme={theme as 'light' | 'dark'}>
-      <ResizablePanelGroup className="h-screen" orientation={isVertical ? 'vertical' : 'horizontal'}>
-        <ResizablePanel collapsible defaultSize="200px" minSize="200px" maxSize="400px">
+      <ResizablePanelGroup className="h-screen">
+        <ResizablePanel collapsible defaultSize="300px" minSize="200px">
           <CodesparkFileExplorer className="h-full w-full" />
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel minSize="400px">
-          <CodesparkEditor
-            containerProps={{ className: 'flex flex-col' }}
-            wrapperProps={{ className: 'flex-1 pr-3' }}
-            useToolbox={[
-              'reset',
-              'format',
-              'copy',
-              {
-                tooltip: isDark ? 'dark' : 'light',
-                icon: isDark ? <Moon className="size-3.5!" /> : <Sun className="size-3.5!" />,
-                onClick: () => setTheme(isDark ? 'light' : 'dark')
-              }
-            ]}
-          />
-        </ResizablePanel>
-        <ResizableHandle />
-        <ResizablePanel minSize="624px">
-          <CodesparkPreview className="h-full">
-            <Style>{CUSTOM_STYLES}</Style>
-            <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
-          </CodesparkPreview>
+          <ResizablePanelGroup orientation={isVertical ? 'vertical' : 'horizontal'}>
+            <ResizablePanel minSize="200px">
+              <CodesparkEditor
+                containerProps={{ className: 'flex flex-col' }}
+                wrapperProps={{ className: 'flex-1 pr-3' }}
+                useToolbox={[
+                  'reset',
+                  'format',
+                  'copy',
+                  {
+                    tooltip: isDark ? 'dark' : 'light',
+                    icon: isDark ? <Moon className="size-3.5!" /> : <Sun className="size-3.5!" />,
+                    onClick: () => setTheme(isDark ? 'light' : 'dark')
+                  }
+                ]}
+              />
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel minSize="200px">
+              <CodesparkPreview className="h-full">
+                <Style>{CUSTOM_STYLES}</Style>
+                <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
+              </CodesparkPreview>
+            </ResizablePanel>
+          </ResizablePanelGroup>
         </ResizablePanel>
       </ResizablePanelGroup>
     </CodesparkProvider>
