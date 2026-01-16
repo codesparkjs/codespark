@@ -6,7 +6,7 @@ import { type ComponentProps, isValidElement, type ReactElement, type ReactNode,
 
 import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
 import { cn } from '@/lib/utils';
-import { useWorkspace, Workspace } from '@/lib/workspace';
+import { type FileTreeNode, useWorkspace, Workspace } from '@/lib/workspace';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
@@ -33,7 +33,7 @@ type ToolboxItemId = 'reset' | 'format' | 'copy';
 interface ToolboxContext {
   editor: monaco.editor.IStandaloneCodeEditor | null;
   workspace: Workspace;
-  currentFile: { path: string; code: string };
+  currentFile: FileTreeNode;
 }
 
 interface ToolboxItemConfig {
@@ -71,7 +71,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     containerProps,
     onChange
   } = props;
-  const { entryFile, currentFile, internalDeps, externalDeps, imports } = useWorkspace(workspace);
+  const { currentFile, internalDeps, externalDeps, imports } = useWorkspace(workspace);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const [dts, setDts] = useState<Record<string, string>>(() => {
@@ -117,7 +117,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   useEffect(() => {
     if (!value) return;
 
-    workspace.setFile(entryFile.path, value);
+    workspace.setFile(workspace.entry, value);
   }, [value]);
 
   useEffect(() => {

@@ -1,3 +1,5 @@
+'use client';
+
 import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { Moon, Sun } from 'lucide-react';
@@ -36,7 +38,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const { theme, setTheme } = useTheme();
   const [isVertical, setIsVertical] = useState<boolean | null>(null);
   const isDark = theme === 'dark';
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic, './button.tsx': 'export const Button = () => <button>ok</button>' } });
+  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic, './button.tsx': 'export const Button = () => <button>ok</button>', './test/test1/index.tsx': '' } });
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   useEffect(() => {

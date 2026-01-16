@@ -9,13 +9,13 @@ import { useCodespark } from '@/context';
 import { OPFS } from './opfs';
 import { constructESMUrl, generateId } from './utils';
 
-interface WorkspaceFile {
-  path: string;
+export interface FileTreeNode {
   name: string;
-  code: string;
+  type: 'file' | 'folder';
+  path: string;
+  code?: string;
+  children?: FileTreeNode[];
 }
-
-export type { WorkspaceFile };
 
 export interface WorkspaceInit {
   id?: string;
@@ -29,15 +29,14 @@ export class Workspace extends OPFS {
 
   private originalFiles: Record<string, string>;
   private listeners = new Set<() => void>();
-  private _entryFile: WorkspaceFile | null = null;
-  private _depFiles: WorkspaceFile[] | null = null;
   private _deps: Dep[] | null = null;
   private _internalDeps: InternalDep[] | null = null;
   private _externalDeps: ExternalDep[] | null = null;
   private _imports: Record<string, string> | null = null;
   private _compiled: string | null = null;
   private _compileError: Error | null = null;
-  private _currentFile: WorkspaceFile | null = null;
+  private _fileTree: FileTreeNode[] | null = null;
+  private _currentFile: FileTreeNode | null = null;
 
   constructor(private config: WorkspaceInit) {
     super();
@@ -57,7 +56,44 @@ export class Workspace extends OPFS {
     return this.config.files;
   }
 
-  get deps(): Dep[] {
+  get fileTree() {
+    if (!this._fileTree) {
+      const root: FileTreeNode[] = [];
+      const entries = Object.entries(this.config.files);
+      const entryItem = entries.find(([path]) => path === this.config.entry);
+      const deps = entries.filter(([path]) => path !== this.config.entry);
+      const sorted = entryItem ? [entryItem, ...deps] : deps;
+
+      for (const [filePath, code] of sorted) {
+        const parts = filePath.split('/').filter(p => p !== '.' && p !== '..');
+        let current = root;
+        let currentPath = '';
+
+        for (let i = 0; i < parts.length; i++) {
+          const name = parts[i];
+          const isFile = i === parts.length - 1;
+          currentPath = currentPath ? `${currentPath}/${name}` : name;
+
+          if (isFile) {
+            current.push({ name, type: 'file', path: filePath, code });
+          } else {
+            let folder = current.find(n => n.type === 'folder' && n.name === name);
+            if (!folder) {
+              folder = { name, type: 'folder', path: currentPath, children: [] };
+              current.push(folder);
+            }
+            current = folder.children!;
+          }
+        }
+      }
+
+      this._fileTree = root;
+    }
+
+    return this._fileTree;
+  }
+
+  get deps() {
     if (!this._deps) {
       this._deps = analyzeReferences(this.files[this.entry], this.files);
     }
@@ -65,7 +101,7 @@ export class Workspace extends OPFS {
     return this._deps;
   }
 
-  get internalDeps(): InternalDep[] {
+  get internalDeps() {
     if (!this._internalDeps) {
       const result: InternalDep[] = [];
       const collect = (deps: Dep[]) => {
@@ -83,7 +119,7 @@ export class Workspace extends OPFS {
     return this._internalDeps;
   }
 
-  get externalDeps(): ExternalDep[] {
+  get externalDeps() {
     if (!this._externalDeps) {
       const result: ExternalDep[] = [];
       const collect = (deps: Dep[]) => {
@@ -100,22 +136,6 @@ export class Workspace extends OPFS {
     }
 
     return this._externalDeps;
-  }
-
-  get entryFile(): WorkspaceFile {
-    if (!this._entryFile) {
-      this._entryFile = this.allFiles[0];
-    }
-
-    return this._entryFile;
-  }
-
-  get depFiles(): WorkspaceFile[] {
-    if (!this._depFiles) {
-      this._depFiles = this.allFiles.slice(1);
-    }
-
-    return this._depFiles;
   }
 
   get imports() {
@@ -139,7 +159,7 @@ export class Workspace extends OPFS {
   get compiled() {
     if (this._compiled === null) {
       try {
-        this._compiled = this.compiler.compile(this.entryFile.code, this.deps);
+        this._compiled = this.compiler.compile(this.files[this.entry], this.deps);
         this._compileError = null;
       } catch (error) {
         this._compiled = '';
@@ -154,9 +174,9 @@ export class Workspace extends OPFS {
     return this._compileError;
   }
 
-  get currentFile(): WorkspaceFile {
+  get currentFile(): FileTreeNode {
     if (!this._currentFile) {
-      this._currentFile = this.entryFile;
+      this._currentFile = { name: this.entry.split('/').pop() || this.entry, type: 'file', path: this.entry, code: this.files[this.entry] };
     }
     return this._currentFile;
   }
@@ -174,8 +194,10 @@ export class Workspace extends OPFS {
     this.listeners.forEach(fn => fn()); // notify
   }
 
-  getFile(path: string): WorkspaceFile | undefined {
-    return this.allFiles.find(f => f.path === path);
+  getFile(path: string): FileTreeNode | undefined {
+    const code = this.files[path];
+    if (code === undefined) return undefined;
+    return { name: path.split('/').pop() || path, type: 'file', path, code };
   }
 
   setCurrentFile(path: string) {
@@ -198,27 +220,14 @@ export class Workspace extends OPFS {
     return new ReactCompiler();
   }
 
-  private get allFiles(): WorkspaceFile[] {
-    const entries = Object.entries(this.config.files);
-    const entry = entries.find(([path]) => path === this.config.entry);
-    const deps = entries.filter(([path]) => path !== this.config.entry);
-
-    return (entry ? [entry, ...deps] : deps).map(([path, code]) => ({
-      path,
-      name: path.split('/').pop() || path,
-      code
-    }));
-  }
-
   private invalidateCache() {
-    this._entryFile = null;
-    this._depFiles = null;
     this._deps = null;
     this._internalDeps = null;
     this._externalDeps = null;
     this._imports = null;
     this._compiled = null;
     this._compileError = null;
+    this._fileTree = null;
   }
 }
 
@@ -272,15 +281,10 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     () => workspace.files,
     () => workspace.files
   );
-  const entryFile = useSyncExternalStore(
+  const fileTree = useSyncExternalStore(
     cb => workspace._subscribe(cb),
-    () => workspace.entryFile,
-    () => workspace.entryFile
-  );
-  const depFiles = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.depFiles,
-    () => workspace.depFiles
+    () => workspace.fileTree,
+    () => workspace.fileTree
   );
   const deps = useSyncExternalStore(
     cb => workspace._subscribe(cb),
@@ -320,8 +324,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
 
   return {
     files,
-    entryFile,
-    depFiles,
+    fileTree,
     deps,
     internalDeps,
     externalDeps,

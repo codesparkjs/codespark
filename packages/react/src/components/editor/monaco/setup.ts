@@ -65,6 +65,7 @@ export const setup = async () => {
         noUnusedParameters: false,
         allowUnreachableCode: true,
         allowUnusedLabels: true,
+        allowImportingTsExtensions: true,
         target: Monaco.typescript.ScriptTarget.ESNext,
         allowNonTsExtensions: true,
         moduleResolution: Monaco.typescript.ModuleResolutionKind.NodeJs,
