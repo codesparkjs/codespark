@@ -71,8 +71,9 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     containerProps,
     onChange
   } = props;
-  const { currentFile, internalDeps, externalDeps, imports } = useWorkspace(workspace);
+  const { files, currentFile, internalDeps, externalDeps, imports } = useWorkspace(workspace);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const monacoRef = useRef<typeof monaco | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const [dts, setDts] = useState<Record<string, string>>(() => {
     const internalDts = Object.fromEntries(internalDeps.map(({ alias, dts }) => [alias, dts]));
@@ -141,6 +142,33 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
       setDts(prev => ({ ...prev, ...Object.fromEntries(results) }));
     });
   }, [imports]);
+
+  useEffect(() => {
+    if (!monacoRef.current) return;
+
+    const prefix = `file:///${workspace.id}/`;
+    const filePaths = new Set(Object.keys(files).map(p => p.replace(/^(\.\.?\/)+/, '')));
+    monacoRef.current.editor.getModels().forEach(model => {
+      const uriStr = model.uri.toString();
+      if (uriStr.startsWith(prefix)) {
+        const modelPath = uriStr.slice(prefix.length);
+        if (!filePaths.has(modelPath)) {
+          model.dispose();
+        }
+      }
+    });
+
+    Object.entries(files).forEach(([filePath, code]) => {
+      const normalizedPath = filePath.replace(/^(\.\.?\/)+/, '');
+      const uri = monacoRef.current!.Uri.parse(`${prefix}${normalizedPath}`);
+
+      if (!monacoRef.current!.editor.getModel(uri)) {
+        const ext = filePath.split('.').pop();
+        const lang = ['ts', 'tsx'].includes(ext!) ? 'typescript' : ext === 'css' ? 'css' : ext === 'json' ? 'json' : 'javascript';
+        monacoRef.current!.editor.createModel(code, lang, uri);
+      }
+    });
+  }, [files]);
 
   return (
     <div {...containerProps} className={cn('h-full divide-y', containerProps?.className)}>
@@ -213,7 +241,10 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
           onChange?.(value, evt);
           workspace.setFile(currentFile.path, value || '');
         }}
-        onMount={editorInstance => (editorRef.current = editorInstance)}
+        onMount={(editorInstance, monacoInstance) => {
+          editorRef.current = editorInstance;
+          monacoRef.current = monacoInstance;
+        }}
       />
     </div>
   );
