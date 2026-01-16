@@ -208,6 +208,39 @@ export class Workspace extends OPFS {
     }
   }
 
+  renameFile(oldPath: string, newName: string) {
+    const isFolder = !(oldPath in this.files);
+    const parentPath = oldPath.split('/').slice(0, -1).join('/');
+    const newPath = parentPath ? `${parentPath}/${newName}` : newName;
+
+    if (isFolder) {
+      const newFiles: Record<string, string> = {};
+      for (const [path, content] of Object.entries(this.files)) {
+        const normalizedPath = path.replace(/^\.\//, '');
+        if (normalizedPath === oldPath || normalizedPath.startsWith(oldPath + '/')) {
+          const newFilePath = path.replace(oldPath, newPath);
+          newFiles[newFilePath] = content;
+        } else {
+          newFiles[path] = content;
+        }
+      }
+      this.config.files = newFiles;
+    } else {
+      const content = this.files[oldPath];
+      const { [oldPath]: _, ...rest } = this.files;
+      this.config.files = { ...rest, [newPath]: content };
+      this.writeToOPFS(newPath, content);
+    }
+
+    if (this._currentFile?.path === oldPath || this._currentFile?.path.startsWith(oldPath + '/')) {
+      const newCurrentPath = isFolder ? newPath + this._currentFile.path.slice(oldPath.length) : newPath;
+      this._currentFile = { ...this._currentFile, path: newCurrentPath, name: newCurrentPath.split('/').pop()! };
+    }
+
+    this.invalidateCache();
+    this.listeners.forEach(fn => fn());
+  }
+
   getOriginalCode(path: string): string | undefined {
     return this.originalFiles[path];
   }
