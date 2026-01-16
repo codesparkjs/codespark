@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Remark plugin for codespark ecosystem",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsdown",
     "test": "vitest run"

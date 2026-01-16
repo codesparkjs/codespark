@@ -5,10 +5,15 @@
   "description": "React components for codespark ecosystem",
   "exports": {
     ".": {
+      "development": "./src/index.tsx",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
-    "./index.css": "./dist/index.css"
+    "./index.css": {
+      "style": "./src/index.css",
+      "development": "./src/index.css",
+      "import": "./dist/index.css"
+    }
   },
   "scripts": {
     "build": "tsdown"
@@ -20,6 +25,7 @@
     "@codespark/compiler": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-collapsible": "^1.1.12",
+    "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",

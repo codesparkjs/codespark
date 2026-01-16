@@ -11,6 +11,9 @@ import * as MdxConfig from './source.config';
 
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter(), netlify(), mdx(MdxConfig), codespark()],
+  resolve: {
+    conditions: ['development', 'import']
+  },
   optimizeDeps: {
     include: ['react', 'react-dom']
   }
