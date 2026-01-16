@@ -6,25 +6,18 @@ export const parseCode = (code: string) => parse(code, { sourceType: 'module', p
 
 export const collectIdentifiers = (ast: Statement[]): Set<string> => {
   const ids = new Set<string>();
-  const boundNames = new Set<string>();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const walk = (node: any, parent?: any, key?: string) => {
+  const walk = (node: any) => {
     if (!node || typeof node !== 'object') return;
-    if ((node.type === 'FunctionExpression' || node.type === 'FunctionDeclaration') && node.id) {
-      boundNames.add(node.id.name);
-    }
-    if ((node.type === 'Identifier' || node.type === 'JSXIdentifier') && !((parent?.type === 'FunctionExpression' || parent?.type === 'FunctionDeclaration') && key === 'id')) {
-      ids.add(node.name);
-    }
+    if (node.type === 'Identifier' || node.type === 'JSXIdentifier') ids.add(node.name);
     for (const k of Object.keys(node)) {
       if (k === 'loc' || k === 'range') continue;
       const val = node[k];
-      if (Array.isArray(val)) val.forEach(v => walk(v, node, k));
-      else if (val && typeof val === 'object') walk(val, node, k);
+      if (Array.isArray(val)) val.forEach(walk);
+      else if (val && typeof val === 'object') walk(val);
     }
   };
-  ast.forEach(n => walk(n));
-  boundNames.forEach(name => ids.delete(name));
+  ast.forEach(walk);
   return ids;
 };
 
@@ -61,24 +54,23 @@ export const getDefinedNames = (node: Statement): string[] => {
   return [];
 };
 
-export const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set<string>, code: string, allDependencies: Record<string, string> = {}): ExternalDep[] => {
+export const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set<string>, allDependencies: Record<string, string> = {}): ExternalDep[] => {
   const externals = new Map<string, { name: string; version: string; imported: Set<string> }>();
 
   imports.forEach(imp => {
     if (imp.importKind === 'type') return;
     const source = imp.source.value;
     if (!usedSources.has(source)) return;
+    if (source.startsWith('.') || source.startsWith('/')) return;
 
     const isUrl = source.startsWith('http://') || source.startsWith('https://');
     const pkgName = isUrl ? source : source.startsWith('@') ? source.split('/').slice(0, 2).join('/') : source.split('/')[0];
     const version = allDependencies[pkgName] || '';
     const namedImports = imp.specifiers.filter(spec => spec.type === 'ImportSpecifier' && spec.importKind !== 'type').map(spec => ((spec as ImportSpecifier).imported as Identifier).name);
 
-    if (externals.has(pkgName)) {
-      namedImports.forEach(name => externals.get(pkgName)!.imported.add(name));
-    } else {
-      externals.set(pkgName, { name: pkgName, version, imported: new Set(namedImports) });
-    }
+    const existing = externals.get(pkgName);
+    if (existing) namedImports.forEach(name => existing.imported.add(name));
+    else externals.set(pkgName, { name: pkgName, version, imported: new Set(namedImports) });
   });
 
   return [...externals.values()].map(dep => ({ ...dep, imported: [...dep.imported] }));

@@ -47,4 +47,31 @@ describe('collectDependencies', () => {
     expect(result.entry.imports[0]).not.toContain('useMemo');
     expect(result.entry.imports[0]).not.toContain('useCallback');
   });
+
+  it('should return empty result on parse error', () => {
+    const code = 'invalid { syntax';
+    const result = collectDependencies(code, path.join(fixturesDir, 'host.tsx'));
+    expect(result.entry.locals).toHaveLength(0);
+    expect(result.entry.imports).toHaveLength(0);
+  });
+
+  it('should handle alias imports', () => {
+    const code = '<App result={{ entry: { code: "" } }} />';
+    const result = collectDependencies(code, path.join(fixturesDir, 'with-alias.tsx'));
+    expect(result.entry.locals).toHaveLength(1);
+  });
+
+  it('should resolve import with explicit extension', () => {
+    const code = '<App />';
+    const result = collectDependencies(code, path.join(fixturesDir, 'with-extension.tsx'));
+    expect(result.entry.locals).toHaveLength(1);
+    expect(result.files['./button.tsx']).toContain('export const Button');
+  });
+
+  it('should resolve alias imports', () => {
+    const code = '<App />';
+    const result = collectDependencies(code, path.join(fixturesDir, 'with-alias-value.tsx'));
+    expect(result.entry.locals).toHaveLength(1);
+    expect(result.files['_shared/util']).toContain('sharedUtil');
+  });
 });

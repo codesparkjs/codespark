@@ -5,10 +5,12 @@
   "description": "Codebase analyzer for codespark ecosystem",
   "exports": {
     ".": {
+      "development": "./src/index.ts",
       "import": "./dist/index.mjs",
       "types": "./dist/index.d.mts"
     },
     "./browser": {
+      "development": "./src/analyze-refs.ts",
       "import": "./dist/browser.js",
       "types": "./dist/browser.d.ts"
     }

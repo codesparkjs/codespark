@@ -3,7 +3,21 @@ import type { ImportDeclaration } from '@babel/types';
 
 import { buildExternalDeps, buildImportMap, collectIdentifiers, getUsedSources, parseCode } from './shared';
 
-const buildInternalDep = (source: string, content: string, files: Record<string, string>, visited: Set<string>): InternalDep | null => {
+const EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'];
+
+const resolveSource = (source: string, files: Record<string, string>): string | null => {
+  if (files[source]) return source;
+  for (const ext of EXTENSIONS) {
+    if (files[source + ext]) return source + ext;
+  }
+  for (const ext of EXTENSIONS) {
+    const indexPath = source + '/index' + ext;
+    if (files[indexPath]) return indexPath;
+  }
+  return null;
+};
+
+const buildInternalDep = (source: string, content: string, files: Record<string, string>, visited: Set<string>, alias: string): InternalDep | null => {
   if (visited.has(source)) return null;
   visited.add(source);
 
@@ -21,16 +35,17 @@ const buildInternalDep = (source: string, content: string, files: Record<string,
     const src = imp.source.value;
     if (!usedSources.has(src)) return;
 
-    if (files[src]) {
-      const child = buildInternalDep(src, files[src], files, visited);
+    const resolved = resolveSource(src, files);
+    if (resolved) {
+      const child = buildInternalDep(resolved, files[resolved], files, visited, src);
       if (child) deps.push(child);
     }
   });
 
-  const externals = buildExternalDeps(imports, usedSources, content);
+  const externals = buildExternalDeps(imports, usedSources);
   deps.push(...externals);
 
-  return { name: source.split('/').pop() || source, alias: source, code: content, dts: '', deps };
+  return { name: source.split('/').pop() || source, alias, code: content, dts: '', deps };
 };
 
 export function analyzeReferences(code: string, files: Record<string, string>) {
@@ -48,13 +63,14 @@ export function analyzeReferences(code: string, files: Record<string, string>) {
       const source = imp.source.value;
       if (!usedSources.has(source)) return;
 
-      if (files[source]) {
-        const dep = buildInternalDep(source, files[source], files, new Set());
+      const resolved = resolveSource(source, files);
+      if (resolved) {
+        const dep = buildInternalDep(resolved, files[resolved], files, new Set(), source);
         if (dep) depsMap.set(dep.name, dep);
       }
     });
 
-    const externals = buildExternalDeps(codeImports, usedSources, code);
+    const externals = buildExternalDeps(codeImports, usedSources);
     externals.forEach(dep => depsMap.set(dep.name, dep));
 
     return [...depsMap.values()];
