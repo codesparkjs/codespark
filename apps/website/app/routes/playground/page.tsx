@@ -10,6 +10,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/componen
 import { decodeBase64URL, devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 import type { Route } from './+types/page';
+import { FileExplorerContextMenu } from './context-menu';
 import { template } from './template';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -56,7 +57,9 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
     <CodesparkProvider workspace={workspace} template="react" imports={imports} theme={theme as 'light' | 'dark'}>
       <ResizablePanelGroup className="h-screen">
         <ResizablePanel collapsible defaultSize="300px" minSize="200px">
-          <CodesparkFileExplorer className="h-full w-full" />
+          <FileExplorerContextMenu>
+            <CodesparkFileExplorer className="h-full w-full" />
+          </FileExplorerContextMenu>
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel minSize="400px">

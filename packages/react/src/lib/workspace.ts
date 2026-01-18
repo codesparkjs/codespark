@@ -65,16 +65,22 @@ export class Workspace extends OPFS {
       const sorted = entryItem ? [entryItem, ...deps] : deps;
 
       for (const [filePath, code] of sorted) {
-        const parts = filePath.split('/').filter(p => p !== '.' && p !== '..');
+        if (filePath.startsWith('../')) {
+          console.warn(`[Workspace] Ignoring file with invalid path: "${filePath}". Paths starting with "../" are not allowed.`);
+          continue;
+        }
+        const isEmptyFolder = filePath.endsWith('/');
+        const normalizedPath = isEmptyFolder ? filePath.slice(0, -1) : filePath;
+        const parts = normalizedPath.split('/').filter(p => p !== '.' && p !== '..');
         let current = root;
         let currentPath = '';
 
         for (let i = 0; i < parts.length; i++) {
           const name = parts[i];
-          const isFile = i === parts.length - 1;
+          const isLast = i === parts.length - 1;
           currentPath = currentPath ? `${currentPath}/${name}` : name;
 
-          if (isFile) {
+          if (isLast && !isEmptyFolder) {
             current.push({ name, type: 'file', path: filePath, code });
           } else {
             let folder = current.find(n => n.type === 'folder' && n.name === name);
@@ -187,11 +193,12 @@ export class Workspace extends OPFS {
     return () => this.listeners.delete(listener);
   }
 
-  setFile(path: string, content: string) {
-    this.config.files = { ...this.config.files, [path]: content };
-    this.invalidateCache();
-    this.writeToOPFS(path, content);
-    this.listeners.forEach(fn => fn()); // notify
+  setCurrentFile(path: string) {
+    const file = this.getFile(path);
+    if (file) {
+      this._currentFile = file;
+      this.listeners.forEach(fn => fn());
+    }
   }
 
   getFile(path: string): FileTreeNode | undefined {
@@ -200,12 +207,23 @@ export class Workspace extends OPFS {
     return { name: path.split('/').pop() || path, type: 'file', path, code };
   }
 
-  setCurrentFile(path: string) {
-    const file = this.getFile(path);
-    if (file) {
-      this._currentFile = file;
-      this.listeners.forEach(fn => fn());
+  setFile(path: string, content: string) {
+    let newFiles = { ...this.config.files };
+    if (!path.endsWith('/')) {
+      const parts = path.split('/');
+      const parentFolders = new Set<string>();
+      for (let i = 1; i < parts.length; i++) {
+        parentFolders.add(parts.slice(0, i).join('/') + '/');
+      }
+      newFiles = Object.fromEntries(Object.entries(newFiles).filter(([key]) => !parentFolders.has(key)));
     }
+    newFiles[path] = content;
+    this.config.files = newFiles;
+    this.invalidateCache();
+    if (!path.endsWith('/')) {
+      this.writeToOPFS(path, content);
+    }
+    this.listeners.forEach(fn => fn());
   }
 
   renameFile(oldPath: string, newName: string) {
@@ -235,6 +253,46 @@ export class Workspace extends OPFS {
     if (this._currentFile?.path === oldPath || this._currentFile?.path.startsWith(oldPath + '/')) {
       const newCurrentPath = isFolder ? newPath + this._currentFile.path.slice(oldPath.length) : newPath;
       this._currentFile = { ...this._currentFile, path: newCurrentPath, name: newCurrentPath.split('/').pop()! };
+    }
+
+    this.invalidateCache();
+    this.listeners.forEach(fn => fn());
+  }
+
+  deleteFile(path: string) {
+    const isEmptyFolder = path.endsWith('/');
+    const normalizedPath = isEmptyFolder ? path.slice(0, -1) : path;
+    const isFolder = isEmptyFolder || !(path in this.files);
+
+    let newFiles: Record<string, string>;
+    if (isFolder) {
+      newFiles = Object.fromEntries(
+        Object.entries(this.files).filter(([filePath]) => {
+          const normalized = filePath.replace(/^\.\//, '');
+          return normalized !== path && normalized !== normalizedPath + '/' && !normalized.startsWith(normalizedPath + '/');
+        })
+      );
+    } else {
+      const { [path]: _, ...rest } = this.files;
+      newFiles = rest;
+    }
+
+    // Check if parent folder becomes empty after deletion
+    const parentPath = normalizedPath.split('/').slice(0, -1).join('/');
+    if (parentPath) {
+      const hasFilesInParent = Object.keys(newFiles).some(f => {
+        const normalized = f.replace(/^\.\//, '').replace(/\/$/, '');
+        return normalized.startsWith(parentPath + '/') && normalized !== parentPath;
+      });
+      if (!hasFilesInParent) {
+        newFiles[parentPath + '/'] = '';
+      }
+    }
+
+    this.config.files = newFiles;
+
+    if (this._currentFile?.path === path || this._currentFile?.path.startsWith(normalizedPath + '/')) {
+      this._currentFile = { name: this.entry.split('/').pop() || this.entry, type: 'file', path: this.entry, code: this.files[this.entry] };
     }
 
     this.invalidateCache();
