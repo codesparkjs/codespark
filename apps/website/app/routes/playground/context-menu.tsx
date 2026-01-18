@@ -3,9 +3,10 @@ import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 
 import { Button } from '~/components/ui/button';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '~/components/ui/context-menu';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '~/components/ui/context-menu';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from '~/components/ui/input-group';
 
 export interface FileExplorerContextMenuProps {
   children: ReactNode;
@@ -23,9 +24,34 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const existingNames = useMemo(() => new Set(Object.keys(files)), [files]);
-  const checkNameError = (name: string) => {
+  const parentPath = clickedType === 'folder' && clickedPath ? clickedPath : '';
+  const existingNames = useMemo(() => {
+    const prefix = parentPath ? `${parentPath}/` : '';
+    const forFile = new Set<string>();
+    const forFolder = new Set<string>();
+    for (let filePath of Object.keys(files)) {
+      // Normalize path by removing leading ./
+      if (filePath.startsWith('./')) {
+        filePath = filePath.slice(2);
+      }
+      const relativePath = prefix ? (filePath.startsWith(prefix) ? filePath.slice(prefix.length) : null) : filePath;
+      if (relativePath) {
+        forFile.add(relativePath);
+        if (relativePath.includes('/')) {
+          forFolder.add(relativePath.split('/')[0]);
+        }
+      }
+    }
+    return { forFile, forFolder };
+  }, [files, parentPath]);
+
+  const checkNameError = (name: string, existingNames: Set<string>) => {
     if (!name) return null;
+
+    // Check for leading slash
+    if (/^[/\\]/.test(name)) {
+      return 'Name cannot start with slash';
+    }
 
     // Check for relative path prefixes
     if (/^\.\.?(\/|$)/.test(name)) {
@@ -54,21 +80,19 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
   };
 
   const handleNewFile = () => {
-    if (newFileName && !checkNameError(newFileName)) {
-      const parentPath = clickedType === 'folder' && clickedPath ? clickedPath : '';
+    if (newFileName && !checkNameError(newFileName, existingNames.forFile)) {
       const filePath = parentPath ? `${parentPath}/${newFileName}` : newFileName;
-      workspace.setFile(filePath, '');
+      workspace.setFile(`./${filePath}`, '');
       setNewFileOpen(false);
       setNewFileName('');
     }
   };
 
   const handleNewFolder = () => {
-    if (newFolderName && !checkNameError(newFolderName)) {
+    if (newFolderName && !checkNameError(newFolderName, existingNames.forFolder)) {
       const trimmedName = newFolderName.replace(/\/+$/, '');
-      const parentPath = clickedType === 'folder' && clickedPath ? clickedPath : '';
       const folderPath = parentPath ? `${parentPath}/${trimmedName}/` : `${trimmedName}/`;
-      workspace.setFile(folderPath, '');
+      workspace.setFile(`./${folderPath}`, '');
       setNewFolderOpen(false);
       setNewFolderName('');
     }
@@ -113,6 +137,7 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
               New Folder...
             </ContextMenuItem>
           )}
+          {clickedType === 'folder' ? <ContextMenuSeparator /> : null}
           {clickedType !== null && (
             <ContextMenuItem
               disabled={clickedPath === workspace.entry}
@@ -139,13 +164,13 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
           </DialogHeader>
           <div className="flex flex-col gap-1">
             <Input value={renameName} onChange={e => setRenameName(e.target.value)} />
-            {checkNameError(renameName) && <p className="text-destructive text-sm">{checkNameError(renameName)}</p>}
+            {checkNameError(renameName, existingNames.forFile) && <p className="text-destructive text-sm">{checkNameError(renameName, existingNames.forFile)}</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenameOpen(false)}>
               Cancel
             </Button>
-            <Button disabled={!renameName || !!checkNameError(renameName)} onClick={handleRename}>
+            <Button disabled={!renameName || !!checkNameError(renameName, existingNames.forFile)} onClick={handleRename}>
               Rename
             </Button>
           </DialogFooter>
@@ -157,14 +182,21 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
             <DialogTitle>New File</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-1">
-            <Input placeholder="Enter file name" value={newFileName} onChange={e => setNewFileName(e.target.value)} />
-            {checkNameError(newFileName) && <p className="text-destructive text-sm">{checkNameError(newFileName)}</p>}
+            <InputGroup>
+              {parentPath ? (
+                <InputGroupAddon>
+                  <InputGroupText>{parentPath}/</InputGroupText>
+                </InputGroupAddon>
+              ) : null}
+              <InputGroupInput className={parentPath ? 'pl-0.5!' : ''} placeholder="Enter file name" value={newFileName} onChange={e => setNewFileName(e.target.value)} />
+            </InputGroup>
+            {checkNameError(newFileName, existingNames.forFile) && <p className="text-destructive text-sm">{checkNameError(newFileName, existingNames.forFile)}</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewFileOpen(false)}>
               Cancel
             </Button>
-            <Button disabled={!newFileName || !!checkNameError(newFileName)} onClick={handleNewFile}>
+            <Button disabled={!newFileName || !!checkNameError(newFileName, existingNames.forFile)} onClick={handleNewFile}>
               Create
             </Button>
           </DialogFooter>
@@ -176,14 +208,21 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
             <DialogTitle>New Folder</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-1">
-            <Input placeholder="Enter folder name" value={newFolderName} onChange={e => setNewFolderName(e.target.value)} />
-            {checkNameError(newFolderName) && <p className="text-destructive text-sm">{checkNameError(newFolderName)}</p>}
+            <InputGroup>
+              {parentPath ? (
+                <InputGroupAddon>
+                  <InputGroupText>{parentPath}/</InputGroupText>
+                </InputGroupAddon>
+              ) : null}
+              <InputGroupInput className={parentPath ? 'pl-0.5!' : ''} placeholder="Enter folder name" value={newFolderName} onChange={e => setNewFolderName(e.target.value)} />
+            </InputGroup>
+            {checkNameError(newFolderName, existingNames.forFolder) && <p className="text-destructive text-sm">{checkNameError(newFolderName, existingNames.forFolder)}</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewFolderOpen(false)}>
               Cancel
             </Button>
-            <Button disabled={!newFolderName || !!checkNameError(newFolderName)} onClick={handleNewFolder}>
+            <Button disabled={!newFolderName || !!checkNameError(newFolderName, existingNames.forFolder)} onClick={handleNewFolder}>
               Create
             </Button>
           </DialogFooter>
