@@ -39,7 +39,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const { theme, setTheme } = useTheme();
   const [isVertical, setIsVertical] = useState<boolean | null>(null);
   const isDark = theme === 'dark';
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic, './src/index.tsx': 'export const Button = () => <button>ok</button>;' } });
+  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? template.basic } });
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   useEffect(() => {
