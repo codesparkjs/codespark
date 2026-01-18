@@ -170,6 +170,62 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     });
   }, [files]);
 
+  useEffect(() => {
+    if (!monacoRef.current) return;
+
+    const monacoInstance = monacoRef.current;
+
+    const provider = monacoInstance.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
+      triggerCharacters: ['/', "'", '"'],
+      provideCompletionItems(model, position) {
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column
+        });
+
+        const importMatch = textUntilPosition.match(/(?:import\s+.*?\s+from\s+|import\s+)(['"])(\.[^'"]*?)$/);
+        if (!importMatch) return { suggestions: [] };
+
+        const typedPath = importMatch[2];
+        const filePaths = Object.keys(files).filter(p => !p.endsWith('/'));
+        const suggestions: monaco.languages.CompletionItem[] = [];
+        const addedPaths = new Set<string>();
+
+        for (const filePath of filePaths) {
+          const normalizedPath = filePath.replace(/^\.\//, '');
+          const suggestionPath = './' + normalizedPath;
+          if (!suggestionPath.startsWith(typedPath)) continue;
+
+          let displayPath = suggestionPath;
+          if (/\.(tsx?|jsx?)$/.test(displayPath)) {
+            displayPath = displayPath.replace(/\.(tsx?|jsx?)$/, '');
+          }
+
+          if (!addedPaths.has(displayPath)) {
+            addedPaths.add(displayPath);
+            suggestions.push({
+              label: displayPath,
+              kind: monacoInstance.languages.CompletionItemKind.File,
+              insertText: displayPath.slice(typedPath.length),
+              range: {
+                startLineNumber: position.lineNumber,
+                startColumn: position.column,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column
+              }
+            });
+          }
+        }
+
+        return { suggestions };
+      }
+    });
+
+    return () => provider.dispose();
+  }, [files]);
+
   return (
     <div {...containerProps} className={cn('h-full divide-y', containerProps?.className)}>
       {useToolbox ? (
