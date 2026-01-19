@@ -3,7 +3,7 @@ import AutoUrlDependency from './auto-url-dependency?raw';
 import Basic from './basic?raw';
 import CustomizeCodespark from './customize-codespark?raw';
 
-export const template: Record<string, string> = {
+export const examples: Record<string, string> = {
   'auto-dependency': AutoDependency,
   'auto-url-dependency': AutoUrlDependency,
   basic: Basic,

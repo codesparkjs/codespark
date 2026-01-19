@@ -69,6 +69,7 @@ export function FileExplorerContextMenu(props: FileExplorerContextMenuProps) {
     }
 
     if (existingNames.has(name)) return 'A file or folder with this name already exists';
+
     return null;
   };
 
