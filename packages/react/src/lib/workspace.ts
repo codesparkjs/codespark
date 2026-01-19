@@ -66,6 +66,7 @@ export class Workspace extends OPFS {
 
       for (const [filePath, code] of sorted) {
         if (filePath.startsWith('../')) {
+          // eslint-disable-next-line no-console
           console.warn(`[Workspace] Ignoring file with invalid path: "${filePath}". Paths starting with "../" are not allowed.`);
           continue;
         }

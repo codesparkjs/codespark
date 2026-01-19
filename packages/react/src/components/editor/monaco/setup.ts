@@ -45,52 +45,46 @@ export const setup = async () => {
   };
 
   loader.config({ monaco });
-  loader
-    .init()
-    .then((Monaco: typeof monaco) => {
-      // Register Shiki languages for syntax highlighting
-      shikiToMonaco(highlighter, Monaco);
+  loader.init().then((Monaco: typeof monaco) => {
+    // Register Shiki languages for syntax highlighting
+    shikiToMonaco(highlighter, Monaco);
 
-      Monaco.typescript.typescriptDefaults.setEagerModelSync(true);
+    Monaco.typescript.typescriptDefaults.setEagerModelSync(true);
 
-      Monaco.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: false,
-        noSyntaxValidation: false
-      });
-
-      Monaco.typescript.typescriptDefaults.setCompilerOptions({
-        strict: true,
-        noImplicitAny: false,
-        noUnusedLocals: false,
-        noUnusedParameters: false,
-        allowUnreachableCode: true,
-        allowUnusedLabels: true,
-        allowImportingTsExtensions: true,
-        target: Monaco.typescript.ScriptTarget.ESNext,
-        allowNonTsExtensions: true,
-        moduleResolution: Monaco.typescript.ModuleResolutionKind.NodeJs,
-        module: Monaco.typescript.ModuleKind.ESNext,
-        noEmit: true,
-        jsx: Monaco.typescript.JsxEmit.Preserve,
-        esModuleInterop: true,
-        typeRoots: ['node_modules/@types']
-      });
-
-      Monaco.languages.registerDocumentFormattingEditProvider('typescript', {
-        async provideDocumentFormattingEdits(model, options) {
-          const text = model.getValue();
-          const formatted = await prettier.format(text, {
-            parser: 'typescript',
-            plugins: [parserTypescript, parserEstree],
-            tabWidth: options.tabSize,
-            useTabs: !options.insertSpaces
-          });
-
-          return [{ range: model.getFullModelRange(), text: formatted }];
-        }
-      });
-    })
-    .catch(() => {
-      //
+    Monaco.typescript.typescriptDefaults.setDiagnosticsOptions({
+      noSemanticValidation: false,
+      noSyntaxValidation: false
     });
+
+    Monaco.typescript.typescriptDefaults.setCompilerOptions({
+      strict: true,
+      noImplicitAny: false,
+      noUnusedLocals: false,
+      noUnusedParameters: false,
+      allowUnreachableCode: true,
+      allowUnusedLabels: true,
+      allowImportingTsExtensions: true,
+      target: Monaco.typescript.ScriptTarget.ESNext,
+      allowNonTsExtensions: true,
+      moduleResolution: Monaco.typescript.ModuleResolutionKind.NodeJs,
+      module: Monaco.typescript.ModuleKind.ESNext,
+      noEmit: true,
+      jsx: Monaco.typescript.JsxEmit.Preserve,
+      esModuleInterop: true
+    });
+
+    Monaco.languages.registerDocumentFormattingEditProvider('typescript', {
+      async provideDocumentFormattingEdits(model, options) {
+        const text = model.getValue();
+        const formatted = await prettier.format(text, {
+          parser: 'typescript',
+          plugins: [parserTypescript, parserEstree],
+          tabWidth: options.tabSize,
+          useTabs: !options.insertSpaces
+        });
+
+        return [{ range: model.getFullModelRange(), text: formatted }];
+      }
+    });
+  });
 };

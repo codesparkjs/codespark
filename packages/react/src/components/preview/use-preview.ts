@@ -10,10 +10,11 @@ export interface UsePreviewOptions {
   onError?: (error: unknown) => void;
   onFetchProgress?: (event: { loading?: string; loaded?: string; remaining: string[] }) => void;
   onRenderComplete?: () => void;
+  onConsole?: (data: { level: string; args: unknown[] }) => void;
 }
 
 export function usePreview(options?: UsePreviewOptions) {
-  const { presets, imports, theme = 'light', onLoad, onError, onFetchProgress, onRenderComplete } = options || {};
+  const { presets, imports, theme = 'light', onLoad, onError, onFetchProgress, onRenderComplete, onConsole } = options || {};
   const [running, setRunning] = useState(true);
   const proxyRef = useRef<PreviewProxy>(void 0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -35,6 +36,7 @@ export function usePreview(options?: UsePreviewOptions) {
         root: iframeRef.current,
         defaultTheme: theme,
         handlers: {
+          on_console: onConsole,
           on_fetch_progress: onFetchProgress,
           on_render_complete: () => {
             onRenderComplete?.();
@@ -57,6 +59,8 @@ export function usePreview(options?: UsePreviewOptions) {
         onLoad?.(proxy);
       });
       proxyRef.current = proxy;
+
+      return () => proxy.destroy();
     }
   }, []);
 

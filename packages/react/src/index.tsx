@@ -29,7 +29,7 @@ export function Codespark(props: CodesparkProps) {
   const { code, name = 'App.tsx', theme, template, showEditor = true, showPreview = true, readonly: readOnly, className, useToolbox, tailwindcss, defaultExpanded = false } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: { [name]: code }, template });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
-  const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 0);
+  const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
 
   useEffect(() => {
     setRuntimeError(compileError);

@@ -69,11 +69,11 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     useOPFS = false,
     wrapperProps,
     containerProps,
-    onChange
+    onChange,
+    onMount
   } = props;
   const { files, currentFile, internalDeps, externalDeps, imports } = useWorkspace(workspace);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const monacoRef = useRef<typeof monaco | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const [dts, setDts] = useState<Record<string, string>>(() => {
     const internalDts = Object.fromEntries(internalDeps.map(({ alias, dts }) => [alias, dts]));
@@ -143,89 +143,6 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     });
   }, [imports]);
 
-  useEffect(() => {
-    if (!monacoRef.current) return;
-
-    const prefix = `file:///${workspace.id}/`;
-    const filePaths = new Set(Object.keys(files).map(p => p.replace(/^(\.\.?\/)+/, '')));
-    monacoRef.current.editor.getModels().forEach(model => {
-      const uriStr = model.uri.toString();
-      if (uriStr.startsWith(prefix)) {
-        const modelPath = uriStr.slice(prefix.length);
-        if (!filePaths.has(modelPath)) {
-          model.dispose();
-        }
-      }
-    });
-
-    Object.entries(files).forEach(([filePath, code]) => {
-      const normalizedPath = filePath.replace(/^(\.\.?\/)+/, '');
-      const uri = monacoRef.current!.Uri.parse(`${prefix}${normalizedPath}`);
-
-      if (!monacoRef.current!.editor.getModel(uri)) {
-        const ext = filePath.split('.').pop();
-        const lang = ['ts', 'tsx'].includes(ext!) ? 'typescript' : ext === 'css' ? 'css' : ext === 'json' ? 'json' : 'javascript';
-        monacoRef.current!.editor.createModel(code, lang, uri);
-      }
-    });
-  }, [files]);
-
-  useEffect(() => {
-    if (!monacoRef.current) return;
-
-    const monacoInstance = monacoRef.current;
-
-    const provider = monacoInstance.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
-      triggerCharacters: ['/', "'", '"'],
-      provideCompletionItems(model, position) {
-        const textUntilPosition = model.getValueInRange({
-          startLineNumber: position.lineNumber,
-          startColumn: 1,
-          endLineNumber: position.lineNumber,
-          endColumn: position.column
-        });
-
-        const importMatch = textUntilPosition.match(/(?:import\s+.*?\s+from\s+|import\s+)(['"])(\.[^'"]*?)$/);
-        if (!importMatch) return { suggestions: [] };
-
-        const typedPath = importMatch[2];
-        const filePaths = Object.keys(files).filter(p => !p.endsWith('/'));
-        const suggestions: monaco.languages.CompletionItem[] = [];
-        const addedPaths = new Set<string>();
-
-        for (const filePath of filePaths) {
-          const normalizedPath = filePath.replace(/^\.\//, '');
-          const suggestionPath = './' + normalizedPath;
-          if (!suggestionPath.startsWith(typedPath)) continue;
-
-          let displayPath = suggestionPath;
-          if (/\.(tsx?|jsx?)$/.test(displayPath)) {
-            displayPath = displayPath.replace(/\.(tsx?|jsx?)$/, '');
-          }
-
-          if (!addedPaths.has(displayPath)) {
-            addedPaths.add(displayPath);
-            suggestions.push({
-              label: displayPath,
-              kind: monacoInstance.languages.CompletionItemKind.File,
-              insertText: displayPath.slice(typedPath.length),
-              range: {
-                startLineNumber: position.lineNumber,
-                startColumn: position.column,
-                endLineNumber: position.lineNumber,
-                endColumn: position.column
-              }
-            });
-          }
-        }
-
-        return { suggestions };
-      }
-    });
-
-    return () => provider.dispose();
-  }, [files]);
-
   return (
     <div {...containerProps} className={cn('h-full divide-y', containerProps?.className)}>
       {useToolbox ? (
@@ -279,11 +196,13 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
         </div>
       ) : null}
       <Monaco
+        id={workspace.id}
         value={value}
         defaultValue={currentFile.code}
         path={`file:///${workspace.id}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
         theme={AVAILABLE_THEMES[theme] ?? AVAILABLE_THEMES.light}
         dts={dts}
+        files={files}
         className={className}
         width={width}
         height={height}
@@ -298,8 +217,8 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
           workspace.setFile(currentFile.path, value || '');
         }}
         onMount={(editorInstance, monacoInstance) => {
+          onMount?.(editorInstance, monacoInstance);
           editorRef.current = editorInstance;
-          monacoRef.current = monacoInstance;
         }}
       />
     </div>

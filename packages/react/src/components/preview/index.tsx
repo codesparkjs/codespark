@@ -17,6 +17,7 @@ export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<Workspa
   onError?: (error: unknown) => void;
   onLoad?: (iframe: HTMLIFrameElement) => void;
   onRendered?: () => void;
+  onConsole?: (data: { level: string; args: unknown[]; duplicate?: boolean }) => void;
 }
 
 export function CodesparkPreview(props: CodesparkPreviewProps) {
@@ -33,9 +34,10 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     children,
     onError,
     onLoad,
-    onRendered
+    onRendered,
+    onConsole
   } = props;
-  const { entryFile, compiled, imports: workspaceImports } = useWorkspace(workspace);
+  const { fileTree, compiled, imports: workspaceImports } = useWorkspace(workspace);
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCss();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
@@ -51,7 +53,8 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     onLoad: proxy => {
       onLoad?.(proxy.iframe);
     },
-    onRenderComplete: onRendered
+    onRenderComplete: onRendered,
+    onConsole
   });
 
   useEffect(() => {
@@ -76,22 +79,20 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     if (typeof window === 'undefined' || !compiled || !workspace) return;
 
     preview(compiled);
-  }, [entryFile, compiled]);
+  }, [fileTree]);
 
   return (
     <div className={cn('relative flex h-50 items-center justify-center', className)}>
       {running ? (
         <div className="absolute right-2 bottom-2 z-10 h-8 w-8 **:box-border">
-          <div className="absolute right-2 bottom-2 z-10 h-8 w-8 **:box-border">
-            <div className="flex -translate-x-1 translate-y-[9px] scale-[0.13] **:absolute **:h-24 **:w-24">
-              <div className="fill-mode-forwards **:border-foreground **:bg-background transform-[rotateX(-25.5deg)_rotateY(45deg)] animate-[cube-rotate_1s_linear_infinite] transform-3d **:rounded-lg **:border-10">
-                <div className="origin-[50%_50%] transform-[rotateX(90deg)_translateZ(44px)]" />
-                <div className="origin-[50%_50%] transform-[rotateY(90deg)_translateZ(44px)]" />
-                <div className="origin-[50%_50%] transform-[rotateX(-90deg)_translateZ(44px)]" />
-                <div className="origin-[50%_50%] transform-[rotateY(-90deg)_translateZ(44px)]" />
-                <div className="origin-[50%_50%] transform-[rotateY(0deg)_translateZ(44px)]" />
-                <div className="origin-[50%_50%] transform-[rotateY(-180deg)_translateZ(44px)]" />
-              </div>
+          <div className="flex -translate-x-1 translate-y-[9px] scale-[0.13] **:absolute **:h-24 **:w-24">
+            <div className="fill-mode-forwards **:border-foreground **:bg-background transform-[rotateX(-25.5deg)_rotateY(45deg)] animate-[cube-rotate_1s_linear_infinite] transform-3d **:rounded-lg **:border-10">
+              <div className="origin-[50%_50%] transform-[rotateX(90deg)_translateZ(44px)]" />
+              <div className="origin-[50%_50%] transform-[rotateY(90deg)_translateZ(44px)]" />
+              <div className="origin-[50%_50%] transform-[rotateX(-90deg)_translateZ(44px)]" />
+              <div className="origin-[50%_50%] transform-[rotateY(-90deg)_translateZ(44px)]" />
+              <div className="origin-[50%_50%] transform-[rotateY(0deg)_translateZ(44px)]" />
+              <div className="origin-[50%_50%] transform-[rotateY(-180deg)_translateZ(44px)]" />
             </div>
           </div>
         </div>

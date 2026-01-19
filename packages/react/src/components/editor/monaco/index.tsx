@@ -45,13 +45,15 @@ const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions
 };
 
 export interface MonacoProps extends MonacoEditorProps {
+  readonly id?: string;
   dts?: Record<string, string>;
+  files?: Record<string, string>;
 }
 
 const addedLibs = new Set<string>();
 
 export const Monaco = memo(function Monaco(props: MonacoProps) {
-  const { value = '', options = {}, defaultLanguage = 'typescript', path = 'file:///index.tsx', theme, onChange, onMount, width, height, dts, ...rest } = props;
+  const { value = '', options = {}, defaultLanguage = 'typescript', path = 'file:///index.tsx', theme, onChange, onMount, width, height, id, dts, files, ...rest } = props;
   const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(null);
   const [MonacoEditor, setMonacoEditor] = useState<typeof import('@monaco-editor/react').default | null>(null);
@@ -67,15 +69,113 @@ export const Monaco = memo(function Monaco(props: MonacoProps) {
   };
 
   const addExtraLib = (libs: Record<string, string> = {}) => {
+    if (!monacoInstance) return;
+
     Object.entries(libs).forEach(([module, content]) => {
       if (addedLibs.has(module)) return;
 
       if (module.startsWith('http://') || module.startsWith('https://')) {
-        monacoInstance!.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
+        monacoInstance.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
       } else {
-        monacoInstance!.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, `file:///node_modules/@types/${module}/index.d.ts`);
+        monacoInstance.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, `file:///node_modules/${module}/index.d.ts`);
       }
       addedLibs.add(module);
+    });
+  };
+
+  const createModels = (files: Record<string, string> = {}) => {
+    if (!monacoInstance || !id) return;
+
+    const prefix = `file:///${id}/`;
+    const filePaths = new Set(Object.keys(files).map(p => p.replace(/^(\.\.?\/)+/, '')));
+    monacoInstance.editor.getModels().forEach(model => {
+      const uriStr = model.uri.toString();
+      if (uriStr.startsWith(prefix)) {
+        const modelPath = uriStr.slice(prefix.length);
+        if (!filePaths.has(modelPath)) {
+          model.dispose();
+        }
+      }
+    });
+
+    Object.entries(files).forEach(([filePath, code]) => {
+      const normalizedPath = filePath.replace(/^(\.\.?\/)+/, '');
+      const uri = monacoInstance.Uri.parse(`${prefix}${normalizedPath}`);
+
+      if (!monacoInstance!.editor.getModel(uri)) {
+        const ext = filePath.split('.').pop();
+        const lang = ['ts', 'tsx'].includes(ext!) ? 'typescript' : ext === 'css' ? 'css' : ext === 'json' ? 'json' : 'javascript';
+        monacoInstance.editor.createModel(code, lang, uri);
+      }
+    });
+  };
+
+  const addSuggestions = (paths: string[]) => {
+    if (!monacoInstance) return;
+
+    const getRelativePath = (from: string, to: string): string => {
+      const fromParts = from.replace(/^\.\//, '').split('/').slice(0, -1);
+      const toParts = to.replace(/^\.\//, '').split('/');
+
+      let commonLength = 0;
+      while (commonLength < fromParts.length && commonLength < toParts.length - 1 && fromParts[commonLength] === toParts[commonLength]) {
+        commonLength++;
+      }
+
+      const upCount = fromParts.length - commonLength;
+      const relativeParts = upCount > 0 ? Array(upCount).fill('..') : ['.'];
+      return relativeParts.concat(toParts.slice(commonLength)).join('/');
+    };
+
+    return monacoInstance.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
+      triggerCharacters: ['/', "'", '"'],
+      provideCompletionItems(model, position) {
+        const textUntilPosition = model.getValueInRange({
+          startLineNumber: position.lineNumber,
+          startColumn: 1,
+          endLineNumber: position.lineNumber,
+          endColumn: position.column
+        });
+
+        const importMatch = textUntilPosition.match(/(?:import\s+.*?\s+from\s+|import\s+)(['"])(\.[^'"]*?)$/);
+        if (!importMatch) return { suggestions: [] };
+
+        const typedPath = importMatch[2];
+        const filePaths = paths.filter(p => !p.endsWith('/'));
+        const suggestions: monaco.languages.CompletionItem[] = [];
+        const addedPaths = new Set<string>();
+
+        const currentPath = model.uri.path.replace(/^\/[^/]+\//, './');
+
+        for (const filePath of filePaths) {
+          if (filePath === currentPath) continue;
+
+          const relativePath = getRelativePath(currentPath, filePath);
+          if (!relativePath.startsWith(typedPath)) continue;
+
+          let displayPath = relativePath;
+          if (/\.(tsx?|jsx?)$/.test(displayPath)) {
+            displayPath = displayPath.replace(/\.(tsx?|jsx?)$/, '');
+          }
+
+          if (!addedPaths.has(displayPath)) {
+            addedPaths.add(displayPath);
+            suggestions.push({
+              label: displayPath,
+              kind: monacoInstance.languages.CompletionItemKind.File,
+              insertText: displayPath.slice(typedPath.length),
+              range: {
+                startLineNumber: position.lineNumber,
+                startColumn: position.column,
+                endLineNumber: position.lineNumber,
+                endColumn: position.column
+              }
+            });
+          }
+        }
+
+        return { suggestions };
+      }
     });
   };
 
@@ -89,10 +189,15 @@ export const Monaco = memo(function Monaco(props: MonacoProps) {
   }, []);
 
   useEffect(() => {
-    if (!monacoInstance) return;
-
     addExtraLib(dts);
   }, [dts, monacoInstance]);
+
+  useEffect(() => {
+    createModels(files);
+    const provider = addSuggestions(Object.keys(files || {}));
+
+    return () => provider?.dispose();
+  }, [files, monacoInstance]);
 
   if (!MonacoEditor) {
     return (
