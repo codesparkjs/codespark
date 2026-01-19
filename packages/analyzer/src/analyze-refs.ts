@@ -5,6 +5,16 @@ import { buildExternalDeps, buildImportMap, collectIdentifiers, getUsedSources, 
 
 const EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'];
 
+const resolvePath = (from: string, to: string): string => {
+  if (!to.startsWith('.')) return to;
+  const fromDir = from.split('/').slice(0, -1);
+  for (const part of to.split('/')) {
+    if (part === '..') fromDir.pop();
+    else if (part !== '.') fromDir.push(part);
+  }
+  return fromDir.join('/') || '.';
+};
+
 const resolveSource = (source: string, files: Record<string, string>): string | null => {
   if (files[source]) return source;
   for (const ext of EXTENSIONS) {
@@ -35,7 +45,8 @@ const buildInternalDep = (source: string, content: string, files: Record<string,
     const src = imp.source.value;
     if (!usedSources.has(src)) return;
 
-    const resolved = resolveSource(src, files);
+    const normalizedSrc = resolvePath(source, src);
+    const resolved = resolveSource(normalizedSrc, files);
     if (resolved) {
       const child = buildInternalDep(resolved, files[resolved], files, visited, src);
       if (child) deps.push(child);

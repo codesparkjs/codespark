@@ -110,4 +110,16 @@ describe('analyzeReferences', () => {
     expect(deps).toHaveLength(1);
     expect(deps[0].name).toBe('button');
   });
+
+  it('should resolve relative paths in nested deps', () => {
+    const code = "import { a } from './src/components/ui/button';\na";
+    const files = {
+      './src/components/ui/button.tsx': "import { cn } from '../../lib/utils';\nexport const a = cn;",
+      './src/lib/utils.ts': "export const cn = '2'"
+    };
+    const deps = analyzeReferences(code, files);
+    expect(deps).toHaveLength(1);
+    expect((deps[0] as InternalDep).deps).toHaveLength(1);
+    expect((deps[0] as InternalDep).deps[0].name).toBe('utils.ts');
+  });
 });
