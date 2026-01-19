@@ -1,0 +1,21 @@
+{
+  "name": "@codespark/framework",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Framework registration API for codespark ecosystem",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsdown --platform=browser"
+  },
+  "author": "TonyL1u",
+  "license": "MIT",
+  "devDependencies": {
+    "tsdown": "^0.17.3"
+  }
+}

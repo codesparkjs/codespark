@@ -7,6 +7,6 @@
       "_shared/*": ["../_shared/*"]
     }
   },
-  "include": ["src", "tsdown.config.ts"],
+  "include": ["src"],
   "exclude": ["dist", "node_modules"]
 }

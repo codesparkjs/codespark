@@ -1,6 +1,6 @@
 import type { CollectResult, Dep, ExternalDep, InternalDep } from '_shared/types';
 import { analyzeReferences } from '@codespark/analyzer/browser';
-import { ReactCompiler } from '@codespark/compiler';
+import { frameworkRegistry } from '@codespark/framework';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
@@ -147,16 +147,17 @@ export class Workspace extends OPFS {
 
   get imports() {
     if (!this._imports) {
+      const frameworkConfig = frameworkRegistry.get(this.template);
+      const frameworkImports = frameworkConfig?.imports ?? {};
+
       this._imports = {
+        ...frameworkImports,
         ...this.externalDeps.reduce<Record<string, string>>((pre, { name, version, imported }) => {
           return {
             ...pre,
             [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
           };
-        }, {}),
-        react: constructESMUrl({ pkg: 'react', version: '18.2.0' }),
-        'react/jsx-runtime': constructESMUrl({ pkg: 'react/jsx-runtime', version: '18.2.0' }),
-        'react-dom/client': constructESMUrl({ pkg: 'react-dom/client', version: '18.2.0' })
+        }, {})
       };
     }
 
@@ -309,7 +310,7 @@ export class Workspace extends OPFS {
   }
 
   private get compiler() {
-    return new ReactCompiler();
+    return frameworkRegistry.getCompiler(this.template);
   }
 
   private invalidateCache() {

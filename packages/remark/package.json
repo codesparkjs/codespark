@@ -11,7 +11,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "build": "tsdown --platform=browser",
     "test": "vitest run"
   },
   "author": "TonyL1u",

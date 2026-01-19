@@ -1,3 +1,5 @@
+import { react } from '@codespark/compiler';
+import { registerFramework } from '@codespark/framework';
 import { Maximize } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -14,6 +16,8 @@ export { Script, type ScriptProps, Style, type StyleProps } from '@/components/i
 export * from '@/components/preview';
 export { CodesparkProvider, type CodesparkProviderProps, ConfigProvider, type ConfigProviderProps } from '@/context';
 export * from '@/lib/workspace';
+
+registerFramework(react);
 
 export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick<CodesparkProviderProps, 'template'>, Pick<CodesparkEditorProps, 'useToolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
   code: string;
