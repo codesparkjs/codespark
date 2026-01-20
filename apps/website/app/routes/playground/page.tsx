@@ -12,17 +12,18 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/componen
 import { decodeBase64URL, devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 import type { Route } from './+types/page';
-import { ConsolePanel, type LogEntry, type LogLevel } from './console-panel';
-import { FileExplorerContextMenu } from './context-menu';
+import { ConsolePanel, type LogEntry, type LogLevel } from './components/console-panel';
+import { FileExplorerContextMenu } from './components/context-menu';
 import { examples } from './examples';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const boilerplate = url.searchParams.get('boilerplate');
+  const defaultCode = examples.basic;
 
   return {
-    code: code ? await decodeBase64URL(code) : boilerplate ? (examples[boilerplate] ?? '') : null
+    code: (code ? await decodeBase64URL(code) : boilerplate ? (examples[boilerplate] ?? '') : null) ?? defaultCode
   };
 }
 
@@ -45,9 +46,9 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const [runtimeLogs, setRuntimeLogs] = useState<LogEntry[]>([]);
   const logIdRef = useRef(0);
   const consolePanelRef = usePanelRef();
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code ?? examples.basic } });
+  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code } });
   const isDark = theme === 'dark';
-  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
+  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -61,7 +62,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   if (isVertical === null) return <></>;
 
   return (
-    <CodesparkProvider workspace={workspace} template="react" imports={imports} theme={theme as 'light' | 'dark'}>
+    <CodesparkProvider workspace={workspace} imports={imports} theme={theme as 'light' | 'dark'}>
       <ResizablePanelGroup className="h-screen">
         <ResizablePanel collapsible defaultSize="300px" minSize="200px">
           <FileExplorerContextMenu>

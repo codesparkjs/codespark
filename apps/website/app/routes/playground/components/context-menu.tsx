@@ -1,6 +1,5 @@
 import { useWorkspace } from '@codespark/react';
-import type { ReactNode } from 'react';
-import { useMemo, useState } from 'react';
+import { type ReactNode, useMemo, useState } from 'react';
 
 import { Button } from '~/components/ui/button';
 import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuSeparator, ContextMenuTrigger } from '~/components/ui/context-menu';
