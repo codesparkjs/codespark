@@ -72,12 +72,12 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     onChange,
     onMount
   } = props;
-  const { files, currentFile, internalDeps, externalDeps, imports } = useWorkspace(workspace);
+  const { files, currentFile, deps, imports } = useWorkspace(workspace);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const [dts, setDts] = useState<Record<string, string>>(() => {
-    const internalDts = Object.fromEntries(internalDeps.map(({ alias, dts }) => [alias, dts]));
-    const externalDts = Object.fromEntries(externalDeps.map(({ name }) => [name, '']));
+    const internalDts = Object.fromEntries(deps.internal.map(({ alias, dts }) => [alias, dts]));
+    const externalDts = Object.fromEntries(deps.external.map(({ name }) => [name, '']));
 
     return { ...internalDts, ...externalDts };
   });

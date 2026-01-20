@@ -6,12 +6,12 @@
   "exports": {
     ".": {
       "development": "./src/index.tsx",
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./index.css": {
-      "style": "./src/index.css",
       "development": "./src/index.css",
+      "style": "./dist/index.css",
       "import": "./dist/index.css"
     }
   },
@@ -21,8 +21,6 @@
   "author": "TonyL1u",
   "license": "MIT",
   "dependencies": {
-    "@codespark/analyzer": "workspace:*",
-    "@codespark/compiler": "workspace:*",
     "@codespark/framework": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-collapsible": "^1.1.12",
@@ -39,7 +37,8 @@
     "react-dom": "^19.2.3",
     "react-is": "^18.2.0",
     "shiki": "^3.20.0",
-    "tailwind-merge": "^3.4.0"
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@types/mdx": "^2.0.13",

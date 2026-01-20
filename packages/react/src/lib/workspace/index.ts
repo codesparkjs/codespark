@@ -1,13 +1,12 @@
 import type { CollectResult, Dep, ExternalDep, InternalDep } from '_shared/types';
-import { analyzeReferences } from '@codespark/analyzer/browser';
-import { frameworkRegistry } from '@codespark/framework';
+import { registry } from '@codespark/framework';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
+import { constructESMUrl, generateId } from '@/lib/utils';
 
 import { OPFS } from './opfs';
-import { constructESMUrl, generateId } from './utils';
 
 export interface FileTreeNode {
   name: string;
@@ -29,13 +28,6 @@ export class Workspace extends OPFS {
 
   private originalFiles: Record<string, string>;
   private listeners = new Set<() => void>();
-  private _deps: Dep[] | null = null;
-  private _internalDeps: InternalDep[] | null = null;
-  private _externalDeps: ExternalDep[] | null = null;
-  private _imports: Record<string, string> | null = null;
-  private _compiled: string | null = null;
-  private _compileError: Error | null = null;
-  private _fileTree: FileTreeNode[] | null = null;
   private _currentFile: FileTreeNode | null = null;
 
   constructor(private config: WorkspaceInit) {
@@ -54,132 +46,6 @@ export class Workspace extends OPFS {
 
   get files() {
     return this.config.files;
-  }
-
-  get fileTree() {
-    if (!this._fileTree) {
-      const root: FileTreeNode[] = [];
-      const entries = Object.entries(this.config.files);
-      const entryItem = entries.find(([path]) => path === this.config.entry);
-      const deps = entries.filter(([path]) => path !== this.config.entry);
-      const sorted = entryItem ? [entryItem, ...deps] : deps;
-
-      for (const [filePath, code] of sorted) {
-        if (filePath.startsWith('../')) {
-          // eslint-disable-next-line no-console
-          console.warn(`[Workspace] Ignoring file with invalid path: "${filePath}". Paths starting with "../" are not allowed.`);
-          continue;
-        }
-        const isEmptyFolder = filePath.endsWith('/');
-        const normalizedPath = isEmptyFolder ? filePath.slice(0, -1) : filePath;
-        const parts = normalizedPath.split('/').filter(p => p !== '.' && p !== '..');
-        let current = root;
-        let currentPath = '';
-
-        for (let i = 0; i < parts.length; i++) {
-          const name = parts[i];
-          const isLast = i === parts.length - 1;
-          currentPath = currentPath ? `${currentPath}/${name}` : name;
-
-          if (isLast && !isEmptyFolder) {
-            current.push({ name, type: 'file', path: filePath, code });
-          } else {
-            let folder = current.find(n => n.type === 'folder' && n.name === name);
-            if (!folder) {
-              folder = { name, type: 'folder', path: currentPath, children: [] };
-              current.push(folder);
-            }
-            current = folder.children!;
-          }
-        }
-      }
-
-      this._fileTree = root;
-    }
-
-    return this._fileTree;
-  }
-
-  get deps() {
-    if (!this._deps) {
-      this._deps = analyzeReferences(this.files[this.entry], this.files);
-    }
-
-    return this._deps;
-  }
-
-  get internalDeps() {
-    if (!this._internalDeps) {
-      const result: InternalDep[] = [];
-      const collect = (deps: Dep[]) => {
-        for (const dep of deps) {
-          if ('code' in dep) {
-            result.push(dep);
-            collect(dep.deps);
-          }
-        }
-      };
-      collect(this.deps);
-      this._internalDeps = result;
-    }
-
-    return this._internalDeps;
-  }
-
-  get externalDeps() {
-    if (!this._externalDeps) {
-      const result: ExternalDep[] = [];
-      const collect = (deps: Dep[]) => {
-        for (const dep of deps) {
-          if ('version' in dep) {
-            result.push(dep);
-          } else {
-            collect(dep.deps);
-          }
-        }
-      };
-      collect(this.deps);
-      this._externalDeps = result;
-    }
-
-    return this._externalDeps;
-  }
-
-  get imports() {
-    if (!this._imports) {
-      const frameworkConfig = frameworkRegistry.get(this.template);
-      const frameworkImports = frameworkConfig?.imports ?? {};
-
-      this._imports = {
-        ...frameworkImports,
-        ...this.externalDeps.reduce<Record<string, string>>((pre, { name, version, imported }) => {
-          return {
-            ...pre,
-            [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
-          };
-        }, {})
-      };
-    }
-
-    return this._imports;
-  }
-
-  get compiled() {
-    if (this._compiled === null) {
-      try {
-        this._compiled = this.compiler.compile(this.files[this.entry], this.deps);
-        this._compileError = null;
-      } catch (error) {
-        this._compiled = '';
-        this._compileError = error as Error;
-      }
-    }
-
-    return this._compiled;
-  }
-
-  get compileError() {
-    return this._compileError;
   }
 
   get currentFile(): FileTreeNode {
@@ -221,7 +87,6 @@ export class Workspace extends OPFS {
     }
     newFiles[path] = content;
     this.config.files = newFiles;
-    this.invalidateCache();
     if (!path.endsWith('/')) {
       this.writeToOPFS(path, content);
     }
@@ -257,7 +122,6 @@ export class Workspace extends OPFS {
       this._currentFile = { ...this._currentFile, path: newCurrentPath, name: newCurrentPath.split('/').pop()! };
     }
 
-    this.invalidateCache();
     this.listeners.forEach(fn => fn());
   }
 
@@ -297,7 +161,6 @@ export class Workspace extends OPFS {
       this._currentFile = { name: this.entry.split('/').pop() || this.entry, type: 'file', path: this.entry, code: this.files[this.entry] };
     }
 
-    this.invalidateCache();
     this.listeners.forEach(fn => fn());
   }
 
@@ -307,20 +170,6 @@ export class Workspace extends OPFS {
 
   async initOPFS() {
     await super.initOPFS(this.files);
-  }
-
-  private get compiler() {
-    return frameworkRegistry.getCompiler(this.template);
-  }
-
-  private invalidateCache() {
-    this._deps = null;
-    this._internalDeps = null;
-    this._externalDeps = null;
-    this._imports = null;
-    this._compiled = null;
-    this._compileError = null;
-    this._fileTree = null;
   }
 }
 
@@ -358,9 +207,7 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
 export function useWorkspace(init?: WorkspaceInit | Workspace) {
   const { workspace: contextWorkspace } = useCodespark();
 
-  if (!init && !contextWorkspace) {
-    throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
-  }
+  if (!init && !contextWorkspace) throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
 
   const workspace = useMemo(() => {
     if (init instanceof Workspace) return init;
@@ -369,62 +216,92 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
 
     return new Workspace(init!);
   }, []);
+  const framework = registry.get(workspace.template);
+  if (!framework) throw new Error(`Framework not found: ${workspace.template}`);
+
   const files = useSyncExternalStore(
     cb => workspace._subscribe(cb),
     () => workspace.files,
     () => workspace.files
-  );
-  const fileTree = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.fileTree,
-    () => workspace.fileTree
-  );
-  const deps = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.deps,
-    () => workspace.deps
-  );
-  const internalDeps = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.internalDeps,
-    () => workspace.internalDeps
-  );
-  const externalDeps = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.externalDeps,
-    () => workspace.externalDeps
-  );
-  const compiled = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.compiled,
-    () => workspace.compiled
-  );
-  const imports = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.imports,
-    () => workspace.imports
-  );
-  const compileError = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
-    () => workspace.compileError,
-    () => workspace.compileError
   );
   const currentFile = useSyncExternalStore(
     cb => workspace._subscribe(cb),
     () => workspace.currentFile,
     () => workspace.currentFile
   );
+  const fileTree = useMemo(() => {
+    const root: FileTreeNode[] = [];
+    const entries = Object.entries(files);
+    const entryItem = entries.find(([path]) => path === workspace.entry);
+    const rest = entries.filter(([path]) => path !== workspace.entry);
+    const sorted = entryItem ? [entryItem, ...rest] : rest;
 
-  return {
-    files,
-    fileTree,
-    deps,
-    internalDeps,
-    externalDeps,
-    compiled,
-    compileError,
-    imports,
-    currentFile,
-    workspace
-  };
+    for (const [filePath, code] of sorted) {
+      if (filePath.startsWith('../')) continue;
+      const isEmptyFolder = filePath.endsWith('/');
+      const normalizedPath = isEmptyFolder ? filePath.slice(0, -1) : filePath;
+      const parts = normalizedPath.split('/').filter(p => p !== '.' && p !== '..');
+      let current = root;
+      let currentPath = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        const name = parts[i];
+        const isLast = i === parts.length - 1;
+        currentPath = currentPath ? `${currentPath}/${name}` : name;
+
+        if (isLast && !isEmptyFolder) {
+          current.push({ name, type: 'file', path: filePath, code });
+        } else {
+          let folder = current.find(n => n.type === 'folder' && n.name === name);
+          if (!folder) {
+            folder = { name, type: 'folder', path: currentPath, children: [] };
+            current.push(folder);
+          }
+          current = folder.children!;
+        }
+      }
+    }
+    return root;
+  }, [files]);
+  const deps = useMemo(() => {
+    const style: InternalDep[] = [];
+    const internal: InternalDep[] = [];
+    const external: ExternalDep[] = [];
+    const collect = (items: Dep[]) => {
+      for (const dep of items) {
+        if ('code' in dep) {
+          if (dep.alias.endsWith('.css')) style.push(dep);
+          internal.push(dep);
+          collect(dep.deps);
+        } else if ('version' in dep) {
+          external.push(dep);
+        }
+      }
+    };
+    collect(framework.analyze(workspace.entry, files));
+
+    return { style, internal, external };
+  }, [files]);
+  const { compiled, compileError } = useMemo(() => {
+    try {
+      framework.revoke();
+      return { compiled: framework.compile(workspace.entry, files), compileError: null };
+    } catch (error) {
+      return { compiled: '', compileError: error as Error };
+    }
+  }, [files]);
+  const imports = useMemo(() => {
+    return {
+      ...deps.external.reduce<Record<string, string>>(
+        (pre, { name, version, imported }) => ({
+          ...pre,
+          [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
+        }),
+        {}
+      ),
+      ...framework.imports
+    };
+  }, [deps.external]);
+
+  return { files, currentFile, fileTree, deps, imports, compiled, compileError, workspace };
 }

@@ -69,6 +69,7 @@
         const scriptEls = [];
         const loadingModules = new Set();
 
+        window.__vite_plugin_react_preamble_installed__ = {};
         window.__modules__ = {};
         window.__export__ = (mod, key, get) => {
           Object.defineProperty(mod, key, {

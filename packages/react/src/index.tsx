@@ -1,5 +1,5 @@
-import { react } from '@codespark/compiler';
 import { registerFramework } from '@codespark/framework';
+import { react } from '@codespark/framework/react';
 import { Maximize } from 'lucide-react';
 import { useEffect, useState } from 'react';
 

@@ -12,14 +12,9 @@ export const setup = async () => {
   if (typeof window === 'undefined' || initialized) return;
   initialized = true;
 
-  const [{ loader }, monaco, { default: editorWorker }, { default: cssWorker }, { default: htmlWorker }, { default: jsonWorker }, { default: tsWorker }, highlighter] = await Promise.all([
+  const [{ loader }, monaco, highlighter] = await Promise.all([
     import('@monaco-editor/react'),
     import('monaco-editor'),
-    import('monaco-editor/esm/vs/editor/editor.worker?worker'),
-    import('monaco-editor/esm/vs/language/css/css.worker?worker'),
-    import('monaco-editor/esm/vs/language/html/html.worker?worker'),
-    import('monaco-editor/esm/vs/language/json/json.worker?worker'),
-    import('monaco-editor/esm/vs/language/typescript/ts.worker?worker'),
     createHighlighter({
       themes: [AVAILABLE_THEMES.light, AVAILABLE_THEMES.dark],
       langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'css', 'html']
@@ -29,18 +24,18 @@ export const setup = async () => {
   window.MonacoEnvironment = {
     getWorker(_, label) {
       if (label === 'json') {
-        return new jsonWorker();
+        return new Worker(new URL('monaco-editor/esm/vs/language/json/json.worker.js', import.meta.url), { type: 'module' });
       }
       if (label === 'css' || label === 'scss' || label === 'less') {
-        return new cssWorker();
+        return new Worker(new URL('monaco-editor/esm/vs/language/css/css.worker.js', import.meta.url), { type: 'module' });
       }
       if (label === 'html' || label === 'handlebars' || label === 'razor') {
-        return new htmlWorker();
+        return new Worker(new URL('monaco-editor/esm/vs/language/html/html.worker.js', import.meta.url), { type: 'module' });
       }
       if (label === 'typescript' || label === 'javascript') {
-        return new tsWorker();
+        return new Worker(new URL('monaco-editor/esm/vs/language/typescript/ts.worker.js', import.meta.url), { type: 'module' });
       }
-      return new editorWorker();
+      return new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url), { type: 'module' });
     }
   };
 
