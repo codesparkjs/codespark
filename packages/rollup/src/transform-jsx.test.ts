@@ -89,6 +89,12 @@ describe('transform JSX', () => {
     };
   };
 
+  it('should return null when no transformation needed', () => {
+    const code = `const x = 1;`;
+    const result = transformJsx(code, '/test.tsx');
+    expect(result).toBeNull();
+  });
+
   it('should transform jsx element', () => {
     const match = getMatcher('wrap-element.tsx');
 
@@ -120,6 +126,15 @@ describe('transform JSX', () => {
     match('example6.tsx', {
       entry: { code: '<MyButton3 />', locals: ['const MyButton = () => <button>Click</button>;', 'const MyButton3 = () => <MyButton />;'], imports: [] },
       files: []
+    });
+  });
+
+  it('should resolve import with explicit extension', () => {
+    const match = getMatcher('wrap-with-extension.tsx');
+
+    match('example1.tsx', {
+      entry: { code: '<Button />', locals: [], imports: [] },
+      files: ['./button.tsx']
     });
   });
 

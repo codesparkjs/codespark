@@ -37,4 +37,14 @@ describe('generateDts', () => {
     const result = generateDts(testFile, ['react', 'lodash']);
     expect(result).toBeDefined();
   });
+
+  it('should include non-excluded libraries', () => {
+    const result = generateDts(testFile, ['lodash', 'dayjs']);
+    expect(result).toBeDefined();
+  });
+
+  it('should exclude react-dom from inlined libraries', () => {
+    const result = generateDts(testFile, ['react-dom']);
+    expect(result).toBeDefined();
+  });
 });

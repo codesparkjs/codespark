@@ -12,8 +12,8 @@ describe('collectDependencies', () => {
     const result = collectDependencies(code, path.join(fixturesDir, 'with-internal.tsx'));
     expect(result.entry.code).toBe(code);
     expect(result.entry.locals).toHaveLength(1);
-    expect(result.files['./button']).toContain('export const Button');
-    expect(result.dts['./button']).toContain('Button');
+    expect(result.files['./cd-button']).toContain('export const Button');
+    expect(result.dts['./cd-button']).toContain('Button');
   });
 
   it('should collect locals from host file', () => {
@@ -65,7 +65,7 @@ describe('collectDependencies', () => {
     const code = '<App />';
     const result = collectDependencies(code, path.join(fixturesDir, 'with-extension.tsx'));
     expect(result.entry.locals).toHaveLength(1);
-    expect(result.files['./button.tsx']).toContain('export const Button');
+    expect(result.files['./cd-button.tsx']).toContain('export const Button');
   });
 
   it('should resolve alias imports', () => {

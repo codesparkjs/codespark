@@ -56,6 +56,9 @@ importers:
 
   apps/website:
     dependencies:
+      '@codespark/framework':
+        specifier: workspace:*
+        version: link:../../packages/framework
       '@codespark/plugin-remark':
         specifier: workspace:*
         version: link:../../packages/remark
@@ -163,29 +166,7 @@ importers:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.2.7(@types/node@22.19.2)(jiti@2.6.1)(lightningcss@1.30.2)(sass-embedded@1.97.1)(sass@1.97.1)(yaml@2.8.2))
 
-  packages/analyzer:
-    dependencies:
-      '@babel/parser':
-        specifier: ^7.28.5
-        version: 7.28.5
-      dts-bundle-generator:
-        specifier: ^9.5.1
-        version: 9.5.1
-    devDependencies:
-      '@babel/types':
-        specifier: ^7.28.5
-        version: 7.28.5
-      '@types/node':
-        specifier: ^22.19.2
-        version: 22.19.2
-      '@types/react':
-        specifier: ^19.2.7
-        version: 19.2.7
-      tsdown:
-        specifier: ^0.17.3
-        version: 0.17.3(synckit@0.11.11)(typescript@5.9.3)
-
-  packages/compiler:
+  packages/framework:
     dependencies:
       '@babel/parser':
         specifier: ^7.28.5
@@ -193,43 +174,37 @@ importers:
       '@babel/standalone':
         specifier: ^7.28.5
         version: 7.28.5
-      '@codespark/framework':
-        specifier: workspace:*
-        version: link:../framework
+      '@mdx-js/mdx':
+        specifier: ^3.1.1
+        version: 3.1.1
+      dompurify:
+        specifier: ^3.3.1
+        version: 3.3.1
       magic-string:
         specifier: ^0.30.21
         version: 0.30.21
-      tailwindcss:
-        specifier: ^4.1.18
-        version: 4.1.18
+      marked:
+        specifier: ^17.0.1
+        version: 17.0.1
     devDependencies:
+      '@babel/types':
+        specifier: ^7.28.5
+        version: 7.28.5
       '@types/babel__standalone':
         specifier: ^7.1.9
         version: 7.1.9
+      '@types/dompurify':
+        specifier: ^3.2.0
+        version: 3.2.0
       '@types/node':
         specifier: ^22.19.2
         version: 22.19.2
-      rollup-plugin-import-raw:
-        specifier: ^1.0.2
-        version: 1.0.2(rollup@4.54.0)
-      tsdown:
-        specifier: ^0.17.3
-        version: 0.17.3(synckit@0.11.11)(typescript@5.9.3)
-
-  packages/framework:
-    devDependencies:
       tsdown:
         specifier: ^0.17.3
         version: 0.17.3(synckit@0.11.11)(typescript@5.9.3)
 
   packages/react:
     dependencies:
-      '@codespark/analyzer':
-        specifier: workspace:*
-        version: link:../analyzer
-      '@codespark/compiler':
-        specifier: workspace:*
-        version: link:../compiler
       '@codespark/framework':
         specifier: workspace:*
         version: link:../framework
@@ -281,6 +256,9 @@ importers:
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
+      tailwindcss:
+        specifier: ^4.1.18
+        version: 4.1.18
     devDependencies:
       '@types/mdx':
         specifier: ^2.0.13
@@ -349,9 +327,9 @@ importers:
       '@babel/types':
         specifier: ^7.28.5
         version: 7.28.5
-      '@codespark/analyzer':
-        specifier: workspace:*
-        version: link:../analyzer
+      dts-bundle-generator:
+        specifier: ^9.5.1
+        version: 9.5.1
       rollup:
         specifier: ^4.54.0
         version: 4.54.0
@@ -2478,6 +2456,10 @@ packages:
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
 
+  '@types/dompurify@3.2.0':
+    resolution: {integrity: sha512-Fgg31wv9QbLDA0SpTOXO3MaxySc4DKGLi8sna4/Utjo4r3ZRPdCt4UQee8BWr+Q5z21yifghREPJGYaEOEIACg==}
+    deprecated: This is a stub types definition. dompurify provides its own type definitions, so you do not need this installed.
+
   '@types/estree-jsx@1.0.5':
     resolution: {integrity: sha512-52CcUVNFyfb1A2ALocQw/Dd1BQFNmSdkuC3BkZ6iqhdMfQz7JWOFRuJFloOzjk+6WijU56m9oKXFAXc7o3Towg==}
 
@@ -3403,6 +3385,9 @@ packages:
 
   dompurify@3.2.7:
     resolution: {integrity: sha512-WhL/YuveyGXJaerVlMYGWhvQswa7myDG17P7Vu65EWC05o8vfeNbvNf4d/BOvH99+ZW+LlQsc1GDKMa1vNK6dw==}
+
+  dompurify@3.3.1:
+    resolution: {integrity: sha512-qkdCKzLNtrgPFP1Vo+98FRzJnBRGe4ffyCea9IwHB1fyxPOeNTHpLKYGd4Uk9xvNoH0ZoOjwZxNptyMwqrId1Q==}
 
   domutils@3.2.2:
     resolution: {integrity: sha512-6kZKyUajlDuqlHKVX1w7gyslj9MPIXzIFiz/rGu35uC1wMi+kMhQwGhl4lt9unC9Vb9INnY9Z3/ZA3+FhASLaw==}
@@ -4745,6 +4730,11 @@ packages:
   marked@14.0.0:
     resolution: {integrity: sha512-uIj4+faQ+MgHgwUW1l2PsPglZLOLOT1uErt06dAPtx2kjteLAkbsd/0FiYg/MGS+i7ZKLb7w2WClxHkzOOuryQ==}
     engines: {node: '>= 18'}
+    hasBin: true
+
+  marked@17.0.1:
+    resolution: {integrity: sha512-boeBdiS0ghpWcSwoNm/jJBwdpFaMnZWRzjA6SkUMYb40SVaN1x7mmfGKp0jvexGcx+7y2La5zRZsYFZI6Qpypg==}
+    engines: {node: '>= 20'}
     hasBin: true
 
   math-intrinsics@1.1.0:
@@ -8967,6 +8957,10 @@ snapshots:
 
   '@types/deep-eql@4.0.2': {}
 
+  '@types/dompurify@3.2.0':
+    dependencies:
+      dompurify: 3.3.1
+
   '@types/estree-jsx@1.0.5':
     dependencies:
       '@types/estree': 1.0.8
@@ -9969,6 +9963,10 @@ snapshots:
       domelementtype: 2.3.0
 
   dompurify@3.2.7:
+    optionalDependencies:
+      '@types/trusted-types': 2.0.7
+
+  dompurify@3.3.1:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -11518,6 +11516,8 @@ snapshots:
   markdown-table@3.0.4: {}
 
   marked@14.0.0: {}
+
+  marked@17.0.1: {}
 
   math-intrinsics@1.1.0: {}
 

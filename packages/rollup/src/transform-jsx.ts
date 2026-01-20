@@ -5,7 +5,8 @@ import _generate from '@babel/generator';
 import { parse } from '@babel/parser';
 import _traverse from '@babel/traverse';
 import * as t from '@babel/types';
-import { collectDependencies } from '@codespark/analyzer';
+
+import { collectDependencies } from './collect-deps';
 
 // @ts-expect-error @babel/traverse cjs error
 const traverse = (_traverse.default ?? _traverse) as typeof _traverse;

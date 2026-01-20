@@ -2,14 +2,66 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type { CollectResult } from '_shared/types';
-import type { ImportDeclaration } from '@babel/types';
+import { parse } from '@babel/parser';
+import type { ImportDeclaration, Statement } from '@babel/types';
 
 import { generateDts } from './generate-dts';
-import { buildImportMap, collectIdentifiers, getDefinedNames, getUsedSources, parseCode } from './shared';
 
 const pkgPath = process.cwd();
 const tsconfigJson = JSON.parse(fs.readFileSync(path.resolve(pkgPath, 'tsconfig.json'), 'utf-8'));
 const aliases = Object.keys(tsconfigJson.compilerOptions?.paths || {}).map(p => p.replace('/*', ''));
+
+const parseCode = (code: string) => parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
+
+const collectIdentifiers = (ast: Statement[]): Set<string> => {
+  const ids = new Set<string>();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const walk = (node: any) => {
+    if (!node || typeof node !== 'object') return;
+    if (node.type === 'Identifier' || node.type === 'JSXIdentifier') ids.add(node.name);
+    for (const k of Object.keys(node)) {
+      if (k === 'loc' || k === 'range') continue;
+      const val = node[k];
+      if (Array.isArray(val)) val.forEach(walk);
+      else if (val && typeof val === 'object') walk(val);
+    }
+  };
+  ast.forEach(walk);
+  return ids;
+};
+
+const buildImportMap = (imports: ImportDeclaration[]): Map<string, string> => {
+  const map = new Map<string, string>();
+  imports.forEach(imp => {
+    if (imp.importKind === 'type') return;
+    const source = imp.source.value;
+    imp.specifiers.forEach(spec => {
+      if (spec.type === 'ImportSpecifier' && spec.importKind === 'type') return;
+      map.set(spec.local.name, source);
+    });
+  });
+  return map;
+};
+
+const getUsedSources = (usedIds: Set<string>, importMap: Map<string, string>): Set<string> => {
+  const sources = new Set<string>();
+  usedIds.forEach(id => {
+    if (importMap.has(id)) sources.add(importMap.get(id)!);
+  });
+  return sources;
+};
+
+const getDefinedNames = (node: Statement): string[] => {
+  if (node.type === 'ExportNamedDeclaration' && node.declaration) {
+    return getDefinedNames(node.declaration as Statement);
+  }
+  if (node.type === 'VariableDeclaration') {
+    return node.declarations.flatMap(d => (d.id.type === 'Identifier' ? [d.id.name] : []));
+  }
+  if (node.type === 'FunctionDeclaration' && node.id) return [node.id.name];
+  if (node.type === 'ClassDeclaration' && node.id) return [node.id.name];
+  return [];
+};
 
 const resolveFile = (source: string, fromFile: string): string | null => {
   const resolved = source.startsWith('.') ? path.resolve(path.dirname(fromFile), source) : resolveAlias(source);

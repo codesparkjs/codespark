@@ -6,16 +6,34 @@
   "exports": {
     ".": {
       "development": "./src/index.ts",
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./*": {
+      "development": "./src/*/index.ts",
+      "import": "./dist/*.js",
+      "types": "./dist/*.d.ts"
     }
   },
   "scripts": {
-    "build": "tsdown --platform=browser"
+    "build": "tsdown",
+    "test": "vitest run"
   },
   "author": "TonyL1u",
   "license": "MIT",
+  "dependencies": {
+    "@babel/parser": "^7.28.5",
+    "@babel/standalone": "^7.28.5",
+    "@mdx-js/mdx": "^3.1.1",
+    "dompurify": "^3.3.1",
+    "magic-string": "^0.30.21",
+    "marked": "^17.0.1"
+  },
   "devDependencies": {
+    "@babel/types": "^7.28.5",
+    "@types/babel__standalone": "^7.1.9",
+    "@types/dompurify": "^3.2.0",
+    "@types/node": "^22.19.2",
     "tsdown": "^0.17.3"
   }
 }

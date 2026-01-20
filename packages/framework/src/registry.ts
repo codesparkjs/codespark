@@ -1,22 +1,24 @@
-import type { FrameworkCompiler, FrameworkConfig } from './types';
+import type { Dep } from '_shared/types';
+
+export abstract class Framework {
+  abstract readonly name: string;
+  abstract readonly imports: Record<string, string>;
+
+  abstract analyze(entry: string, files: Record<string, string>): Dep[];
+  abstract compile(entry: string, files: Record<string, string>): string;
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  revoke(): void {}
+}
 
 class FrameworkRegistry {
-  private frameworks = new Map<string, FrameworkConfig>();
+  private frameworks = new Map<string, Framework>();
 
-  register(config: FrameworkConfig): void {
-    this.frameworks.set(config.name, config);
+  register(framework: Framework): void {
+    this.frameworks.set(framework.name, framework);
   }
 
-  get(name: string): FrameworkConfig | undefined {
+  get(name: string): Framework | undefined {
     return this.frameworks.get(name);
-  }
-
-  getCompiler(name: string): FrameworkCompiler {
-    const config = this.frameworks.get(name);
-    if (!config) {
-      throw new Error(`Framework "${name}" not registered`);
-    }
-    return typeof config.compiler === 'function' ? config.compiler() : config.compiler;
   }
 
   list(): string[] {
@@ -24,8 +26,8 @@ class FrameworkRegistry {
   }
 }
 
-export const frameworkRegistry = new FrameworkRegistry();
+export const registry = new FrameworkRegistry();
 
-export function registerFramework(config: FrameworkConfig): void {
-  frameworkRegistry.register(config);
+export function registerFramework(framework: Framework): void {
+  registry.register(framework);
 }

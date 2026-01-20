@@ -1,2 +1,1 @@
-export * from './registry';
-export * from './types';
+export { Framework, registerFramework, registry } from './registry';
