@@ -37,7 +37,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     onRendered,
     onConsole
   } = props;
-  const { fileTree, compiled, imports: workspaceImports, deps } = useWorkspace(workspace);
+  const { compiled, imports: workspaceImports, deps } = useWorkspace(workspace);
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCss();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
@@ -79,7 +79,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     if (typeof window === 'undefined' || !compiled || !workspace) return;
 
     preview(compiled);
-  }, [fileTree]);
+  }, [compiled]);
 
   return (
     <div className={cn('relative flex h-50 items-center justify-center', className)}>

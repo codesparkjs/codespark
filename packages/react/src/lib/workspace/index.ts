@@ -48,10 +48,11 @@ export class Workspace extends OPFS {
     return this.config.files;
   }
 
-  get currentFile(): FileTreeNode {
+  get currentFile() {
     if (!this._currentFile) {
       this._currentFile = { name: this.entry.split('/').pop() || this.entry, type: 'file', path: this.entry, code: this.files[this.entry] };
     }
+
     return this._currentFile;
   }
 
