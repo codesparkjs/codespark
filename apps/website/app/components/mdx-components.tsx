@@ -17,7 +17,7 @@ export const mdxComponents = {
 const code = \`${code}\`;
 
 export default function App() {
-  return <Codespark code={code} theme="${theme}" />;
+  return <Codespark code={code} tailwindcss={${tailwindcss}} theme="${theme}" />;
 }`;
 
     return (

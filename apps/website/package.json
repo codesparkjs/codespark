@@ -9,6 +9,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@codespark/framework": "workspace:*",
     "@codespark/plugin-remark": "workspace:*",
     "@codespark/react": "workspace:*",
     "@radix-ui/react-context-menu": "^2.2.16",
