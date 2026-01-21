@@ -26,8 +26,8 @@ export class Framework extends Base {
 
     if (deps.length > 0) this.transformDepsToBlob(deps);
     const sourceWithBlobs = this.transformCodeWithBlobUrls(files[entry]);
-    const s = new MagicString(sourceWithBlobs);
-    const ast = parse(sourceWithBlobs, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
+    const builder = this.createBuilder(sourceWithBlobs);
+    const ast = parse(builder.toString(), { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
     let name;
     for (const node of ast) {
@@ -44,7 +44,7 @@ export class Framework extends Base {
               throw new Error('Export an async function');
             }
             name = 'App';
-            s.update(declaration.start!, declaration.body.start! - 1, 'function App() ');
+            builder.update(declaration.start!, declaration.body.start! - 1, 'function App() ');
             break;
           case 'FunctionDeclaration':
             if (declaration.async) {
@@ -54,7 +54,7 @@ export class Framework extends Base {
               name = declaration.id.name;
             } else {
               name = 'App';
-              s.update(declaration.start!, declaration.body.start! - 1, 'function App() ');
+              builder.update(declaration.start!, declaration.body.start! - 1, 'function App() ');
             }
             break;
           default:
@@ -63,18 +63,12 @@ export class Framework extends Base {
       }
     }
 
-    s.append(
-      `
-      import('react-dom/client').then(({ createRoot }) => {
-        window.__root__ = window.__root__ || createRoot(document.getElementById('root'));
-        window.__root__.render(${name ? `<${name} />` : 'null'});
-      }).then(() => {
-        window.__render_complete__?.();
-      }).finally(() => {
-        window.__next__?.();
-      })`
+    builder.async(
+      `const { createRoot } = await import('react-dom/client');
+      window.__root__ = window.__root__ || createRoot(${builder.root});
+      window.__root__.render(${name ? `<${name} />` : 'null'});`
     );
-    const { code } = transform(s.toString(), {
+    const { code } = transform(builder.toString(), {
       filename: `${name}.ts`,
       presets: [
         [react, { runtime: 'automatic' }],

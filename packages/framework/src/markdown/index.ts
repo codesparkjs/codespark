@@ -14,11 +14,7 @@ export class Framework extends Base {
     const content = files[entry] ?? '';
     const html = DOMPurify.sanitize(marked.parse(content, { async: false }));
 
-    return `
-    document.getElementById('root').innerHTML = ${JSON.stringify(html)};
-    window.__render_complete__?.();
-    window.__next__?.();
-    `;
+    return this.createBuilder().setHTML(JSON.stringify(html)).done();
   }
 }
 
