@@ -1,5 +1,3 @@
-'use client';
-
 import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { ChevronsUpDown, Moon, Sun, Trash2 } from 'lucide-react';
