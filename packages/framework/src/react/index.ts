@@ -63,11 +63,11 @@ export class Framework extends Base {
       }
     }
 
-    builder.async(
-      `const { createRoot } = await import('react-dom/client');
+    builder.async(`
+      const { createRoot } = await import('react-dom/client');
       window.__root__ = window.__root__ || createRoot(${builder.root});
-      window.__root__.render(${name ? `<${name} />` : 'null'});`
-    );
+      window.__root__.render(${name ? `<${name} />` : 'null'});
+    `);
     const { code } = transform(builder.toString(), {
       filename: `${name}.ts`,
       presets: [

@@ -42,7 +42,7 @@ class RuntimeBuilder {
   }
 
   async(code: string) {
-    this.s.append(`(async () => {\ntry {\n${code}\nwindow.__render_complete__?.();\n} finally {\nwindow.__next__?.();\n}\n})();`);
+    this.s.append(`\n;(async () => {\ntry {\n${code}\nwindow.__render_complete__?.();\n} finally {\nwindow.__next__?.();\n}\n})();`);
     return this;
   }
 }

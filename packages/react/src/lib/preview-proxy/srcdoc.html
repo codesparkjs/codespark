@@ -116,7 +116,10 @@
               });
               scriptEl.innerHTML = script;
               document.head.appendChild(scriptEl);
-              scriptEl.onerror = err => send_error(err.message, err.stack);
+              scriptEl.onerror = err => {
+                send_error(err.message, err.stack);
+                window.__next__?.(); // unblock queue on error
+              };
               scriptEls.push(scriptEl);
               await done;
             }
@@ -182,6 +185,7 @@
           } catch (e) {
             parent.postMessage({ action: 'error', value: msg }, '*');
           }
+          window.__next__?.(); // unblock eval queue on error
         };
 
         window.addEventListener('unhandledrejection', event => {

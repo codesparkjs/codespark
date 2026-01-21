@@ -52,10 +52,6 @@ export function usePreview(options?: UsePreviewOptions) {
       });
       iframeRef.current.addEventListener('load', e => {
         readyRef.current.resolve((e.target as HTMLIFrameElement).contentDocument);
-        proxy.handleLinks().catch(error => {
-          // eslint-disable-next-line no-console
-          console.log(error);
-        });
         onLoad?.(proxy);
       });
       proxyRef.current = proxy;
