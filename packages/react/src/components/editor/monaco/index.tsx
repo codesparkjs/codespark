@@ -53,7 +53,7 @@ export interface MonacoProps extends MonacoEditorProps {
 const addedLibs = new Set<string>();
 
 export const Monaco = memo(function Monaco(props: MonacoProps) {
-  const { value = '', options = {}, defaultLanguage = 'typescript', path = 'file:///index.tsx', theme, onChange, onMount, width, height, id, dts, files, ...rest } = props;
+  const { value = '', options = {}, onChange, onMount, width, height, id, dts, files, ...rest } = props;
   const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor>(null);
   const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(null);
   const [MonacoEditor, setMonacoEditor] = useState<typeof import('@monaco-editor/react').default | null>(null);
@@ -211,18 +211,5 @@ export const Monaco = memo(function Monaco(props: MonacoProps) {
     );
   }
 
-  return (
-    <MonacoEditor
-      value={value}
-      options={{ ...MONACO_DEFAULT_OPTIONS, ...options }}
-      defaultLanguage={defaultLanguage}
-      path={path}
-      theme={theme}
-      width={width ?? '100%'}
-      height={height}
-      {...rest}
-      onMount={handleEditorDidMount}
-      onChange={handleEditorContentChange}
-    />
-  );
+  return <MonacoEditor value={value} options={{ ...MONACO_DEFAULT_OPTIONS, ...options }} width={width ?? '100%'} height={height} {...rest} onMount={handleEditorDidMount} onChange={handleEditorContentChange} />;
 });

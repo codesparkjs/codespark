@@ -8,7 +8,7 @@ import { useWorkspace, Workspace, type WorkspaceInit } from '@/lib/workspace';
 import { usePreview } from './use-preview';
 import { useTailwindCss } from './use-tailwindcss';
 
-export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<WorkspaceInit, 'template'> {
+export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<WorkspaceInit, 'framework'> {
   code?: string;
   workspace?: Workspace;
   className?: string;
@@ -22,11 +22,11 @@ export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<Workspa
 
 export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
-  const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, template: contextTemplate } = useCodespark();
+  const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark();
   const {
     code = '',
-    template = contextTemplate,
-    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': code }, template }),
+    framework = contextFramework,
+    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': code }, framework }),
     className,
     tailwindcss = true,
     imports,

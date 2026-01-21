@@ -1,5 +1,5 @@
 import type { CollectResult, Dep, ExternalDep, InternalDep } from '_shared/types';
-import { registry } from '@codespark/framework';
+import { type Framework, registry } from '@codespark/framework';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
@@ -18,7 +18,7 @@ export interface FileTreeNode {
 
 export interface WorkspaceInit {
   id?: string;
-  template?: 'react' | 'vue' | 'preact' | 'markdown';
+  framework?: Framework | (new () => Framework) | string;
   entry: string;
   files: Record<string, string>;
 }
@@ -40,12 +40,12 @@ export class Workspace extends OPFS {
     return this.config.entry;
   }
 
-  get template() {
-    return this.config.template ?? 'react';
-  }
-
   get files() {
     return this.config.files;
+  }
+
+  get framework() {
+    return this.config.framework ?? 'react';
   }
 
   get currentFile() {
@@ -174,13 +174,13 @@ export class Workspace extends OPFS {
   }
 }
 
-export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'template'> {
+export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'framework'> {
   name?: string;
   mode?: 'raw' | 'source' | 'packed';
 }
 
 export function createWorkspace(this: { __scanned?: CollectResult } | void, source: ComponentType | ReactElement, config?: CreateWorkspaceConfig) {
-  const { id, template, name = 'App.tsx', mode = 'packed' } = config || {};
+  const { id, framework, name = 'App.tsx', mode = 'packed' } = config || {};
 
   if (!this?.__scanned) {
     return new Workspace({ id, entry: name, files: { [name]: source.toString() } });
@@ -194,7 +194,7 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
   } else if (mode === 'source') {
     packedCode = Object.values(files)[0];
 
-    return new Workspace({ id, template, entry: name, files: { [name]: packedCode } });
+    return new Workspace({ id, framework, entry: name, files: { [name]: packedCode } });
   } else {
     const { code, locals, imports } = entry;
     const depDefs = imports.join('\n');
@@ -202,7 +202,7 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
     packedCode = [depDefs, localDefs, isElement(source) || isFragment(source) ? `export default function App() {\n  return ${code}\n};` : `export default ${code};`].filter(Boolean).join('\n\n');
   }
 
-  return new Workspace({ id, template, entry: name, files: { [name]: packedCode, ...files } });
+  return new Workspace({ id, framework, entry: name, files: { [name]: packedCode, ...files } });
 }
 
 export function useWorkspace(init?: WorkspaceInit | Workspace) {
@@ -217,8 +217,16 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
 
     return new Workspace(init!);
   }, []);
-  const framework = registry.get(workspace.template);
-  if (!framework) throw new Error(`Framework not found: ${workspace.template}`);
+  const framework = useMemo(() => {
+    const fwInput = workspace.framework;
+
+    if (typeof fwInput === 'string') return registry.get(fwInput);
+
+    if (typeof fwInput === 'function') return new fwInput();
+
+    return fwInput;
+  }, []);
+  if (!framework) throw new Error(`Framework not found: ${workspace.framework}`);
 
   const files = useSyncExternalStore(
     cb => workspace._subscribe(cb),

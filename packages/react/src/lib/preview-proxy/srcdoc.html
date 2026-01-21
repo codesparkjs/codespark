@@ -69,6 +69,9 @@
         const scriptEls = [];
         const loadingModules = new Set();
 
+        // Queue for sequential eval execution
+        let evalQueue = Promise.resolve();
+
         window.__vite_plugin_react_preamble_installed__ = {};
         window.__modules__ = {};
         window.__export__ = (mod, key, get) => {
@@ -85,7 +88,46 @@
           parent.postMessage({ action: 'render_complete' }, '*');
         };
 
-        async function handle_message(ev) {
+        async function processEval(ev) {
+          const { cmd_id } = ev.data;
+          const send_message = payload => parent.postMessage({ ...payload }, ev.origin);
+          const send_reply = payload => send_message({ ...payload, cmd_id });
+          const send_ok = () => send_reply({ action: 'cmd_ok' });
+          const send_error = (message, stack) => send_reply({ action: 'cmd_error', message, stack });
+
+          try {
+            if (scriptEls.length) {
+              scriptEls.forEach(el => {
+                document.head.removeChild(el);
+              });
+              scriptEls.length = 0;
+            }
+
+            let { script: scripts } = ev.data.args;
+            if (typeof scripts === 'string') scripts = [scripts];
+
+            for (const script of scripts) {
+              const scriptEl = document.createElement('script');
+              scriptEl.setAttribute('type', 'module');
+              // send ok in the module script to ensure sequential evaluation
+              // of multiple proxy.eval() calls
+              const done = new Promise(resolve => {
+                window.__next__ = resolve;
+              });
+              scriptEl.innerHTML = script;
+              document.head.appendChild(scriptEl);
+              scriptEl.onerror = err => send_error(err.message, err.stack);
+              scriptEls.push(scriptEl);
+              await done;
+            }
+            window.__next__ = undefined;
+            send_ok();
+          } catch (e) {
+            send_error(e.message, e.stack);
+          }
+        }
+
+        function handle_message(ev) {
           const { action, cmd_id } = ev.data;
           const send_message = payload => parent.postMessage({ ...payload }, ev.origin);
           const send_reply = payload => send_message({ ...payload, cmd_id });
@@ -93,36 +135,9 @@
           const send_error = (message, stack) => send_reply({ action: 'cmd_error', message, stack });
 
           if (action === 'eval') {
-            try {
-              if (scriptEls.length) {
-                scriptEls.forEach(el => {
-                  document.head.removeChild(el);
-                });
-                scriptEls.length = 0;
-              }
-
-              let { script: scripts } = ev.data.args;
-              if (typeof scripts === 'string') scripts = [scripts];
-
-              for (const script of scripts) {
-                const scriptEl = document.createElement('script');
-                scriptEl.setAttribute('type', 'module');
-                // send ok in the module script to ensure sequential evaluation
-                // of multiple proxy.eval() calls
-                const done = new Promise(resolve => {
-                  window.__next__ = resolve;
-                });
-                scriptEl.innerHTML = script;
-                document.head.appendChild(scriptEl);
-                scriptEl.onerror = err => send_error(err.message, err.stack);
-                scriptEls.push(scriptEl);
-                await done;
-              }
-              window.__next__ = undefined;
-              send_ok();
-            } catch (e) {
-              send_error(e.message, e.stack);
-            }
+            // Queue eval requests to ensure sequential execution
+            evalQueue = evalQueue.then(() => processEval(ev));
+            return;
           }
 
           if (action === 'catch_clicks') {

@@ -7,7 +7,7 @@ export interface ConfigProviderProps {
   imports?: Record<string, string>;
 }
 
-export interface CodesparkProviderProps extends ConfigProviderProps, Pick<WorkspaceInit, 'template'> {
+export interface CodesparkProviderProps extends ConfigProviderProps, Pick<WorkspaceInit, 'framework'> {
   workspace?: Workspace;
 }
 
@@ -26,7 +26,7 @@ export function ConfigProvider(props: PropsWithChildren<ConfigProviderProps>) {
 }
 
 export function CodesparkProvider(props: PropsWithChildren<CodesparkProviderProps>) {
-  const { children, theme, template = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' } }) } = props;
+  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' } }) } = props;
 
-  return <CodesparkContext.Provider value={{ workspace, template, imports, theme }}>{children}</CodesparkContext.Provider>;
+  return <CodesparkContext.Provider value={{ workspace, framework, imports, theme }}>{children}</CodesparkContext.Provider>;
 }

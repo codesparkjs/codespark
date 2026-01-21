@@ -17,7 +17,8 @@ export const setup = async () => {
     import('monaco-editor'),
     createHighlighter({
       themes: [AVAILABLE_THEMES.light, AVAILABLE_THEMES.dark],
-      langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'css', 'html']
+      langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'css', 'html'],
+      langAlias: { typescript: 'tsx', javascript: 'jsx' }
     })
   ]);
 
@@ -41,7 +42,8 @@ export const setup = async () => {
 
   loader.config({ monaco });
   loader.init().then((Monaco: typeof monaco) => {
-    // Register Shiki languages for syntax highlighting
+    Monaco.languages.register({ id: 'tsx' });
+    Monaco.languages.register({ id: 'jsx' });
     shikiToMonaco(highlighter, Monaco);
 
     Monaco.typescript.typescriptDefaults.setEagerModelSync(true);

@@ -48,9 +48,9 @@ export class PreviewProxy {
     this.handleEvent = e => this.handleReplMessage(e);
     window.addEventListener('message', this.handleEvent, false);
 
-    this.iframe.onload = () => {
+    this.iframe.addEventListener('load', () => {
       URL.revokeObjectURL(this.iframe.src);
-    };
+    });
   }
 
   eval(script: string | string[]) {

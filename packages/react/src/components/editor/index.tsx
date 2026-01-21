@@ -2,7 +2,7 @@
 
 import { Check, Copy, RefreshCw, RemoveFormatting } from 'lucide-react';
 import type * as monaco from 'monaco-editor';
-import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
 import { cn } from '@/lib/utils';
@@ -59,7 +59,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   const { workspace: contextWorkspace, theme: contextTheme } = useCodespark();
   const {
     value = '',
-    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' } }),
+    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': value } }),
     theme = contextTheme ?? globalTheme ?? 'light',
     options,
     width,
@@ -81,6 +81,21 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
 
     return { ...internalDts, ...externalDts };
   });
+  const language = useMemo(() => {
+    const ext = currentFile.name.split('.').pop()?.toLowerCase();
+    const langMap: Record<string, string> = {
+      ts: 'typescript',
+      tsx: 'typescript',
+      js: 'javascript',
+      jsx: 'javascript',
+      css: 'css',
+      json: 'json',
+      html: 'html',
+      md: 'markdown'
+    };
+
+    return ext ? langMap[ext] : undefined;
+  }, [currentFile.name]);
   const toolboxItems: Record<ToolboxItemId, ToolboxItemConfig> = {
     reset: {
       tooltip: 'Reset Document',
@@ -124,16 +139,24 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    const controllers = new Map<string, AbortController>();
     Promise.all(
       Object.entries(imports).map(async ([name, url]) => {
         if (dtsCacheMap.has(name)) return [name, dtsCacheMap.get(name)!];
 
-        const { headers } = await fetch(url, { method: 'HEAD' });
-        const dtsUrl = headers.get('X-TypeScript-Types');
-        if (dtsUrl) {
-          const dtsContent = await fetch(dtsUrl).then(r => r.text());
-          dtsCacheMap.set(name, dtsContent);
-          return [name, dtsContent];
+        const controller = new AbortController();
+        controllers.set(name, controller);
+
+        try {
+          const { headers } = await fetch(url, { method: 'HEAD', signal: controller.signal });
+          const dtsUrl = headers.get('X-TypeScript-Types');
+          if (dtsUrl) {
+            const dtsContent = await fetch(dtsUrl, { signal: controller.signal }).then(r => r.text());
+            dtsCacheMap.set(name, dtsContent);
+            return [name, dtsContent];
+          }
+        } catch {
+          // Ignore abort errors
         }
 
         return [];
@@ -141,6 +164,10 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     ).then(results => {
       setDts(prev => ({ ...prev, ...Object.fromEntries(results) }));
     });
+
+    return () => {
+      controllers.forEach(controller => controller.abort());
+    };
   }, [imports]);
 
   return (
@@ -203,6 +230,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
         theme={AVAILABLE_THEMES[theme] ?? AVAILABLE_THEMES.light}
         dts={dts}
         files={files}
+        language={language}
         className={className}
         width={width}
         height={height}
