@@ -37,14 +37,14 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     onRendered,
     onConsole
   } = props;
-  const { compiled, imports: workspaceImports, deps } = useWorkspace(workspace);
+  const { compiled, deps } = useWorkspace(workspace);
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCss();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
     theme,
     presets: [...injections, ...deps.style.map(({ code }) => `<style>${code}</style>`)],
     imports: {
-      ...workspaceImports,
+      ...deps.imports,
       ...globalImports,
       ...contextImports,
       ...imports

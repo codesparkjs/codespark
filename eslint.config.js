@@ -1,5 +1,5 @@
 import js from '@eslint/js';
-import { defineConfig } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import pluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import pluginReact from 'eslint-plugin-react';
 import pluginSimpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -29,6 +29,7 @@ export default defineConfig([
   tseslint.configs.stylistic,
   pluginReact.configs.flat.recommended,
   pluginPrettierRecommended,
+  globalIgnores(['**/dist', '**/.react-router', '**/.source', '**/build', '**/netlify']),
   {
     plugins: {
       'simple-import-sort': pluginSimpleImportSort

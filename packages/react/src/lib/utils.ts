@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import { useCallback, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -45,4 +46,19 @@ export function generateId(prefix?: string) {
   const random = Math.random().toString(36).slice(2, 10);
 
   return prefix ? `${prefix}-${random}` : random;
+}
+
+export function useCopyToClipboard(timeout = 2000) {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const copyToClipboard = useCallback(
+    async (text: string) => {
+      await navigator.clipboard.writeText(text);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), timeout);
+    },
+    [timeout]
+  );
+
+  return { copyToClipboard, isCopied };
 }

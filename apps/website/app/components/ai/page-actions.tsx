@@ -1,4 +1,3 @@
-'use client';
 import { cva } from 'class-variance-authority';
 import { buttonVariants } from 'fumadocs-ui/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from 'fumadocs-ui/components/ui/popover';

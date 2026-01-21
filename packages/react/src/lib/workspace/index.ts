@@ -1,12 +1,13 @@
 import type { CollectResult } from '_shared/types';
+import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { type Framework, registry } from '@codespark/framework';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
+import { constructESMUrl } from '@/lib/utils';
 import { generateId } from '@/lib/utils';
 
-import { useDerivedState } from './atoms';
 import { OPFS } from './opfs';
 
 export interface FileTreeNode {
@@ -175,40 +176,17 @@ export class Workspace extends OPFS {
   }
 }
 
-export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'framework'> {
-  name?: string;
-  mode?: 'raw' | 'source' | 'packed';
+export interface WorkspaceDerivedState {
+  fileTree: FileTreeNode[];
+  deps: { style: InternalDep[]; internal: InternalDep[]; external: ExternalDep[]; imports: Record<string, string> };
+  compiled: string;
+  compileError: Error | null;
 }
 
-export function createWorkspace(this: { __scanned?: CollectResult } | void, source: ComponentType | ReactElement, config?: CreateWorkspaceConfig) {
-  const { id, framework, name = 'App.tsx', mode = 'packed' } = config || {};
-
-  if (!this?.__scanned) {
-    return new Workspace({ id, entry: name, files: { [name]: source.toString() } });
-  }
-
-  const { entry, files } = this.__scanned;
-
-  let packedCode: string;
-  if (mode === 'raw') {
-    packedCode = entry.code;
-  } else if (mode === 'source') {
-    packedCode = Object.values(files)[0];
-
-    return new Workspace({ id, framework, entry: name, files: { [name]: packedCode } });
-  } else {
-    const { code, locals, imports } = entry;
-    const depDefs = imports.join('\n');
-    const localDefs = locals.join('\n');
-    packedCode = [depDefs, localDefs, isElement(source) || isFragment(source) ? `export default function App() {\n  return ${code}\n};` : `export default ${code};`].filter(Boolean).join('\n\n');
-  }
-
-  return new Workspace({ id, framework, entry: name, files: { [name]: packedCode, ...files } });
-}
+const workspaceCache = new WeakMap<Workspace, { files: Record<string, string>; state: WorkspaceDerivedState }>();
 
 export function useWorkspace(init?: WorkspaceInit | Workspace) {
   const { workspace: contextWorkspace } = useCodespark();
-
   if (!init && !contextWorkspace) throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
 
   const workspace = useMemo(() => {
@@ -239,7 +217,125 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     () => workspace.currentFile,
     () => workspace.currentFile
   );
-  const derivedState = useDerivedState(workspace, framework, files);
+  const derivedState = useMemo(() => {
+    const cached = workspaceCache.get(workspace);
+    if (cached && cached.files === files) {
+      return cached.state;
+    }
+
+    const buildFileTree = () => {
+      const root: FileTreeNode[] = [];
+      const entries = Object.entries(files);
+      const entryItem = entries.find(([path]) => path === workspace.entry);
+      const rest = entries.filter(([path]) => path !== workspace.entry);
+      const sorted = entryItem ? [entryItem, ...rest] : rest;
+
+      for (const [filePath, code] of sorted) {
+        if (filePath.startsWith('../')) continue;
+        const isEmptyFolder = filePath.endsWith('/');
+        const normalizedPath = isEmptyFolder ? filePath.slice(0, -1) : filePath;
+        const parts = normalizedPath.split('/').filter(p => p !== '.' && p !== '..');
+        let current = root;
+        let currentPath = '';
+
+        for (let i = 0; i < parts.length; i++) {
+          const name = parts[i];
+          const isLast = i === parts.length - 1;
+          currentPath = currentPath ? `${currentPath}/${name}` : name;
+
+          if (isLast && !isEmptyFolder) {
+            current.push({ name, type: 'file', path: filePath, code });
+          } else {
+            let folder = current.find(n => n.type === 'folder' && n.name === name);
+            if (!folder) {
+              folder = { name, type: 'folder', path: currentPath, children: [] };
+              current.push(folder);
+            }
+            current = folder.children!;
+          }
+        }
+      }
+
+      return root;
+    };
+    const computeDeps = () => {
+      const style: InternalDep[] = [];
+      const internal: InternalDep[] = [];
+      const external: ExternalDep[] = [];
+      const collect = (items: Dep[]) => {
+        for (const dep of items) {
+          if ('code' in dep) {
+            if (dep.alias.endsWith('.css')) style.push(dep);
+            internal.push(dep);
+            collect(dep.deps);
+          } else if ('version' in dep) {
+            external.push(dep);
+          }
+        }
+      };
+      collect(framework.analyze(workspace.entry, files));
+
+      return {
+        style,
+        internal,
+        external,
+        imports: {
+          ...external.reduce<Record<string, string>>(
+            (pre, { name, version, imported }) => ({
+              ...pre,
+              [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
+            }),
+            {}
+          ),
+          ...framework.imports
+        }
+      };
+    };
+    const getCompileInfo = () => {
+      try {
+        framework.revoke();
+        return { compiled: framework.compile(workspace.entry, files), compileError: null };
+      } catch (error) {
+        return { compiled: '', compileError: error as Error };
+      }
+    };
+
+    const state: WorkspaceDerivedState = { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
+    workspaceCache.set(workspace, { files, state });
+
+    return state;
+  }, [files]);
 
   return { files, currentFile, ...derivedState, workspace };
+}
+
+export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'framework'> {
+  name?: string;
+  mode?: 'raw' | 'source' | 'packed';
+}
+
+export function createWorkspace(this: { __scanned?: CollectResult } | void, source: ComponentType | ReactElement, config?: CreateWorkspaceConfig) {
+  const { id, framework, name = 'App.tsx', mode = 'packed' } = config || {};
+
+  if (!this?.__scanned) {
+    return new Workspace({ id, entry: name, files: { [name]: source.toString() } });
+  }
+
+  const { entry, files } = this.__scanned;
+
+  let packedCode: string;
+  if (mode === 'raw') {
+    packedCode = entry.code;
+  } else if (mode === 'source') {
+    packedCode = Object.values(files)[0];
+
+    return new Workspace({ id, framework, entry: name, files: { [name]: packedCode } });
+  } else {
+    const { code, locals, imports } = entry;
+    const depDefs = imports.join('\n');
+    const localDefs = locals.join('\n');
+    packedCode = [depDefs, localDefs, isElement(source) || isFragment(source) ? `export default function App() {\n  return ${code}\n};` : `export default ${code};`].filter(Boolean).join('\n\n');
+  }
+
+  return new Workspace({ id, framework, entry: name, files: { [name]: packedCode, ...files } });
 }

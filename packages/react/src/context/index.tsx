@@ -26,7 +26,7 @@ export function ConfigProvider(props: PropsWithChildren<ConfigProviderProps>) {
 }
 
 export function CodesparkProvider(props: PropsWithChildren<CodesparkProviderProps>) {
-  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' } }) } = props;
+  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' }, framework }) } = props;
 
   return <CodesparkContext.Provider value={{ workspace, framework, imports, theme }}>{children}</CodesparkContext.Provider>;
 }

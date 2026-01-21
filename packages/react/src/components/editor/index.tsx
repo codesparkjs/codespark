@@ -1,32 +1,16 @@
-'use client';
-
 import { Check, Copy, RefreshCw, RemoveFormatting } from 'lucide-react';
 import type * as monaco from 'monaco-editor';
-import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
 import { cn } from '@/lib/utils';
+import { useCopyToClipboard } from '@/lib/utils';
 import { type FileTreeNode, useWorkspace, Workspace } from '@/lib/workspace';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
 import { getIconForLanguageExtension } from './icons';
 import { AVAILABLE_THEMES, Monaco, type MonacoProps } from './monaco';
-
-const useCopyToClipboard = (timeout = 2000) => {
-  const [isCopied, setIsCopied] = useState(false);
-
-  const copyToClipboard = useCallback(
-    async (text: string) => {
-      await navigator.clipboard.writeText(text);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), timeout);
-    },
-    [timeout]
-  );
-
-  return { copyToClipboard, isCopied };
-};
 
 type ToolboxItemId = 'reset' | 'format' | 'copy';
 
@@ -72,7 +56,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     onChange,
     onMount
   } = props;
-  const { files, currentFile, deps, imports } = useWorkspace(workspace);
+  const { files, currentFile, deps } = useWorkspace(workspace);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const [dts, setDts] = useState<Record<string, string>>(() => {
@@ -141,7 +125,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
 
     const controllers = new Map<string, AbortController>();
     Promise.all(
-      Object.entries(imports).map(async ([name, url]) => {
+      Object.entries(deps.imports).map(async ([name, url]) => {
         if (dtsCacheMap.has(name)) return [name, dtsCacheMap.get(name)!];
 
         const controller = new AbortController();
@@ -168,7 +152,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
     return () => {
       controllers.forEach(controller => controller.abort());
     };
-  }, [imports]);
+  }, [deps.imports]);
 
   return (
     <div {...containerProps} className={cn('h-full divide-y', containerProps?.className)}>
