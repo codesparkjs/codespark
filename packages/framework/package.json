@@ -32,7 +32,6 @@
   "devDependencies": {
     "@babel/types": "^7.28.5",
     "@types/babel__standalone": "^7.1.9",
-    "@types/dompurify": "^3.2.0",
     "@types/node": "^22.19.2",
     "tsdown": "^0.17.3"
   }
