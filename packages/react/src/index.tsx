@@ -8,7 +8,7 @@ import { CodesparkFileExplorer } from '@/components/file-explorer';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
 import { CodesparkProvider, type CodesparkProviderProps, type ConfigProviderProps } from '@/context';
 import { cn } from '@/lib/utils';
-import { useWorkspace } from '@/lib/workspace';
+import { useWorkspace, type Workspace } from '@/lib/workspace';
 
 export * from '@/components/editor';
 export * from '@/components/file-explorer';
@@ -19,7 +19,7 @@ export * from '@/lib/workspace';
 
 registerFramework(react);
 
-export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick<CodesparkProviderProps, 'framework'>, Pick<CodesparkEditorProps, 'useToolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
+export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick<CodesparkProviderProps, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
   code: string;
   name?: string;
   showEditor?: boolean;
@@ -27,10 +27,11 @@ export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick
   readonly?: boolean;
   className?: string;
   defaultExpanded?: boolean;
+  getWorkspace?: (ws: Workspace) => void;
 }
 
 export function Codespark(props: CodesparkProps) {
-  const { code, name = 'App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, useToolbox, tailwindcss, defaultExpanded = false } = props;
+  const { code, name = 'App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, defaultExpanded = false, getWorkspace } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: { [name]: code }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
@@ -38,6 +39,10 @@ export function Codespark(props: CodesparkProps) {
   useEffect(() => {
     setRuntimeError(compileError);
   }, [compileError]);
+
+  useEffect(() => {
+    getWorkspace?.(workspace);
+  }, []);
 
   return (
     <CodesparkProvider workspace={workspace} theme={theme}>
@@ -64,8 +69,8 @@ export function Codespark(props: CodesparkProps) {
             <CodesparkEditor
               containerProps={{ className: 'w-0 flex-1' }}
               options={{ readOnly }}
-              useToolbox={
-                useToolbox ?? [
+              toolbox={
+                toolbox ?? [
                   'reset',
                   'format',
                   {

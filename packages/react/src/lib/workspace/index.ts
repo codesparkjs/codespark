@@ -1,13 +1,14 @@
 import type { CollectResult } from '_shared/types';
 import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { type Framework, registry } from '@codespark/framework';
+import type * as monaco from 'monaco-editor';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
-import { constructESMUrl } from '@/lib/utils';
-import { generateId } from '@/lib/utils';
+import { constructESMUrl, generateId } from '@/lib/utils';
 
+import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR } from './internals';
 import { OPFS } from './opfs';
 
 export interface FileTreeNode {
@@ -27,15 +28,40 @@ export interface WorkspaceInit {
 
 export class Workspace extends OPFS {
   id: string;
+  initialFiles: Record<string, string>;
 
-  private originalFiles: Record<string, string>;
   private listeners = new Set<() => void>();
   private _currentFile: FileTreeNode | null = null;
+  private _editors = new Map<string, monaco.editor.IStandaloneCodeEditor>();
 
   constructor(private config: WorkspaceInit) {
     super();
     this.id = config.id ?? generateId('workspace');
-    this.originalFiles = { ...config.files };
+    this.initialFiles = { ...config.files };
+  }
+
+  private notifyListeners(): void {
+    this.listeners.forEach(fn => fn());
+  }
+
+  private createEntryFileNode(code?: string): FileTreeNode {
+    return {
+      name: this.entry.split('/').pop() || this.entry,
+      type: 'file',
+      path: this.entry,
+      code: code ?? this.files[this.entry]
+    };
+  }
+
+  private normalizePath(path: string): string {
+    return path.replace(/^\.\//, '');
+  }
+
+  private getFile(path: string): FileTreeNode | undefined {
+    const code = this.files[path];
+    if (code === undefined) return undefined;
+
+    return { name: path.split('/').pop() || path, type: 'file', path, code };
   }
 
   get entry() {
@@ -52,30 +78,14 @@ export class Workspace extends OPFS {
 
   get currentFile() {
     if (!this._currentFile) {
-      this._currentFile = { name: this.entry.split('/').pop() || this.entry, type: 'file', path: this.entry, code: this.files[this.entry] };
+      this._currentFile = this.createEntryFileNode();
     }
 
     return this._currentFile;
   }
 
-  _subscribe(listener: () => void) {
-    this.listeners.add(listener);
-
-    return () => this.listeners.delete(listener);
-  }
-
-  setCurrentFile(path: string) {
-    const file = this.getFile(path);
-    if (file) {
-      this._currentFile = file;
-      this.listeners.forEach(fn => fn());
-    }
-  }
-
-  getFile(path: string): FileTreeNode | undefined {
-    const code = this.files[path];
-    if (code === undefined) return undefined;
-    return { name: path.split('/').pop() || path, type: 'file', path, code };
+  get editors(): ReadonlyMap<string, monaco.editor.IStandaloneCodeEditor> {
+    return this._editors;
   }
 
   setFile(path: string, content: string) {
@@ -93,7 +103,24 @@ export class Workspace extends OPFS {
     if (!path.endsWith('/')) {
       this.writeToOPFS(path, content);
     }
-    this.listeners.forEach(fn => fn());
+    if (this._currentFile && this._currentFile.path === path) {
+      this._currentFile = { ...this._currentFile, code: content };
+    }
+    this.notifyListeners();
+  }
+
+  setFiles(files: Record<string, string>) {
+    this.config.files = { ...files };
+    this.initialFiles = { ...files };
+    if (this._currentFile) {
+      const newCode = files[this._currentFile.path];
+      if (newCode !== undefined) {
+        this._currentFile = { ...this._currentFile, code: newCode };
+      } else {
+        this._currentFile = this.createEntryFileNode(files[this.entry]);
+      }
+    }
+    this.notifyListeners();
   }
 
   renameFile(oldPath: string, newName: string) {
@@ -104,7 +131,7 @@ export class Workspace extends OPFS {
     if (isFolder) {
       const newFiles: Record<string, string> = {};
       for (const [path, content] of Object.entries(this.files)) {
-        const normalizedPath = path.replace(/^\.\//, '');
+        const normalizedPath = this.normalizePath(path);
         if (normalizedPath === oldPath || normalizedPath.startsWith(oldPath + '/')) {
           const newFilePath = path.replace(oldPath, newPath);
           newFiles[newFilePath] = content;
@@ -125,7 +152,7 @@ export class Workspace extends OPFS {
       this._currentFile = { ...this._currentFile, path: newCurrentPath, name: newCurrentPath.split('/').pop()! };
     }
 
-    this.listeners.forEach(fn => fn());
+    this.notifyListeners();
   }
 
   deleteFile(path: string) {
@@ -137,7 +164,7 @@ export class Workspace extends OPFS {
     if (isFolder) {
       newFiles = Object.fromEntries(
         Object.entries(this.files).filter(([filePath]) => {
-          const normalized = filePath.replace(/^\.\//, '');
+          const normalized = this.normalizePath(filePath);
           return normalized !== path && normalized !== normalizedPath + '/' && !normalized.startsWith(normalizedPath + '/');
         })
       );
@@ -150,7 +177,7 @@ export class Workspace extends OPFS {
     const parentPath = normalizedPath.split('/').slice(0, -1).join('/');
     if (parentPath) {
       const hasFilesInParent = Object.keys(newFiles).some(f => {
-        const normalized = f.replace(/^\.\//, '').replace(/\/$/, '');
+        const normalized = this.normalizePath(f).replace(/\/$/, '');
         return normalized.startsWith(parentPath + '/') && normalized !== parentPath;
       });
       if (!hasFilesInParent) {
@@ -161,17 +188,35 @@ export class Workspace extends OPFS {
     this.config.files = newFiles;
 
     if (this._currentFile?.path === path || this._currentFile?.path.startsWith(normalizedPath + '/')) {
-      this._currentFile = { name: this.entry.split('/').pop() || this.entry, type: 'file', path: this.entry, code: this.files[this.entry] };
+      this._currentFile = this.createEntryFileNode();
     }
 
-    this.listeners.forEach(fn => fn());
+    this.notifyListeners();
   }
 
-  getOriginalCode(path: string): string | undefined {
-    return this.originalFiles[path];
+  setCurrentFile(path: string) {
+    const file = this.getFile(path);
+    if (file) {
+      this._currentFile = file;
+      this.notifyListeners();
+    }
   }
 
-  async initOPFS() {
+  [INTERNAL_SUBSCRIBE](listener: () => void) {
+    this.listeners.add(listener);
+
+    return () => this.listeners.delete(listener);
+  }
+
+  [INTERNAL_REGISTER_EDITOR](id: string, editor: monaco.editor.IStandaloneCodeEditor): void {
+    this._editors.set(id, editor);
+  }
+
+  [INTERNAL_UNREGISTER_EDITOR](id: string): void {
+    this._editors.delete(id);
+  }
+
+  async [INTERNAL_INIT_OPFS]() {
     await super.initOPFS(this.files);
   }
 }
@@ -208,12 +253,12 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
   if (!framework) throw new Error(`Framework not found: ${workspace.framework}`);
 
   const files = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
+    cb => workspace[INTERNAL_SUBSCRIBE](cb),
     () => workspace.files,
     () => workspace.files
   );
   const currentFile = useSyncExternalStore(
-    cb => workspace._subscribe(cb),
+    cb => workspace[INTERNAL_SUBSCRIBE](cb),
     () => workspace.currentFile,
     () => workspace.currentFile
   );
@@ -302,7 +347,6 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
 
     const state: WorkspaceDerivedState = { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
     workspaceCache.set(workspace, { files, state });
-
     return state;
   }, [files]);
 

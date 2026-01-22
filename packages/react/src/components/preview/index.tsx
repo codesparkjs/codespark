@@ -2,11 +2,10 @@ import { type ReactNode, useEffect } from 'react';
 
 import { useInjections } from '@/components/inject';
 import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
+import { usePreview } from '@/lib/preview-proxy';
+import { useTailwindCSS } from '@/lib/tailwindcss';
 import { cn } from '@/lib/utils';
 import { useWorkspace, Workspace, type WorkspaceInit } from '@/lib/workspace';
-
-import { usePreview } from './use-preview';
-import { useTailwindCss } from './use-tailwindcss';
 
 export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<WorkspaceInit, 'framework'> {
   code?: string;
@@ -38,7 +37,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     onConsole
   } = props;
   const { compiled, deps } = useWorkspace(workspace);
-  const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCss();
+  const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCSS();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
     theme,
