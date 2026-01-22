@@ -1,17 +1,19 @@
 import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
-import { ChevronsUpDown, Moon, Sun, Trash2 } from 'lucide-react';
+import { ChevronsUpDown, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { usePanelRef } from 'react-resizable-panels';
 
 import { Button } from '~/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/components/ui/resizable';
+import { useIsMobile } from '~/hooks/use-mobile';
 import { decodeBase64URL, devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 import type { Route } from './+types/page';
 import { ConsolePanel, type LogEntry, type LogLevel } from './components/console-panel';
 import { FileExplorerContextMenu } from './components/context-menu';
+import { Toolbox } from './components/toolbox';
 import { examples } from './examples';
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -21,7 +23,8 @@ export async function loader({ request }: Route.LoaderArgs) {
   const defaultCode = examples.basic;
 
   return {
-    code: (code ? await decodeBase64URL(code) : boilerplate ? (examples[boilerplate] ?? '') : null) ?? defaultCode
+    code: (code ? await decodeBase64URL(code) : boilerplate ? (examples[boilerplate] ?? '') : null) ?? defaultCode,
+    boilerplate
   };
 }
 
@@ -36,28 +39,24 @@ const CUSTOM_STYLES = `
 }
 `;
 
+const CUSTOM_MOBILE_STYLES = `
+#root {
+  width: 100%;
+}
+`;
+
 export default function Playground({ loaderData }: Route.ComponentProps) {
-  const { code } = loaderData;
-  const { theme, setTheme } = useTheme();
-  const [isVertical, setIsVertical] = useState<boolean | null>(null);
+  const { code, boilerplate } = loaderData;
+  const { theme } = useTheme();
+  const isMobile = useIsMobile();
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [runtimeLogs, setRuntimeLogs] = useState<LogEntry[]>([]);
   const logIdRef = useRef(0);
   const consolePanelRef = usePanelRef();
   const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code } });
-  const isDark = theme === 'dark';
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 768px)');
-    setIsVertical(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsVertical(e.matches);
-    mq.addEventListener('change', handler);
-
-    return () => mq.removeEventListener('change', handler);
-  }, []);
-
-  if (isVertical === null) return <></>;
+  if (isMobile === null) return <></>;
 
   return (
     <CodesparkProvider workspace={workspace} imports={imports} theme={theme as 'light' | 'dark'}>
@@ -69,21 +68,22 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
         </ResizablePanel>
         <ResizableHandle />
         <ResizablePanel minSize="400px">
-          <ResizablePanelGroup orientation={isVertical ? 'vertical' : 'horizontal'}>
+          <ResizablePanelGroup orientation={isMobile ? 'vertical' : 'horizontal'}>
             <ResizablePanel minSize="200px">
               <CodesparkEditor
+                id="main"
                 containerProps={{ className: 'flex flex-col' }}
                 wrapperProps={{ className: 'flex-1' }}
-                useToolbox={[
-                  'reset',
-                  'format',
-                  'copy',
-                  {
-                    tooltip: isDark ? 'dark' : 'light',
-                    icon: isDark ? <Moon className="size-3.5!" /> : <Sun className="size-3.5!" />,
-                    onClick: () => setTheme(isDark ? 'light' : 'dark')
-                  }
-                ]}
+                options={{ fixedOverflowWidgets: true }}
+                toolbox={
+                  <Toolbox
+                    examples={Object.keys(examples)}
+                    defaultExample={boilerplate || 'basic'}
+                    onSelectExample={key => {
+                      workspace.setFiles({ 'App.tsx': examples[key] });
+                    }}
+                  />
+                }
                 onChange={() => setRuntimeError(null)}
               />
             </ResizablePanel>
@@ -107,7 +107,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                         return [...prev, { id: logIdRef.current++, level: level as LogLevel, args, timestamp: Date.now(), count: 1 }];
                       });
                     }}>
-                    <Style>{CUSTOM_STYLES}</Style>
+                    <Style>{isMobile ? CUSTOM_MOBILE_STYLES : CUSTOM_STYLES}</Style>
                     <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
                   </CodesparkPreview>
                   {runtimeError ? (
@@ -127,7 +127,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                       if (!panel) return;
 
                       if (panel.isCollapsed()) {
-                        panel.resize(300);
+                        panel.resize(isMobile ? 100 : 300);
                       } else {
                         panel.collapse();
                       }
@@ -139,7 +139,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                     <Trash2 className="size-3.5" />
                   </Button>
                 </ResizableHandle>
-                <ResizablePanel panelRef={consolePanelRef} collapsible defaultSize="300px" maxSize="500px">
+                <ResizablePanel panelRef={consolePanelRef} collapsible defaultSize={isMobile ? '0px' : '300px'} maxSize={isMobile ? '200px' : '500px'}>
                   <ConsolePanel logs={runtimeLogs} />
                 </ResizablePanel>
               </ResizablePanelGroup>

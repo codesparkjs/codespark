@@ -24,7 +24,7 @@ export default function App() {
       <Codespark
         code={code}
         tailwindcss={tailwindcss}
-        useToolbox={[
+        toolbox={[
           'copy',
           {
             tooltip: 'Toggle Tailwind',
