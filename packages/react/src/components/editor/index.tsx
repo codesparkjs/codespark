@@ -139,7 +139,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
             return [name, dtsContent];
           }
 
-          return [];
+          return [name, ''];
         } catch {
           return [name, ''];
         }
@@ -214,6 +214,8 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
         }}
         onChange={(value, evt) => {
           onChange?.(value, evt);
+
+          if (value === currentFile.code) return;
           workspace.setFile(currentFile.path, value || '');
         }}
         onMount={(editorInstance, monacoInstance) => {

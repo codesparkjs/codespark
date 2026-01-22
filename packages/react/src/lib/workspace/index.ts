@@ -347,6 +347,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
 
     const state: WorkspaceDerivedState = { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
     workspaceCache.set(workspace, { files, state });
+
     return state;
   }, [files]);
 

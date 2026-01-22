@@ -70,7 +70,7 @@ export const Monaco = memo(function Monaco(props: MonacoProps) {
     if (!monacoInstance) return;
 
     Object.entries(libs).forEach(([module, content]) => {
-      if (addedLibs.has(module) || !content) return;
+      if (addedLibs.has(module)) return;
 
       if (module.startsWith('http://') || module.startsWith('https://')) {
         monacoInstance.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
