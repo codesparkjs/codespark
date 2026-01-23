@@ -1,9 +1,9 @@
-import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
+import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, Workspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { ChevronsUpDown, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useRef, useState } from 'react';
-import { usePanelRef } from 'react-resizable-panels';
+import { useMemo, useRef, useState } from 'react';
+import { type PanelImperativeHandle, usePanelRef } from 'react-resizable-panels';
 
 import { Button } from '~/components/ui/button';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '~/components/ui/resizable';
@@ -52,16 +52,27 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [runtimeLogs, setRuntimeLogs] = useState<LogEntry[]>([]);
   const logIdRef = useRef(0);
+  const fileExplorerPanelRef = usePanelRef();
   const consolePanelRef = usePanelRef();
-  const { workspace } = useWorkspace({ entry: 'App.tsx', files: { 'App.tsx': code } });
+  const workspace = useMemo(() => new Workspace({ entry: 'App.tsx', files: { 'App.tsx': code } }), []);
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
 
   if (isMobile === null) return <></>;
 
+  const handleTogglePanel = (panel: PanelImperativeHandle | null) => {
+    if (!panel) return;
+
+    if (panel.isCollapsed()) {
+      panel.resize(isMobile ? 100 : 300);
+    } else {
+      panel.collapse();
+    }
+  };
+
   return (
     <CodesparkProvider workspace={workspace} imports={imports} theme={theme as 'light' | 'dark'}>
       <ResizablePanelGroup className="h-screen">
-        <ResizablePanel collapsible defaultSize="300px" minSize="200px">
+        <ResizablePanel panelRef={fileExplorerPanelRef} collapsible defaultSize="300px" minSize="200px">
           <FileExplorerContextMenu>
             <CodesparkFileExplorer className="h-full w-full" />
           </FileExplorerContextMenu>
@@ -79,6 +90,9 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                   <Toolbox
                     examples={Object.keys(examples)}
                     defaultExample={boilerplate || 'basic'}
+                    toggleFileExplorer={() => {
+                      handleTogglePanel(fileExplorerPanelRef.current);
+                    }}
                     onSelectExample={key => {
                       workspace.setFiles({ 'App.tsx': examples[key] });
                     }}
@@ -123,14 +137,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                     size="sm"
                     className="text-muted-foreground text-xs font-medium uppercase"
                     onClick={() => {
-                      const panel = consolePanelRef.current;
-                      if (!panel) return;
-
-                      if (panel.isCollapsed()) {
-                        panel.resize(isMobile ? 100 : 300);
-                      } else {
-                        panel.collapse();
-                      }
+                      handleTogglePanel(consolePanelRef.current);
                     }}>
                     Console
                     <ChevronsUpDown className="size-3.5" />

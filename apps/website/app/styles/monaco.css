@@ -24,6 +24,80 @@
   }
 }
 
-.monaco-scrollable-element > .scrollbar > .slider {
+.monaco-scrollable-element>.scrollbar>.slider {
   border-radius: 4px;
+}
+
+.monaco-editor .find-widget {
+  right: 12px !important;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  border-top-left-radius: 0px !important;
+  background: var(--background) !important;
+  padding: 6px 8px;
+  border-bottom-left-radius: 0px !important;
+
+  &.visible {
+    top: 12px !important;
+  }
+}
+
+.monaco-editor .find-widget .monaco-inputbox {
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border);
+  background: var(--background) !important;
+}
+
+.monaco-editor .find-widget .monaco-inputbox.synthetic-focus {
+  border-color: var(--ring);
+  outline: none;
+}
+
+.monaco-editor .find-widget .monaco-inputbox>.ibwrapper>.input,
+.monaco-editor .find-widget .monaco-inputbox>.ibwrapper>.mirror {
+  background: transparent !important;
+  color: var(--foreground);
+  padding: 4px 8px;
+}
+
+.monaco-editor .find-widget .monaco-inputbox>.ibwrapper>.input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.monaco-editor .find-widget .button {
+  border-radius: calc(var(--radius) - 4px);
+  background: transparent;
+  border: none;
+  width: 24px;
+  height: 24px;
+}
+
+.monaco-editor .find-widget .button:hover {
+  background: var(--accent);
+}
+
+.monaco-editor .find-widget .button.checked {
+  background: var(--secondary);
+}
+
+.monaco-editor .find-widget .matchesCount {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  padding: 0 6px;
+}
+
+.monaco-editor .find-widget .monaco-findInput,
+.monaco-editor .find-widget .monaco-replaceInput {
+  font-size: 13px;
+}
+
+.monaco-editor .find-widget>.button.codicon-widget-close {
+  width: 22px;
+  height: 22px;
+  top: 5px !important;
+  right: 6px !important;
+}
+
+.context-view.monaco-component {
+  width: max-content !important;
 }

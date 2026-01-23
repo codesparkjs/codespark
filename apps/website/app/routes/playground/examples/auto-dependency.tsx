@@ -1,14 +1,13 @@
-import { useState } from 'react';
+import { Heart, Sparkles, Star } from 'lucide-react';
 
 export default function App() {
-  const [count, setCount] = useState(0);
+  const icons = [Heart, Star, Sparkles];
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6">
-      <p className="text-2xl font-bold">{count}</p>
-      <button onClick={() => setCount(count + 1)} className="rounded-lg bg-black px-4 py-2 text-white">
-        Click me
-      </button>
+    <div className="flex items-center justify-center gap-6 p-6">
+      {icons.map((Icon, i) => (
+        <Icon key={i} className="h-8 w-8" />
+      ))}
     </div>
   );
 }

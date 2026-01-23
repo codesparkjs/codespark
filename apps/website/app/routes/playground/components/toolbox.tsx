@@ -1,5 +1,5 @@
 import { useWorkspace } from '@codespark/react';
-import { Check, Copy, Moon, MoreHorizontalIcon, RefreshCw, RemoveFormatting, Sun } from 'lucide-react';
+import { Check, Copy, Maximize, Moon, MoreHorizontalIcon, RefreshCw, RemoveFormatting, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 
@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
 import { useIsMobile } from '~/hooks/use-mobile';
 
-export function Toolbox(props: { examples: string[]; defaultExample?: string; onSelectExample?: (key: string) => void }) {
-  const { examples, defaultExample, onSelectExample } = props;
+export function Toolbox(props: { examples: string[]; defaultExample?: string; toggleFileExplorer: () => void; onSelectExample?: (key: string) => void }) {
+  const { examples, defaultExample, toggleFileExplorer, onSelectExample } = props;
   const { workspace, currentFile } = useWorkspace();
   const [isCopied, setIsCopied] = useState(false);
   const isMobile = useIsMobile();
@@ -78,6 +78,10 @@ export function Toolbox(props: { examples: string[]; defaultExample?: string; on
               {isCopied ? <Check className="text-foreground size-3.5!" /> : <Copy className="text-foreground size-3.5!" />}
               {isCopied ? 'Copied' : 'Copy to Clipboard'}
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={toggleFileExplorer}>
+              <Maximize className="text-foreground size-3.5!" />
+              Toggle File Explorer
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={toggleTheme}>
               {isDark ? <Moon className="text-foreground size-3.5!" /> : <Sun className="text-foreground size-3.5!" />}
               {isDark ? 'Dark' : 'Light'}
@@ -128,6 +132,14 @@ export function Toolbox(props: { examples: string[]; defaultExample?: string; on
             </Button>
           </TooltipTrigger>
           <TooltipContent>{isCopied ? 'Copied' : 'Copy to Clipboard'}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-sm" onClick={toggleFileExplorer}>
+              <Maximize className="size-3.5!" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Toggle File Explorer</TooltipContent>
         </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
