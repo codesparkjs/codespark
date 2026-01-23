@@ -8,7 +8,7 @@ import { isElement, isFragment } from 'react-is';
 import { useCodespark } from '@/context';
 import { constructESMUrl, generateId } from '@/lib/utils';
 
-import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR } from './internals';
+import { INTERNAL_BOUND, INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
 import { OPFS } from './opfs';
 
 export interface FileTreeNode {
@@ -33,6 +33,7 @@ export class Workspace extends OPFS {
   private listeners = new Set<() => void>();
   private _currentFile: FileTreeNode | null = null;
   private _editors = new Map<string, monaco.editor.IStandaloneCodeEditor>();
+  private _bound = false;
 
   constructor(private config: WorkspaceInit) {
     super();
@@ -219,6 +220,13 @@ export class Workspace extends OPFS {
   async [INTERNAL_INIT_OPFS]() {
     await super.initOPFS(this.files);
   }
+
+  [INTERNAL_BOUND]() {
+    if (this._bound) return true;
+    this._bound = true;
+
+    return false;
+  }
 }
 
 export interface WorkspaceDerivedState {
@@ -228,19 +236,18 @@ export interface WorkspaceDerivedState {
   compileError: Error | null;
 }
 
-const workspaceCache = new WeakMap<Workspace, { files: Record<string, string>; state: WorkspaceDerivedState }>();
-
 export function useWorkspace(init?: WorkspaceInit | Workspace) {
-  const { workspace: contextWorkspace } = useCodespark();
-  if (!init && !contextWorkspace) throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
+  const context = useCodespark();
 
   const workspace = useMemo(() => {
     if (init instanceof Workspace) return init;
 
-    if (contextWorkspace) return contextWorkspace;
+    if (init) return new Workspace(init);
 
-    return new Workspace(init!);
+    return context?.workspace;
   }, []);
+  if (!workspace) throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
+
   const framework = useMemo(() => {
     const fwInput = workspace.framework;
 
@@ -252,20 +259,23 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
   }, []);
   if (!framework) throw new Error(`Framework not found: ${workspace.framework}`);
 
+  const standalone = context ? false : !workspace[INTERNAL_BOUND]();
+  const subscribe = useMemo(() => (standalone ? (cb: () => void) => workspace[INTERNAL_SUBSCRIBE](cb) : NOOP_SUBSCRIBE), []);
   const files = useSyncExternalStore(
-    cb => workspace[INTERNAL_SUBSCRIBE](cb),
+    subscribe,
     () => workspace.files,
     () => workspace.files
   );
   const currentFile = useSyncExternalStore(
-    cb => workspace[INTERNAL_SUBSCRIBE](cb),
+    subscribe,
     () => workspace.currentFile,
     () => workspace.currentFile
   );
-  const derivedState = useMemo(() => {
-    const cached = workspaceCache.get(workspace);
-    if (cached && cached.files === files) {
-      return cached.state;
+  const derivedState = useMemo<WorkspaceDerivedState>(() => {
+    if (context) {
+      const { fileTree, deps, compiled, compileError } = context;
+
+      return { fileTree, deps, compiled, compileError };
     }
 
     const buildFileTree = () => {
@@ -345,13 +355,15 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
       }
     };
 
-    const state: WorkspaceDerivedState = { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
-    workspaceCache.set(workspace, { files, state });
-
-    return state;
+    return { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
   }, [files]);
 
-  return { files, currentFile, ...derivedState, workspace };
+  return {
+    files: context?.files ?? files,
+    currentFile: context?.currentFile ?? currentFile,
+    ...derivedState,
+    workspace
+  };
 }
 
 export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'framework'> {

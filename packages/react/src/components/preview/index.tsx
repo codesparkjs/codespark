@@ -1,13 +1,13 @@
 import { type ReactNode, useEffect } from 'react';
 
 import { useInjections } from '@/components/inject';
-import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
+import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
 import { usePreview } from '@/lib/preview-proxy';
 import { useTailwindCSS } from '@/lib/tailwindcss';
 import { cn } from '@/lib/utils';
 import { useWorkspace, Workspace, type WorkspaceInit } from '@/lib/workspace';
 
-export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<WorkspaceInit, 'framework'> {
+export interface CodesparkPreviewProps extends ConfigContextValue, Pick<WorkspaceInit, 'framework'> {
   code?: string;
   workspace?: Workspace;
   className?: string;
@@ -21,7 +21,7 @@ export interface CodesparkPreviewProps extends ConfigProviderProps, Pick<Workspa
 
 export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
-  const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark();
+  const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark() || {};
   const {
     code = '',
     framework = contextFramework,

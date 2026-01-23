@@ -2,7 +2,7 @@ import { Check, Copy, RefreshCw, RemoveFormatting } from 'lucide-react';
 import type * as monaco from 'monaco-editor';
 import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type ConfigProviderProps, useCodespark, useConfig } from '@/context';
+import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
 import { cn, generateId, useCopyToClipboard } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
 import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
@@ -23,7 +23,7 @@ export interface ToolboxItemConfig {
 
 const dtsCacheMap = new Map<string, string>();
 
-export interface CodesparkEditorProps extends Pick<ConfigProviderProps, 'theme'>, Pick<MonacoProps, 'options' | 'width' | 'height' | 'onChange' | 'onMount' | 'className'> {
+export interface CodesparkEditorProps extends Pick<ConfigContextValue, 'theme'>, Pick<MonacoProps, 'options' | 'width' | 'height' | 'onChange' | 'onMount' | 'className'> {
   id?: string;
   value?: string;
   workspace?: Workspace;
@@ -35,7 +35,7 @@ export interface CodesparkEditorProps extends Pick<ConfigProviderProps, 'theme'>
 
 export function CodesparkEditor(props: CodesparkEditorProps) {
   const { theme: globalTheme } = useConfig();
-  const { workspace: contextWorkspace, theme: contextTheme } = useCodespark();
+  const { workspace: contextWorkspace, theme: contextTheme } = useCodespark() || {};
   const {
     id,
     value = '',

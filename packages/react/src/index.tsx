@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { CodesparkEditor, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkFileExplorer } from '@/components/file-explorer';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
-import { CodesparkProvider, type CodesparkProviderProps, type ConfigProviderProps } from '@/context';
+import { type CodesparkContextValue, CodesparkProvider, type ConfigContextValue } from '@/context';
 import { cn } from '@/lib/utils';
 import { useWorkspace, type Workspace } from '@/lib/workspace';
 
@@ -19,7 +19,7 @@ export * from '@/lib/workspace';
 
 registerFramework(react);
 
-export interface CodesparkProps extends Pick<ConfigProviderProps, 'theme'>, Pick<CodesparkProviderProps, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
+export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
   code: string;
   name?: string;
   showEditor?: boolean;

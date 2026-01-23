@@ -1,32 +1,43 @@
-import { createContext, type PropsWithChildren, useContext } from 'react';
+import { createContext, type ReactNode, useContext } from 'react';
 
-import { Workspace, type WorkspaceInit } from '@/lib/workspace';
+import { type FileTreeNode, useWorkspace, Workspace, type WorkspaceDerivedState, type WorkspaceInit } from '@/lib/workspace';
 
-export interface ConfigProviderProps {
+export interface ConfigContextValue {
   theme?: 'light' | 'dark';
   imports?: Record<string, string>;
 }
 
-export interface CodesparkProviderProps extends ConfigProviderProps, Pick<WorkspaceInit, 'framework'> {
+export interface CodesparkContextValue extends ConfigContextValue, WorkspaceDerivedState, Pick<WorkspaceInit, 'framework'> {
   workspace?: Workspace;
+  files: Record<string, string>;
+  currentFile: FileTreeNode;
 }
 
-const ConfigContext = createContext<ConfigProviderProps>({ theme: 'light' });
+const ConfigContext = createContext<ConfigContextValue>({ theme: 'light' });
 
-const CodesparkContext = createContext({} as CodesparkProviderProps);
+const CodesparkContext = createContext<CodesparkContextValue | null>(null);
 
 export const useConfig = () => useContext(ConfigContext);
 
 export const useCodespark = () => useContext(CodesparkContext);
 
-export function ConfigProvider(props: PropsWithChildren<ConfigProviderProps>) {
+export interface ConfigProviderProps extends ConfigContextValue {
+  children?: ReactNode;
+}
+
+export function ConfigProvider(props: ConfigProviderProps) {
   const { children, ...config } = props;
 
   return <ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>;
 }
 
-export function CodesparkProvider(props: PropsWithChildren<CodesparkProviderProps>) {
-  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' }, framework }) } = props;
+export interface CodesparkProviderProps extends Omit<CodesparkContextValue, 'files' | 'currentFile' | keyof WorkspaceDerivedState> {
+  children?: ReactNode;
+}
 
-  return <CodesparkContext.Provider value={{ workspace, framework, imports, theme }}>{children}</CodesparkContext.Provider>;
+export function CodesparkProvider(props: CodesparkProviderProps) {
+  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' }, framework }) } = props;
+  const store = useWorkspace(workspace);
+
+  return <CodesparkContext.Provider value={{ framework, imports, theme, ...store }}>{children}</CodesparkContext.Provider>;
 }

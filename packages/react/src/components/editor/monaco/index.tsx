@@ -15,6 +15,9 @@ const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions
   automaticLayout: true,
   folding: false,
   scrollBeyondLastLine: false,
+  find: {
+    addExtraSpaceOnTop: false
+  },
   minimap: {
     enabled: false
   },
