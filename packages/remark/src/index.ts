@@ -59,7 +59,7 @@ const remarkCodespark: Plugin<[], Root> = () => {
       if (!['js', 'jsx', 'ts', 'tsx'].includes(lang || '') || !params?.codespark || !parent || index === undefined) return;
 
       try {
-        const baseAttrs = [createJsxAttr('name', params.name || 'App.tsx'), createJsxExpressionAttr('code', value)];
+        const baseAttrs = [createJsxAttr('name', params.name || './App.tsx'), createJsxExpressionAttr('code', value)];
         const extraAttrs = Object.entries(params)
           .filter(([k]) => !['codespark', 'name', 'code'].includes(k))
           .map(([k, v]) => createJsxAttr(k, parseAttrValue(v)));

@@ -36,7 +36,7 @@ export interface CodesparkProviderProps extends Omit<CodesparkContextValue, 'fil
 }
 
 export function CodesparkProvider(props: CodesparkProviderProps) {
-  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: 'App.tsx', files: { 'App.tsx': '' }, framework }) } = props;
+  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: './App.tsx', files: { './App.tsx': '' }, framework }) } = props;
   const store = useWorkspace(workspace);
 
   return <CodesparkContext.Provider value={{ framework, imports, theme, ...store }}>{children}</CodesparkContext.Provider>;

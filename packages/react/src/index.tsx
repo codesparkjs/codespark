@@ -20,7 +20,8 @@ export * from '@/lib/workspace';
 registerFramework(react);
 
 export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
-  code: string;
+  code?: string;
+  files?: Record<string, string>;
   name?: string;
   showEditor?: boolean;
   showPreview?: boolean;
@@ -31,8 +32,8 @@ export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<
 }
 
 export function Codespark(props: CodesparkProps) {
-  const { code, name = 'App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, defaultExpanded = false, getWorkspace } = props;
-  const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: { [name]: code }, framework });
+  const { code, files, name = './App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, defaultExpanded, getWorkspace } = props;
+  const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
 

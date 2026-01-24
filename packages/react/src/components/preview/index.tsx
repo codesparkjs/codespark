@@ -25,7 +25,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   const {
     code = '',
     framework = contextFramework,
-    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': code }, framework }),
+    workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }),
     className,
     tailwindcss = true,
     imports,

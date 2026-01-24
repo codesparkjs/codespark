@@ -39,7 +39,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   const {
     id,
     value = '',
-    workspace = contextWorkspace ?? new Workspace({ entry: 'App.tsx', files: { 'App.tsx': value } }),
+    workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }),
     theme = contextTheme ?? globalTheme ?? 'light',
     options,
     width,

@@ -2,7 +2,7 @@ import type { CollectResult } from '_shared/types';
 import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { type Framework, registry } from '@codespark/framework';
 import type * as monaco from 'monaco-editor';
-import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
+import { type ComponentType, type ReactElement, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
@@ -348,7 +348,6 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     };
     const getCompileInfo = () => {
       try {
-        framework.revoke();
         return { compiled: framework.compile(workspace.entry, files), compileError: null };
       } catch (error) {
         return { compiled: '', compileError: error as Error };
@@ -357,6 +356,10 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
 
     return { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
   }, [files]);
+
+  // useEffect(() => {
+  //   return () => framework.revoke();
+  // }, []);
 
   return {
     files: context?.files ?? files,
@@ -372,7 +375,7 @@ export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'frame
 }
 
 export function createWorkspace(this: { __scanned?: CollectResult } | void, source: ComponentType | ReactElement, config?: CreateWorkspaceConfig) {
-  const { id, framework, name = 'App.tsx', mode = 'packed' } = config || {};
+  const { id, framework, name = './App.tsx', mode = 'packed' } = config || {};
 
   if (!this?.__scanned) {
     return new Workspace({ id, entry: name, files: { [name]: source.toString() } });
