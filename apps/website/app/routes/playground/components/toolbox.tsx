@@ -1,25 +1,45 @@
 import { useWorkspace } from '@codespark/react';
-import { Check, Copy, Maximize, Moon, MoreHorizontalIcon, RefreshCw, RemoveFormatting, Sun } from 'lucide-react';
+import { Check, Code, Copy, Maximize, Moon, MoreHorizontalIcon, RefreshCw, RemoveFormatting, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import { Button } from '~/components/ui/button';
 import { ButtonGroup } from '~/components/ui/button-group';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select';
+import { Toggle } from '~/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
 import { useIsMobile } from '~/hooks/use-mobile';
 
-export function Toolbox(props: { examples: string[]; defaultExample?: string; toggleFileExplorer: () => void; onSelectExample?: (key: string) => void }) {
-  const { examples, defaultExample, toggleFileExplorer, onSelectExample } = props;
+interface ToolboxProps {
+  children?: ReactNode;
+  toggleFileExplorer?: () => void;
+  embedded?: boolean;
+  onToggleEmbedded?: (value: boolean) => void;
+}
+
+function ToolboxButton({ icon, label, onClick }: { icon: ReactNode; label: string; onClick?: () => void }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon-sm" onClick={onClick}>
+          {icon}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+export function Toolbox({ children, toggleFileExplorer, embedded, onToggleEmbedded }: ToolboxProps) {
   const { workspace, currentFile } = useWorkspace();
   const [isCopied, setIsCopied] = useState(false);
   const isMobile = useIsMobile();
   const { theme, setTheme } = useTheme();
   const isDark = theme === 'dark';
 
+  const getMainEditor = () => workspace.editors.get('main');
   const resetDocument = () => {
-    const editor = workspace.editors.get('main');
+    const editor = getMainEditor();
     if (editor) {
       const { path } = currentFile;
       const initialCode = workspace.initialFiles[path] ?? '';
@@ -28,37 +48,20 @@ export function Toolbox(props: { examples: string[]; defaultExample?: string; to
     }
   };
   const formatDocument = () => {
-    const editor = workspace.editors.get('main');
-    editor?.getAction('editor.action.formatDocument')?.run();
+    getMainEditor()?.getAction('editor.action.formatDocument')?.run();
   };
   const copyToClipboard = async () => {
-    const editor = workspace.editors.get('main');
-    const content = editor?.getModel()?.getValue() || '';
+    const content = getMainEditor()?.getModel()?.getValue() || '';
     await navigator.clipboard.writeText(content);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
   };
-  const toggleTheme = () => {
-    setTheme(isDark ? 'light' : 'dark');
-  };
+  const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 
   if (isMobile) {
     return (
       <ButtonGroup>
-        <Select defaultValue={defaultExample} onValueChange={onSelectExample}>
-          <SelectTrigger className="w-50">
-            <SelectValue placeholder="Select an example..." />
-          </SelectTrigger>
-          <SelectContent>
-            {examples.map(key => {
-              return (
-                <SelectItem key={key} value={key}>
-                  {key}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
+        {children}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon-sm" aria-label="More Options">
@@ -82,6 +85,10 @@ export function Toolbox(props: { examples: string[]; defaultExample?: string; to
               <Maximize className="text-foreground size-3.5!" />
               Toggle File Explorer
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToggleEmbedded?.(!embedded)}>
+              <Code className="text-foreground size-3.5!" />
+              {embedded ? 'Disable Embedded' : 'Enable Embedded'}
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={toggleTheme}>
               {isDark ? <Moon className="text-foreground size-3.5!" /> : <Sun className="text-foreground size-3.5!" />}
               {isDark ? 'Dark' : 'Light'}
@@ -94,61 +101,21 @@ export function Toolbox(props: { examples: string[]; defaultExample?: string; to
 
   return (
     <div className="flex items-center gap-x-3">
-      <Select defaultValue={defaultExample} onValueChange={onSelectExample}>
-        <SelectTrigger className="w-50">
-          <SelectValue placeholder="Select an example..." />
-        </SelectTrigger>
-        <SelectContent>
-          {examples.map(key => {
-            return (
-              <SelectItem key={key} value={key}>
-                {key}
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
+      {children}
       <div>
+        <ToolboxButton icon={<RefreshCw className="size-3.5!" />} label="Reset Document" onClick={resetDocument} />
+        <ToolboxButton icon={<RemoveFormatting className="size-3.5!" />} label="Format Document" onClick={formatDocument} />
+        <ToolboxButton icon={isCopied ? <Check className="size-3.5!" /> : <Copy className="size-3.5!" />} label={isCopied ? 'Copied' : 'Copy to Clipboard'} onClick={copyToClipboard} />
+        <ToolboxButton icon={<Maximize className="size-3.5!" />} label="Toggle File Explorer" onClick={toggleFileExplorer} />
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={resetDocument}>
-              <RefreshCw className="size-3.5!" />
-            </Button>
+            <Toggle size="sm" pressed={embedded} onPressedChange={onToggleEmbedded}>
+              <Code />
+            </Toggle>
           </TooltipTrigger>
-          <TooltipContent>Reset Document</TooltipContent>
+          <TooltipContent>{embedded ? 'Disable Embedded' : 'Enable Embedded'}</TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={formatDocument}>
-              <RemoveFormatting className="size-3.5!" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Format Document</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={copyToClipboard}>
-              {isCopied ? <Check className="size-3.5!" /> : <Copy className="size-3.5!" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{isCopied ? 'Copied' : 'Copy to Clipboard'}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={toggleFileExplorer}>
-              <Maximize className="size-3.5!" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Toggle File Explorer</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-sm" onClick={toggleTheme}>
-              {isDark ? <Moon className="size-3.5!" /> : <Sun className="size-3.5!" />}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{isDark ? 'Dark' : 'Light'}</TooltipContent>
-        </Tooltip>
+        <ToolboxButton icon={isDark ? <Moon className="size-3.5!" /> : <Sun className="size-3.5!" />} label={isDark ? 'Dark' : 'Light'} onClick={toggleTheme} />
       </div>
     </div>
   );
