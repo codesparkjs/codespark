@@ -3,25 +3,10 @@ import { join, relative } from 'node:path';
 
 import type { Route } from './+types/index';
 
-async function readDirRecursive(dir: string, baseDir: string, result: Record<string, string>) {
-  const entries = await readdir(dir, { withFileTypes: true });
-
-  await Promise.all(
-    entries.map(async entry => {
-      const fullPath = join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await readDirRecursive(fullPath, baseDir, result);
-      } else {
-        const relativePath = relative(baseDir, fullPath).replace(/\\/g, '/');
-        const content = await readFile(fullPath, 'utf-8');
-        result[`./${relativePath}`] = content;
-      }
-    })
-  );
-}
+type FileMap = Record<string, string>;
 
 interface ExampleMeta {
-  embedded?: boolean;
+  title?: string;
 }
 
 async function getExampleMeta(dir: string): Promise<ExampleMeta> {
@@ -34,7 +19,31 @@ async function getExampleMeta(dir: string): Promise<ExampleMeta> {
   }
 }
 
-export async function loader({ params }: Route.LoaderArgs) {
+async function readDirRecursive(dir: string, baseDir: string): Promise<FileMap> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const results = await Promise.all(
+    entries.map(async entry => {
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        return readDirRecursive(fullPath, baseDir);
+      }
+      const relativePath = relative(baseDir, fullPath).replace(/\\/g, '/');
+      const content = await readFile(fullPath, 'utf-8');
+      return { [`./${relativePath}`]: content };
+    })
+  );
+  return Object.assign({}, ...results);
+}
+
+async function readDirSafe(dir: string): Promise<FileMap | null> {
+  try {
+    return await readDirRecursive(dir, dir);
+  } catch {
+    return null;
+  }
+}
+
+export async function loader({ params }: Route.LoaderArgs): Promise<Response> {
   const examplePath = params['*'];
 
   if (!examplePath) {
@@ -43,23 +52,25 @@ export async function loader({ params }: Route.LoaderArgs) {
 
     const list = await Promise.all(
       dirs.map(async entry => {
-        const meta = await getExampleMeta(join(import.meta.dirname, entry.name));
-
-        return { name: entry.name, ...meta };
+        const exampleDir = join(import.meta.dirname, entry.name);
+        const [meta, raw] = await Promise.all([getExampleMeta(exampleDir), readDirSafe(join(exampleDir, 'raw'))]);
+        return { name: entry.name, raw: raw !== null, ...meta };
       })
     );
 
     return Response.json(list);
   }
 
-  const examplesDir = join(import.meta.dirname, examplePath);
+  const exampleDir = join(import.meta.dirname, examplePath);
+  const [embedded, raw] = await Promise.all([readDirSafe(join(exampleDir, 'embedded')), readDirSafe(join(exampleDir, 'raw'))]);
 
-  try {
-    const result: Record<string, string> = {};
-    await readDirRecursive(examplesDir, examplesDir, result);
-    delete result['./meta.json'];
-    return Response.json(result);
-  } catch {
+  if (!embedded) {
     return Response.json({ error: 'Example not found' }, { status: 404 });
   }
+
+  if (raw) {
+    return Response.json({ embedded, raw });
+  }
+
+  return Response.json({ embedded });
 }
