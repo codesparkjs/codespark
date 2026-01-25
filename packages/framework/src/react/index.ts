@@ -90,6 +90,7 @@ export class Framework extends Base {
   private transformDepsToBlob(deps: Dep[]) {
     for (const dep of deps) {
       if (!('code' in dep)) continue;
+      if (dep.alias?.endsWith('.css')) continue;
 
       if (dep.deps?.length) {
         this.transformDepsToBlob(dep.deps);
@@ -115,19 +116,19 @@ export class Framework extends Base {
   }
 
   private transformCodeWithBlobUrls(code: string) {
-    if (this.blobUrlMap.size === 0) {
-      return code;
-    }
-
     const s = new MagicString(code);
     const ast = parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
     for (const node of ast) {
       if (node.type === 'ImportDeclaration') {
         const importSource = node.source.value;
-        const blobUrl = this.blobUrlMap.get(importSource);
-        if (blobUrl) {
-          s.update(node.source.start! + 1, node.source.end! - 1, blobUrl);
+        if (importSource.endsWith('.css')) {
+          s.remove(node.start!, node.end!);
+        } else {
+          const blobUrl = this.blobUrlMap.get(importSource);
+          if (blobUrl) {
+            s.update(node.source.start! + 1, node.source.end! - 1, blobUrl);
+          }
         }
       }
     }

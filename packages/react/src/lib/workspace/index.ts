@@ -2,7 +2,7 @@ import type { CollectResult } from '_shared/types';
 import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { type Framework, registry } from '@codespark/framework';
 import type * as monaco from 'monaco-editor';
-import { type ComponentType, type ReactElement, useEffect, useMemo, useSyncExternalStore } from 'react';
+import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';

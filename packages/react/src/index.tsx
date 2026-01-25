@@ -19,20 +19,20 @@ export * from '@/lib/workspace';
 
 registerFramework(react);
 
-export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss'> {
+export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
   code?: string;
   files?: Record<string, string>;
   name?: string;
+  className?: string;
   showEditor?: boolean;
   showPreview?: boolean;
   readonly?: boolean;
-  className?: string;
   defaultExpanded?: boolean;
   getWorkspace?: (ws: Workspace) => void;
 }
 
 export function Codespark(props: CodesparkProps) {
-  const { code, files, name = './App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, defaultExpanded, getWorkspace } = props;
+  const { code, files, name = './App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, onConsole, onError, children, defaultExpanded, getWorkspace } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
@@ -52,10 +52,13 @@ export function Codespark(props: CodesparkProps) {
           {showPreview ? (
             <CodesparkPreview
               tailwindcss={tailwindcss}
+              onConsole={onConsole}
               onError={error => {
+                onError?.(error);
                 setRuntimeError(error as Error);
-              }}
-            />
+              }}>
+              {children}
+            </CodesparkPreview>
           ) : null}
           {runtimeError ? (
             <div className="bg-background absolute inset-0 z-20 overflow-auto p-6">

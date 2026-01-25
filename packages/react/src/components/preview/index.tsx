@@ -41,7 +41,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
     theme,
-    presets: [...injections, ...deps.style.map(({ code }) => `<style>${code}</style>`)],
+    presets: [...injections, ...deps.style.map(({ alias, code }) => (alias.endsWith('.tw.css') ? `<style type="text/tailwindcss">${code}</style>` : `<style>${code}</style>`))],
     imports: {
       ...deps.imports,
       ...globalImports,
