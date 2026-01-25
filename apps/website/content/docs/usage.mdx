@@ -3,7 +3,7 @@ title: Usage
 description: Learn how to use the Codespark component in your React application.
 ---
 
-import CustomizeCodespark from '../../app/routes/examples/customize-codespark/App.tsx';
+import CustomizeCodespark from '../../app/routes/examples/customize-codespark/embedded/App.tsx';
 
 ## Basic Usage
 
@@ -14,8 +14,8 @@ import { Codespark } from '@codespark/react';
 
 const code = `export default function App() {
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Hello World</h1>
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
       <p>This is my first Codes Park!</p>
     </div>
   );
@@ -29,8 +29,8 @@ export default function App() {
 ```tsx codespark
 export default function App() {
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Hello World</h1>
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
       <p>This is my first Codes Park!</p>
     </div>
   );
