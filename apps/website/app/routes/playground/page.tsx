@@ -127,7 +127,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                     <SelectTrigger className="w-60">
                       <SelectValue placeholder="Select an example..." />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" sideOffset={6}>
                       {examples.map(({ name, title }) => (
                         <SelectItem key={name} value={name}>
                           {title}
