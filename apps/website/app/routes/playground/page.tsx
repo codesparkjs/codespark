@@ -159,7 +159,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                         });
                       }}>
                       <Style>{isMobile ? CUSTOM_MOBILE_STYLES : CUSTOM_STYLES}</Style>
-                      {embedded ? <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style> : null}
+                      {embedded || !hasRaw ? <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style> : null}
                     </CodesparkPreview>
                     {runtimeError && (
                       <div className="bg-background absolute inset-0 z-20 overflow-auto p-6">

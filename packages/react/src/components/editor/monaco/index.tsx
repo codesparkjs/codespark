@@ -2,11 +2,17 @@ import type { EditorProps as MonacoEditorProps, OnChange, OnMount } from '@monac
 import type * as monaco from 'monaco-editor';
 import { memo, useEffect, useRef, useState } from 'react';
 
+import { EditorEngine } from '@/lib/editor-adapter';
 import { Skeleton } from '@/ui/skeleton';
 
+import { MonacoEditorAdapter } from './adapter';
 import { setup } from './setup';
 
-export * from './themes';
+export * from './theme';
+
+export function createMonacoAdapter(instance: monaco.editor.IStandaloneCodeEditor) {
+  return new MonacoEditorAdapter(EditorEngine.Monaco, instance);
+}
 
 const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   fontSize: 14,

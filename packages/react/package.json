@@ -21,9 +21,12 @@
   "author": "TonyL1u",
   "license": "MIT",
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/view": "^6.39.11",
     "@codespark/framework": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@shikijs/monaco": "^3.20.0",
+    "@uiw/react-codemirror": "^4.25.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.562.0",

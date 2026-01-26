@@ -1,11 +1,11 @@
 import type { CollectResult } from '_shared/types';
 import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { type Framework, registry } from '@codespark/framework';
-import type * as monaco from 'monaco-editor';
 import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
+import type { EditorAdapter } from '@/lib/editor-adapter';
 import { constructESMUrl, generateId } from '@/lib/utils';
 
 import { INTERNAL_BOUND, INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
@@ -32,7 +32,7 @@ export class Workspace extends OPFS {
 
   private listeners = new Set<() => void>();
   private _currentFile: FileTreeNode | null = null;
-  private _editors = new Map<string, monaco.editor.IStandaloneCodeEditor>();
+  private _editors = new Map<string, EditorAdapter>();
   private _bound = false;
 
   constructor(private config: WorkspaceInit) {
@@ -85,7 +85,7 @@ export class Workspace extends OPFS {
     return this._currentFile;
   }
 
-  get editors(): ReadonlyMap<string, monaco.editor.IStandaloneCodeEditor> {
+  get editors(): ReadonlyMap<string, EditorAdapter> {
     return this._editors;
   }
 
@@ -209,7 +209,7 @@ export class Workspace extends OPFS {
     return () => this.listeners.delete(listener);
   }
 
-  [INTERNAL_REGISTER_EDITOR](id: string, editor: monaco.editor.IStandaloneCodeEditor): void {
+  [INTERNAL_REGISTER_EDITOR](id: string, editor: EditorAdapter): void {
     this._editors.set(id, editor);
   }
 

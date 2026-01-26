@@ -1,12 +1,13 @@
 import { registerFramework } from '@codespark/framework';
 import { react } from '@codespark/framework/react';
 import { Maximize } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 
 import { CodesparkEditor, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkFileExplorer } from '@/components/file-explorer';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
 import { type CodesparkContextValue, CodesparkProvider, type ConfigContextValue } from '@/context';
+import type { EditorEngine } from '@/lib/editor-adapter';
 import { cn } from '@/lib/utils';
 import { useWorkspace, type Workspace } from '@/lib/workspace';
 
@@ -15,11 +16,13 @@ export * from '@/components/file-explorer';
 export { Script, type ScriptProps, Style, type StyleProps } from '@/components/inject';
 export * from '@/components/preview';
 export { CodesparkProvider, type CodesparkProviderProps, ConfigProvider, type ConfigProviderProps } from '@/context';
+export * from '@/lib/editor-adapter';
 export * from '@/lib/workspace';
 
 registerFramework(react);
 
-export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
+export interface CodesparkProps<E extends EditorEngine = EditorEngine.Monaco>
+  extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps<E>, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
   code?: string;
   files?: Record<string, string>;
   name?: string;
@@ -31,8 +34,10 @@ export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<
   getWorkspace?: (ws: Workspace) => void;
 }
 
-export function Codespark(props: CodesparkProps) {
-  const { code, files, name = './App.tsx', theme, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, onConsole, onError, children, defaultExpanded, getWorkspace } = props;
+export function Codespark(props: CodesparkProps<EditorEngine.Monaco>): JSX.Element;
+export function Codespark<E extends EditorEngine>(props: CodesparkProps<E> & { editor?: E }): JSX.Element;
+export function Codespark(props: CodesparkProps<EditorEngine> & { editor?: EditorEngine }) {
+  const { code, files, name = './App.tsx', theme, editor, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, onConsole, onError, children, defaultExpanded, getWorkspace } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
@@ -71,6 +76,7 @@ export function Codespark(props: CodesparkProps) {
           <div className="flex h-full w-full divide-x">
             {expanded ? <CodesparkFileExplorer /> : null}
             <CodesparkEditor
+              editor={editor}
               containerProps={{ className: 'w-0 flex-1' }}
               options={{ readOnly }}
               toolbox={

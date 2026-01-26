@@ -1,60 +1,62 @@
 import { Check, Copy, RefreshCw, RemoveFormatting } from 'lucide-react';
-import type * as monaco from 'monaco-editor';
-import { type ComponentProps, isValidElement, type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, isValidElement, type JSX, type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
+import { type EditorAdapter, EditorEngine } from '@/lib/editor-adapter';
 import { cn, generateId, useCopyToClipboard } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
 import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
 import { Button } from '@/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
+import { CodeMirror, type CodeMirrorProps, createCodeMirrorAdapter } from './codemirror';
 import { getIconForLanguageExtension } from './icons';
-import { AVAILABLE_THEMES, Monaco, type MonacoProps } from './monaco';
+import { AVAILABLE_THEME, createMonacoAdapter, Monaco, type MonacoProps } from './monaco';
 
 type ToolboxItemId = 'reset' | 'format' | 'copy';
 
 export interface ToolboxItemConfig {
   tooltip?: string;
   icon?: ReactNode;
-  onClick?: (editor: monaco.editor.IStandaloneCodeEditor | null) => void;
-  render?: (editor: monaco.editor.IStandaloneCodeEditor | null) => ReactNode;
+  onClick?: (editor: EditorAdapter | null) => void;
+  render?: (editor: EditorAdapter | null) => ReactNode;
 }
 
 const dtsCacheMap = new Map<string, string>();
 
-export interface CodesparkEditorProps extends Pick<ConfigContextValue, 'theme'>, Pick<MonacoProps, 'options' | 'width' | 'height' | 'onChange' | 'onMount' | 'className'> {
+export interface CodesparkEditorBaseProps extends Pick<ConfigContextValue, 'theme'> {
   id?: string;
   value?: string;
   workspace?: Workspace;
-  toolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[] | ((editor: monaco.editor.IStandaloneCodeEditor | null) => ReactNode) | ReactNode;
+  toolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[];
   useOPFS?: boolean;
-  wrapperProps?: ComponentProps<'section'>;
   containerProps?: ComponentProps<'div'>;
 }
 
-export function CodesparkEditor(props: CodesparkEditorProps) {
-  const { theme: globalTheme } = useConfig();
+export interface CodesparkEditorEngineProps {
+  [EditorEngine.Monaco]: Pick<MonacoProps, 'width' | 'height' | 'onChange' | 'onMount' | 'className' | 'wrapperProps' | 'options'>;
+  [EditorEngine.CodeMirror]: Pick<CodeMirrorProps, 'width' | 'height' | 'extensions' | 'onChange' | 'onMount' | 'className' | 'basicSetup'>;
+}
+
+export type CodesparkEditorProps<E extends EditorEngine = EditorEngine.Monaco> = CodesparkEditorBaseProps & CodesparkEditorEngineProps[E];
+
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: EditorEngine, guardType: EditorEngine.Monaco): props is CodesparkEditorProps<EditorEngine.Monaco>;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: EditorEngine, guardType: EditorEngine.CodeMirror): props is CodesparkEditorProps<EditorEngine.CodeMirror>;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: EditorEngine, guardType: EditorEngine): boolean {
+  if ('editor' in props && props.editor === guardType) return true;
+
+  return editor === guardType;
+}
+
+export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.Monaco>): JSX.Element;
+export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorProps<E> & { editor?: E }): JSX.Element;
+export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorProps<E> & { editor?: E }) {
+  const { theme: globalTheme, editor: globalEditor } = useConfig();
   const { workspace: contextWorkspace, theme: contextTheme } = useCodespark() || {};
-  const {
-    id,
-    value = '',
-    workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }),
-    theme = contextTheme ?? globalTheme ?? 'light',
-    options,
-    width,
-    height = 200,
-    className,
-    toolbox = true,
-    useOPFS = false,
-    wrapperProps,
-    containerProps,
-    onChange,
-    onMount
-  } = props;
-  const idRef = useRef(id ?? generateId('editor'));
+  const { id, value = '', workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }), theme = contextTheme ?? globalTheme ?? 'light', editor, className, toolbox = true, useOPFS = false, containerProps } = props;
   const { files, currentFile, deps } = useWorkspace(workspace);
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const idRef = useRef(id ?? generateId('editor'));
+  const editorRef = useRef<EditorAdapter | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const [dts, setDts] = useState<Record<string, string>>(() => {
     const internalDts = Object.fromEntries(deps.internal.map(({ alias, dts }) => [alias, dts]));
@@ -74,7 +76,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
       onClick: () => {
         const { path } = currentFile;
         const initialCode = workspace.initialFiles[path] ?? '';
-        editorRef.current?.getModel()?.setValue(initialCode);
+        editorRef.current?.setValue(initialCode);
         workspace.setFile(path, initialCode);
       }
     },
@@ -82,14 +84,14 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
       tooltip: 'Format Document',
       icon: <RemoveFormatting className="size-3.5!" />,
       onClick: () => {
-        editorRef.current?.getAction('editor.action.formatDocument')?.run();
+        editorRef.current?.format();
       }
     },
     copy: {
       tooltip: isCopied ? 'Copied' : 'Copy to Clipboard',
       icon: isCopied ? <Check className="size-3.5!" /> : <Copy className="size-3.5!" />,
       onClick: () => {
-        const content = editorRef.current?.getModel()?.getValue() || '';
+        const content = editorRef.current?.getValue() || '';
         copyToClipboard(content);
       }
     }
@@ -106,9 +108,9 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   }, []);
 
   useEffect(() => {
-    const editorValue = editorRef.current?.getModel()?.getValue();
+    const editorValue = editorRef.current?.getValue();
     if (editorValue && editorValue !== currentFile.code) {
-      editorRef.current?.getModel()?.setValue(currentFile.code ?? '');
+      editorRef.current?.setValue(currentFile.code ?? '');
     }
   }, [currentFile.code]);
 
@@ -119,7 +121,7 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
   }, [value]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || editor !== EditorEngine.Monaco) return;
 
     const controllers = new Map<string, AbortController>();
     Promise.all(
@@ -145,13 +147,13 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
         }
       })
     )
-      .then(results => Object.fromEntries(results.filter(result => result.length > 0)))
+      .then(results => Object.fromEntries(results))
       .then(setDts);
 
     return () => {
       controllers.forEach(controller => controller.abort());
     };
-  }, [deps.imports]);
+  }, [deps.imports, editor]);
 
   return (
     <div {...containerProps} className={cn('h-full divide-y', containerProps?.className)}>
@@ -161,13 +163,11 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
             {getIconForLanguageExtension('typescript')}
             <span className="text-card-foreground">{currentFile.path.replace(/^(\.\.?\/)+/, '')}</span>
           </div>
-          {typeof toolbox === 'function' ? (
-            toolbox(editorRef.current)
-          ) : isValidElement(toolbox) ? (
+          {isValidElement(toolbox) ? (
             toolbox
           ) : (
             <div className="flex items-center">
-              {(Array.isArray(toolbox) ? toolbox : (['reset', 'format', 'toggle-sidebar', 'copy'] as const)).map((t, index) => {
+              {(Array.isArray(toolbox) ? toolbox : (['reset', 'format', 'copy'] as const)).map((t, index) => {
                 if (isValidElement(t)) return t;
 
                 const item = typeof t === 'string' ? toolboxItems[t as ToolboxItemId] : (t as ToolboxItemConfig);
@@ -175,17 +175,23 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
 
                 const { tooltip, icon, onClick, render } = item;
 
+                function renderTriggerContent(): ReactNode {
+                  if (icon) {
+                    return (
+                      <Button variant="ghost" size="icon-sm" onClick={() => onClick?.(editorRef.current)}>
+                        {icon}
+                      </Button>
+                    );
+                  }
+                  if (render) {
+                    return render(editorRef.current);
+                  }
+                  return null;
+                }
+
                 return (
                   <Tooltip key={index}>
-                    <TooltipTrigger asChild>
-                      {icon ? (
-                        <Button variant="ghost" size="icon-sm" onClick={() => onClick?.(editorRef.current)}>
-                          {icon}
-                        </Button>
-                      ) : render ? (
-                        render(editorRef.current)
-                      ) : null}
-                    </TooltipTrigger>
+                    <TooltipTrigger asChild>{renderTriggerContent()}</TooltipTrigger>
                     <TooltipContent>{tooltip}</TooltipContent>
                   </Tooltip>
                 );
@@ -194,36 +200,63 @@ export function CodesparkEditor(props: CodesparkEditorProps) {
           )}
         </div>
       ) : null}
-      <Monaco
-        id={`${workspace.id}-${idRef.current}`}
-        value={value}
-        defaultValue={currentFile.code}
-        path={`file:///${workspace.id}-${idRef.current}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
-        theme={AVAILABLE_THEMES[theme] ?? AVAILABLE_THEMES.light}
-        dts={dts}
-        files={files}
-        language={language}
-        className={className}
-        width={width}
-        height={height}
-        wrapperProps={wrapperProps}
-        options={{
-          padding: { top: 12, bottom: 12 },
-          lineDecorationsWidth: 12,
-          ...options
-        }}
-        onChange={(value, evt) => {
-          onChange?.(value, evt);
+      {propsTypeGuard(props, globalEditor ?? EditorEngine.Monaco, EditorEngine.CodeMirror) ? (
+        <CodeMirror
+          id={`${workspace.id}-${idRef.current}`}
+          className={className}
+          value={currentFile.code}
+          height={props.height ?? '200px'}
+          width={props.width}
+          theme={theme}
+          basicSetup={props.basicSetup}
+          onChange={(value, viewUpdate) => {
+            props.onChange?.(value, viewUpdate);
 
-          if (value === currentFile.code) return;
-          workspace.setFile(currentFile.path, value || '');
-        }}
-        onMount={(editorInstance, monacoInstance) => {
-          onMount?.(editorInstance, monacoInstance);
-          editorRef.current = editorInstance;
-          workspace[INTERNAL_REGISTER_EDITOR](idRef.current, editorInstance);
-        }}
-      />
+            if (value === currentFile.code) return;
+            workspace.setFile(currentFile.path, value || '');
+          }}
+          onMount={editor => {
+            props.onMount?.(editor);
+
+            const adapter = createCodeMirrorAdapter(editor);
+            editorRef.current = adapter;
+            workspace[INTERNAL_REGISTER_EDITOR](idRef.current, adapter);
+          }}
+        />
+      ) : (
+        <Monaco
+          id={`${workspace.id}-${idRef.current}`}
+          value={value}
+          defaultValue={currentFile.code}
+          path={`file:///${workspace.id}-${idRef.current}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
+          theme={AVAILABLE_THEME[theme] ?? AVAILABLE_THEME.light}
+          dts={dts}
+          files={files}
+          language={language}
+          className={className}
+          height={props.height ?? 200}
+          width={props.width}
+          wrapperProps={props.wrapperProps}
+          options={{
+            padding: { top: 12, bottom: 12 },
+            lineDecorationsWidth: 12,
+            ...props.options
+          }}
+          onChange={(value, evt) => {
+            props.onChange?.(value, evt);
+
+            if (value === currentFile.code) return;
+            workspace.setFile(currentFile.path, value || '');
+          }}
+          onMount={(editorInstance, monacoInstance) => {
+            props.onMount?.(editorInstance, monacoInstance);
+
+            const adapter = createMonacoAdapter(editorInstance);
+            editorRef.current = adapter;
+            workspace[INTERNAL_REGISTER_EDITOR](idRef.current, adapter);
+          }}
+        />
+      )}
     </div>
   );
 }

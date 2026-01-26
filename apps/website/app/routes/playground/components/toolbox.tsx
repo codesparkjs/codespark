@@ -44,18 +44,24 @@ export function Toolbox(props: ToolboxProps) {
     if (editor) {
       const { path } = currentFile;
       const initialCode = workspace.initialFiles[path] ?? '';
-      editor.getModel()?.setValue(initialCode);
+      editor.setValue(initialCode);
       workspace.setFile(path, initialCode);
     }
   };
   const formatDocument = () => {
-    getMainEditor()?.getAction('editor.action.formatDocument')?.run();
+    const editor = getMainEditor();
+    if (editor) {
+      editor.format();
+    }
   };
   const copyToClipboard = async () => {
-    const content = getMainEditor()?.getModel()?.getValue() || '';
-    await navigator.clipboard.writeText(content);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2000);
+    const editor = getMainEditor();
+    if (editor) {
+      const content = editor.getValue();
+      await navigator.clipboard.writeText(content);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
   };
   const toggleTheme = () => setTheme(isDark ? 'light' : 'dark');
 

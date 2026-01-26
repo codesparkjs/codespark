@@ -4,7 +4,7 @@ import parserTypescript from 'prettier/plugins/typescript';
 import prettier from 'prettier/standalone';
 import { createHighlighter } from 'shiki';
 
-import { AVAILABLE_THEMES } from './themes';
+import { AVAILABLE_THEME } from './theme';
 
 let initialized = false;
 
@@ -16,7 +16,7 @@ export const setup = async () => {
     import('@monaco-editor/react'),
     import('monaco-editor'),
     createHighlighter({
-      themes: [AVAILABLE_THEMES.light, AVAILABLE_THEMES.dark],
+      themes: [AVAILABLE_THEME.light, AVAILABLE_THEME.dark],
       langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'css', 'html'],
       langAlias: { typescript: 'tsx', javascript: 'jsx' }
     })

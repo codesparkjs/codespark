@@ -1,10 +1,12 @@
 import { createContext, type ReactNode, useContext } from 'react';
 
+import type { EditorEngine } from '@/lib/editor-adapter';
 import { type FileTreeNode, useWorkspace, Workspace, type WorkspaceDerivedState, type WorkspaceInit } from '@/lib/workspace';
 
 export interface ConfigContextValue {
   theme?: 'light' | 'dark';
   imports?: Record<string, string>;
+  editor?: EditorEngine;
 }
 
 export interface CodesparkContextValue extends ConfigContextValue, WorkspaceDerivedState, Pick<WorkspaceInit, 'framework'> {
@@ -36,8 +38,8 @@ export interface CodesparkProviderProps extends Omit<CodesparkContextValue, 'fil
 }
 
 export function CodesparkProvider(props: CodesparkProviderProps) {
-  const { children, theme, framework = 'react', imports, workspace = new Workspace({ entry: './App.tsx', files: { './App.tsx': '' }, framework }) } = props;
+  const { children, theme, framework = 'react', imports, editor, workspace = new Workspace({ entry: './App.tsx', files: { './App.tsx': '' }, framework }) } = props;
   const store = useWorkspace(workspace);
 
-  return <CodesparkContext.Provider value={{ framework, imports, theme, ...store }}>{children}</CodesparkContext.Provider>;
+  return <CodesparkContext.Provider value={{ framework, imports, theme, editor, ...store }}>{children}</CodesparkContext.Provider>;
 }
