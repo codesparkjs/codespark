@@ -9,6 +9,11 @@
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
+    "./monaco": {
+      "development": "./src/components/editor/monaco/index.tsx",
+      "import": "./dist/monaco.js",
+      "types": "./dist/monaco.d.ts"
+    },
     "./index.css": {
       "development": "./src/index.css",
       "style": "./dist/index.css",

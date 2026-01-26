@@ -1,6 +1,6 @@
 import type * as monaco from 'monaco-editor';
 
-import type { EditorAdapter, EditorEngine } from '@/lib/editor-adapter';
+import { type EditorAdapter, EditorEngine } from '@/lib/editor-adapter';
 
 export class MonacoEditorAdapter implements EditorAdapter<EditorEngine.Monaco> {
   constructor(

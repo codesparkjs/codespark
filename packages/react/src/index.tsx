@@ -3,7 +3,7 @@ import { react } from '@codespark/framework/react';
 import { Maximize } from 'lucide-react';
 import { type JSX, useEffect, useState } from 'react';
 
-import { CodesparkEditor, type CodesparkEditorProps } from '@/components/editor';
+import { CodesparkEditor, type CodesparkEditorEngineComponents, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkFileExplorer } from '@/components/file-explorer';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
 import { type CodesparkContextValue, CodesparkProvider, type ConfigContextValue } from '@/context';
@@ -35,8 +35,8 @@ export interface CodesparkProps<E extends EditorEngine = EditorEngine.Monaco>
 }
 
 export function Codespark(props: CodesparkProps<EditorEngine.Monaco>): JSX.Element;
-export function Codespark<E extends EditorEngine>(props: CodesparkProps<E> & { editor?: E }): JSX.Element;
-export function Codespark(props: CodesparkProps<EditorEngine> & { editor?: EditorEngine }) {
+export function Codespark<E extends EditorEngine>(props: CodesparkProps<E> & { editor?: CodesparkEditorEngineComponents[E] }): JSX.Element;
+export function Codespark(props: CodesparkProps & { editor?: CodesparkEditorEngineComponents[EditorEngine] }) {
   const { code, files, name = './App.tsx', theme, editor, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, onConsole, onError, children, defaultExpanded, getWorkspace } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);

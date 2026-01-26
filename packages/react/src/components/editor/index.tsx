@@ -7,11 +7,12 @@ import { cn, generateId, useCopyToClipboard } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
 import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
 import { Button } from '@/ui/button';
+import { getIconForLanguageExtension } from '@/ui/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
-import { CodeMirror, type CodeMirrorProps, createCodeMirrorAdapter } from './codemirror';
-import { getIconForLanguageExtension } from './icons';
-import { AVAILABLE_THEME, createMonacoAdapter, Monaco, type MonacoProps } from './monaco';
+import { CodeMirror, type CodeMirrorProps } from './codemirror';
+import type { Monaco, MonacoProps } from './monaco';
+import { AVAILABLE_THEME } from './monaco/theme';
 
 type ToolboxItemId = 'reset' | 'format' | 'copy';
 
@@ -38,22 +39,40 @@ export interface CodesparkEditorEngineProps {
   [EditorEngine.CodeMirror]: Pick<CodeMirrorProps, 'width' | 'height' | 'extensions' | 'onChange' | 'onMount' | 'className' | 'basicSetup'>;
 }
 
-export type CodesparkEditorProps<E extends EditorEngine = EditorEngine.Monaco> = CodesparkEditorBaseProps & CodesparkEditorEngineProps[E];
-
-function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: EditorEngine, guardType: EditorEngine.Monaco): props is CodesparkEditorProps<EditorEngine.Monaco>;
-function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: EditorEngine, guardType: EditorEngine.CodeMirror): props is CodesparkEditorProps<EditorEngine.CodeMirror>;
-function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: EditorEngine, guardType: EditorEngine): boolean {
-  if ('editor' in props && props.editor === guardType) return true;
-
-  return editor === guardType;
+export interface CodesparkEditorEngineComponents {
+  [EditorEngine.Monaco]: typeof Monaco;
+  [EditorEngine.CodeMirror]: typeof CodeMirror;
 }
 
-export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.Monaco>): JSX.Element;
-export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorProps<E> & { editor?: E }): JSX.Element;
-export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorProps<E> & { editor?: E }) {
+export type CodesparkEditorProps<E extends EditorEngine = EditorEngine.CodeMirror> = CodesparkEditorBaseProps & CodesparkEditorEngineProps[E];
+
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents[EditorEngine], kind: EditorEngine.Monaco): props is CodesparkEditorProps<EditorEngine.Monaco>;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents[EditorEngine], kind: EditorEngine.CodeMirror): props is CodesparkEditorProps<EditorEngine.CodeMirror>;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents[EditorEngine], kind: EditorEngine): boolean {
+  if ('editor' in props && (props.editor as CodesparkEditorEngineComponents[EditorEngine]).kind === kind) return true;
+
+  return editor.kind === kind;
+}
+
+export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.CodeMirror>): JSX.Element;
+export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.Monaco> & { editor: typeof Monaco }): JSX.Element;
+export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.CodeMirror> & { editor: typeof CodeMirror }): JSX.Element;
+export function CodesparkEditor<E extends EditorEngine.CodeMirror>(props: CodesparkEditorProps<E>): JSX.Element;
+export function CodesparkEditor<E extends EditorEngine.Monaco>(props: CodesparkEditorProps<E>): JSX.Element;
+export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorProps<E> & { editor?: CodesparkEditorEngineComponents[E] }) {
   const { theme: globalTheme, editor: globalEditor } = useConfig();
   const { workspace: contextWorkspace, theme: contextTheme } = useCodespark() || {};
-  const { id, value = '', workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }), theme = contextTheme ?? globalTheme ?? 'light', editor, className, toolbox = true, useOPFS = false, containerProps } = props;
+  const {
+    id,
+    value = '',
+    workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }),
+    theme = contextTheme ?? globalTheme ?? 'light',
+    editor = globalEditor ?? CodeMirror,
+    className,
+    toolbox = true,
+    useOPFS = false,
+    containerProps
+  } = props;
   const { files, currentFile, deps } = useWorkspace(workspace);
   const idRef = useRef(id ?? generateId('editor'));
   const editorRef = useRef<EditorAdapter | null>(null);
@@ -121,7 +140,7 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
   }, [value]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || editor !== EditorEngine.Monaco) return;
+    if (typeof window === 'undefined' || editor?.kind !== EditorEngine.Monaco) return;
 
     const controllers = new Map<string, AbortController>();
     Promise.all(
@@ -200,8 +219,8 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
           )}
         </div>
       ) : null}
-      {propsTypeGuard(props, globalEditor ?? EditorEngine.Monaco, EditorEngine.CodeMirror) ? (
-        <CodeMirror
+      {editor.kind === EditorEngine.CodeMirror && propsTypeGuard(props, editor, EditorEngine.CodeMirror) ? (
+        <editor.Component
           id={`${workspace.id}-${idRef.current}`}
           className={className}
           value={currentFile.code}
@@ -215,16 +234,16 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
             if (value === currentFile.code) return;
             workspace.setFile(currentFile.path, value || '');
           }}
-          onMount={editor => {
-            props.onMount?.(editor);
+          onMount={editorInstance => {
+            props.onMount?.(editorInstance);
 
-            const adapter = createCodeMirrorAdapter(editor);
+            const adapter = editor.createAdapter(editorInstance);
             editorRef.current = adapter;
             workspace[INTERNAL_REGISTER_EDITOR](idRef.current, adapter);
           }}
         />
-      ) : (
-        <Monaco
+      ) : editor.kind === EditorEngine.Monaco && propsTypeGuard(props, editor, EditorEngine.Monaco) ? (
+        <editor.Component
           id={`${workspace.id}-${idRef.current}`}
           value={value}
           defaultValue={currentFile.code}
@@ -251,12 +270,12 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
           onMount={(editorInstance, monacoInstance) => {
             props.onMount?.(editorInstance, monacoInstance);
 
-            const adapter = createMonacoAdapter(editorInstance);
+            const adapter = editor.createAdapter(editorInstance);
             editorRef.current = adapter;
             workspace[INTERNAL_REGISTER_EDITOR](idRef.current, adapter);
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 }

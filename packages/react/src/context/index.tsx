@@ -1,12 +1,13 @@
 import { createContext, type ReactNode, useContext } from 'react';
 
-import type { EditorEngine } from '@/lib/editor-adapter';
+import type { CodeMirror } from '@/components/editor/codemirror';
+import type { Monaco } from '@/components/editor/monaco';
 import { type FileTreeNode, useWorkspace, Workspace, type WorkspaceDerivedState, type WorkspaceInit } from '@/lib/workspace';
 
 export interface ConfigContextValue {
   theme?: 'light' | 'dark';
   imports?: Record<string, string>;
-  editor?: EditorEngine;
+  editor?: typeof CodeMirror | typeof Monaco;
 }
 
 export interface CodesparkContextValue extends ConfigContextValue, WorkspaceDerivedState, Pick<WorkspaceInit, 'framework'> {
