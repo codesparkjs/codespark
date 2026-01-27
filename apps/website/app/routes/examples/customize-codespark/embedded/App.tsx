@@ -19,7 +19,7 @@ export default function App() {
             <span className="h-3 w-3 rounded-full bg-yellow-500" />
             <span className="h-3 w-3 rounded-full bg-green-500" />
           </div>
-          <CodesparkEditor height={400} value={code} toolbox={false} />
+          <CodesparkEditor height="400px" value={code} toolbox={false} />
         </div>
         <CodesparkPreview className="h-full" />
       </div>

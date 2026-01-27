@@ -4,7 +4,7 @@ import type * as monaco from 'monaco-editor';
 import parserEstree from 'prettier/plugins/estree';
 import parserTypescript from 'prettier/plugins/typescript';
 import prettier from 'prettier/standalone';
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { createHighlighter } from 'shiki';
 
 import { EditorEngine, EditorEngineComponent } from '@/lib/editor-adapter';
@@ -132,19 +132,29 @@ const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions
 
 export interface MonacoProps extends MonacoEditorProps {
   readonly id?: string;
-  dts?: Record<string, string>;
+  readonly name?: string;
   files?: Record<string, string>;
+  imports?: Record<string, string>;
 }
 
 const addedLibs = new Set<string>();
 
+const dtsCacheMap = new Map<string, string>();
+
 export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, monaco.editor.IStandaloneCodeEditor> = {
   kind: EditorEngine.Monaco,
   Component: memo(function Monaco(props) {
-    const { value = '', options = {}, onChange, onMount, width, height, id, dts, files, ...rest } = props;
+    const { value = '', options = {}, onChange, onMount, width, height, id, name, files, imports, ...rest } = props;
     const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor>(null);
     const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(null);
     const [MonacoEditor, setMonacoEditor] = useState<typeof import('@monaco-editor/react').default | null>(null);
+    const [dts, setDts] = useState<Record<string, string>>({});
+    const language = useMemo(() => {
+      const ext = name?.split('.').pop()?.toLowerCase();
+      const langMap: Record<string, string> = { ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript', css: 'css', json: 'json', html: 'html', md: 'markdown' };
+
+      return ext ? langMap[ext] : undefined;
+    }, [name]);
 
     const handleEditorDidMount: OnMount = (editor, monaco) => {
       onMount?.(editor, monaco);
@@ -287,6 +297,41 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
       return () => provider?.dispose();
     }, [files, monacoInstance]);
 
+    useEffect(() => {
+      if (typeof window === 'undefined') return;
+
+      const controllers = new Map<string, AbortController>();
+      Promise.all(
+        Object.entries(imports || {}).map(async ([name, url]) => {
+          if (dtsCacheMap.has(name)) return [name, dtsCacheMap.get(name)!];
+
+          const controller = new AbortController();
+          controllers.set(name, controller);
+
+          try {
+            const { headers } = await fetch(url, { method: 'HEAD', signal: controller.signal });
+            const dtsUrl = headers.get('X-TypeScript-Types');
+            if (dtsUrl) {
+              const dtsContent = await fetch(dtsUrl, { signal: controller.signal }).then(r => r.text());
+              dtsCacheMap.set(name, dtsContent);
+
+              return [name, dtsContent];
+            }
+
+            return [name, ''];
+          } catch {
+            return [name, ''];
+          }
+        })
+      )
+        .then(results => Object.fromEntries(results))
+        .then(setDts);
+
+      return () => {
+        controllers.forEach(controller => controller.abort());
+      };
+    }, [imports]);
+
     if (!MonacoEditor) {
       return (
         <div className="flex flex-col space-y-3 p-5" style={{ height }}>
@@ -299,7 +344,7 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
       );
     }
 
-    return <MonacoEditor value={value} options={{ ...MONACO_DEFAULT_OPTIONS, ...options }} width={width ?? '100%'} height={height} {...rest} onMount={handleEditorDidMount} onChange={handleEditorContentChange} />;
+    return <MonacoEditor value={value} language={language} options={{ ...MONACO_DEFAULT_OPTIONS, ...options }} width={width ?? '100%'} height={height} {...rest} onMount={handleEditorDidMount} onChange={handleEditorContentChange} />;
   }),
   createAdapter: instance => {
     return new MonacoEditorAdapter(EditorEngine.Monaco, instance);

@@ -1,5 +1,6 @@
 import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
+import { Monaco } from '@codespark/react/monaco';
 import { ChevronsUpDown, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useRef, useState } from 'react';
@@ -79,7 +80,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const fileExplorerPanelRef = usePanelRef();
   const consolePanelRef = usePanelRef();
   const { workspace, compileError } = useWorkspace({ entry: './App.tsx', files });
-  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
+  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
   const hasRaw = examples.find(e => e.name === example)?.raw ?? true;
 
   useEffect(() => {
@@ -136,7 +137,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                     </SelectContent>
                   </Select>
                 </Toolbox>
-                <CodesparkEditor id="main" containerProps={{ className: 'flex-1' }} wrapperProps={{ className: 'h-full!' }} options={{ fixedOverflowWidgets: true }} onChange={() => setRuntimeError(null)} toolbox={false} />
+                <CodesparkEditor id="main" editor={Monaco} containerProps={{ className: 'flex-1' }} wrapperProps={{ className: 'h-full!' }} options={{ fixedOverflowWidgets: true }} onChange={() => setRuntimeError(null)} toolbox={false} />
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel minSize="200px">

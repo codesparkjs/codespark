@@ -42,6 +42,10 @@
   }
 }
 
+.monaco-editor .margin {
+  transform: translate3d(0px, -2px, 0px) !important;
+}
+
 .monaco-editor .find-widget .monaco-inputbox {
   border-radius: calc(var(--radius) - 2px);
   border: 1px solid var(--border);

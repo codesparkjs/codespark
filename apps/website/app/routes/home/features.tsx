@@ -84,7 +84,7 @@ function DemoPark({ workspace, title, description, icon, reverse }: { workspace:
             <span className="h-3 w-3 rounded-full bg-yellow-500" />
             <span className="h-3 w-3 rounded-full bg-green-500" />
           </div>
-          <CodesparkEditor height={360} toolbox={false} options={{ fixedOverflowWidgets: true }} />
+          <CodesparkEditor height="360px" toolbox={false} />
         </div>
         <div
           className={cn(
