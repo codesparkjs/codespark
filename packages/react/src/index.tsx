@@ -1,13 +1,13 @@
 import { registerFramework } from '@codespark/framework';
 import { react } from '@codespark/framework/react';
 import { Maximize } from 'lucide-react';
-import { type JSX, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CodesparkEditor, type CodesparkEditorEngineComponents, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkFileExplorer } from '@/components/file-explorer';
 import { CodesparkPreview, type CodesparkPreviewProps } from '@/components/preview';
 import { type CodesparkContextValue, CodesparkProvider, type ConfigContextValue } from '@/context';
-import type { EditorEngine } from '@/lib/editor-adapter';
+import { EditorEngine } from '@/lib/editor-adapter';
 import { cn } from '@/lib/utils';
 import { useWorkspace, type Workspace } from '@/lib/workspace';
 
@@ -21,8 +21,7 @@ export * from '@/lib/workspace';
 
 registerFramework(react);
 
-export interface CodesparkProps<E extends EditorEngine = EditorEngine.Monaco>
-  extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps<E>, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
+export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
   code?: string;
   files?: Record<string, string>;
   name?: string;
@@ -32,15 +31,39 @@ export interface CodesparkProps<E extends EditorEngine = EditorEngine.Monaco>
   readonly?: boolean;
   defaultExpanded?: boolean;
   getWorkspace?: (ws: Workspace) => void;
+  editor?: CodesparkEditorEngineComponents;
 }
 
-export function Codespark(props: CodesparkProps<EditorEngine.Monaco>): JSX.Element;
-export function Codespark<E extends EditorEngine>(props: CodesparkProps<E> & { editor?: CodesparkEditorEngineComponents[E] }): JSX.Element;
-export function Codespark(props: CodesparkProps & { editor?: CodesparkEditorEngineComponents[EditorEngine] }) {
+export function Codespark(props: CodesparkProps) {
   const { code, files, name = './App.tsx', theme, editor, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, onConsole, onError, children, defaultExpanded, getWorkspace } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
+
+  const renderEditor = () => {
+    const sharedProps = {
+      containerProps: { className: 'w-0 flex-1' },
+      toolbox: toolbox ?? [
+        'reset',
+        'format',
+        {
+          tooltip: 'Toggle File Explorer',
+          icon: <Maximize className="size-3.5!" />,
+          onClick: () => setExpanded(v => !v)
+        },
+        'copy'
+      ],
+      onChange: () => {
+        setRuntimeError(null);
+      }
+    };
+
+    if (editor?.kind === EditorEngine.Monaco) {
+      return <CodesparkEditor editor={editor} {...sharedProps} options={{ readOnly }} />;
+    }
+
+    return <CodesparkEditor editor={editor} {...sharedProps} readOnly={readOnly} />;
+  };
 
   useEffect(() => {
     setRuntimeError(compileError);
@@ -75,26 +98,7 @@ export function Codespark(props: CodesparkProps & { editor?: CodesparkEditorEngi
         {showEditor ? (
           <div className="flex h-full w-full divide-x">
             {expanded ? <CodesparkFileExplorer /> : null}
-            <CodesparkEditor
-              editor={editor}
-              containerProps={{ className: 'w-0 flex-1' }}
-              options={{ readOnly }}
-              toolbox={
-                toolbox ?? [
-                  'reset',
-                  'format',
-                  {
-                    tooltip: 'Toggle File Explorer',
-                    icon: <Maximize className="size-3.5!" />,
-                    onClick: () => setExpanded(v => !v)
-                  },
-                  'copy'
-                ]
-              }
-              onChange={() => {
-                setRuntimeError(null);
-              }}
-            />
+            {renderEditor()}
           </div>
         ) : null}
       </div>

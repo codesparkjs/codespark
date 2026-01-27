@@ -106,7 +106,7 @@ const buildInternalDep = (source: string, content: string, files: Record<string,
   });
 
   deps.push(...buildExternalDeps(imports, usedSources));
-  return { name: source.split('/').pop() || source, alias, code: content, dts: '', deps };
+  return { name: source.split('/').pop() || source, alias, code: content, deps };
 };
 
 export function analyze(entry: string, files: Record<string, string>) {
@@ -119,7 +119,7 @@ export function analyze(entry: string, files: Record<string, string>) {
       const source = imp.source.value;
 
       if (imp.specifiers.length === 0 && source.endsWith(CSS_EXTENSION)) {
-        depsMap.set(source, { name: '', alias: source, code: files[source], dts: '', deps: [] });
+        depsMap.set(source, { name: '', alias: source, code: files[source], deps: [] });
       } else if (usedSources.has(source)) {
         const resolved = resolveSource(source, files);
         if (resolved) {

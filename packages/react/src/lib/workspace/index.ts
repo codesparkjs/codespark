@@ -1,14 +1,14 @@
 import type { CollectResult } from '_shared/types';
 import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { type Framework, registry } from '@codespark/framework';
-import { type ComponentType, type ReactElement, useMemo, useSyncExternalStore } from 'react';
+import { type ComponentType, type ReactElement, useId, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
 import type { EditorAdapter } from '@/lib/editor-adapter';
-import { constructESMUrl, generateId } from '@/lib/utils';
+import { constructESMUrl } from '@/lib/utils';
 
-import { INTERNAL_BOUND, INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
+import { INTERNAL_BOUND, INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SET_ID, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
 import { OPFS } from './opfs';
 
 export interface FileTreeNode {
@@ -37,7 +37,7 @@ export class Workspace extends OPFS {
 
   constructor(private config: WorkspaceInit) {
     super();
-    this.id = config.id ?? generateId('workspace');
+    this.id = config.id || '';
     this.initialFiles = { ...config.files };
   }
 
@@ -227,24 +227,41 @@ export class Workspace extends OPFS {
 
     return false;
   }
+
+  [INTERNAL_SET_ID](id: string) {
+    this.id = id;
+  }
 }
 
 export interface WorkspaceDerivedState {
   fileTree: FileTreeNode[];
-  deps: { style: InternalDep[]; internal: InternalDep[]; external: ExternalDep[]; imports: Record<string, string> };
+  deps: {
+    style: InternalDep[];
+    internal: InternalDep[];
+    external: ExternalDep[];
+    imports: Record<string, string>;
+  };
   compiled: string;
   compileError: Error | null;
 }
 
 export function useWorkspace(init?: WorkspaceInit | Workspace) {
+  const uid = useId();
   const context = useCodespark();
-
   const workspace = useMemo(() => {
-    if (init instanceof Workspace) return init;
+    let ws;
 
-    if (init) return new Workspace(init);
+    if (init instanceof Workspace) {
+      ws = init;
+    } else if (init) {
+      ws = new Workspace(init);
+    } else {
+      ws = context?.workspace;
+    }
 
-    return context?.workspace;
+    if (!ws?.id) ws?.[INTERNAL_SET_ID](`workspace${uid}`);
+
+    return ws;
   }, []);
   if (!workspace) throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
 

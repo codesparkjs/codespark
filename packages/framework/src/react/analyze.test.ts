@@ -139,7 +139,6 @@ describe('analyze', () => {
     expect((deps[0] as InternalDep).alias).toBe('./styles.css');
     expect((deps[0] as InternalDep).code).toBe('.btn { color: red; }');
     expect((deps[0] as InternalDep).name).toBe('');
-    expect((deps[0] as InternalDep).dts).toBe('');
     expect((deps[0] as InternalDep).deps).toHaveLength(0);
   });
 

@@ -4,7 +4,6 @@ export interface InternalDep {
   name: string;
   alias: string;
   code: string;
-  dts: string;
   deps: Dep[];
 }
 
@@ -17,5 +16,4 @@ export interface ExternalDep {
 export interface CollectResult {
   entry: { code: string; locals: string[]; imports: string[] };
   files: Record<string, string>;
-  dts: Record<string, string>;
 }

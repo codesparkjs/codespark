@@ -20,7 +20,7 @@ export interface EditorAdapter<E extends EditorEngine = any> {
   format(): Promise<void>;
 }
 
-export interface EditorEngineComponent<E extends EditorEngine = any, P = unknown, I = unknown> {
+export interface EditorEngineComponent<E extends EditorEngine = any, P = object, I = unknown> {
   kind: E;
   Component: ComponentType<P>;
   createAdapter: (instance: I) => EditorAdapter<E>;

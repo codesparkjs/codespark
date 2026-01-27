@@ -42,12 +42,6 @@ export function constructESMUrl(config: { pkg: string; version?: string; deps?: 
   return query ? `${base}?${query}` : base;
 }
 
-export function generateId(prefix?: string) {
-  const random = Math.random().toString(36).slice(2, 10);
-
-  return prefix ? `${prefix}-${random}` : random;
-}
-
 export function useCopyToClipboard(timeout = 2000) {
   const [isCopied, setIsCopied] = useState(false);
 

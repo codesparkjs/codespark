@@ -15,13 +15,22 @@ export const theme = EditorView.theme({
     border: 'none'
   },
   '.cm-gutter': {
-    paddingLeft: '12px',
-    paddingRight: '4px',
+    padding: '1px 4px 0px 12px',
     minWidth: '36px'
+  },
+  '.cm-scroller': {
+    paddingTop: '8px'
   },
   '.cm-line': {
     padding: '0 12px',
     height: '24px',
     lineHeight: '24px'
+  },
+  '.cm-gutterElement.cm-gutterElement': {
+    padding: '0px',
+    lineHeight: '24px'
+  },
+  '.cm-activeLine': {
+    borderRadius: '4px'
   }
 });

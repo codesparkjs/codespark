@@ -17,5 +17,10 @@ export default defineConfig([
     entry: { monaco: 'src/components/editor/monaco/index.tsx' },
     dts: true,
     platform: 'browser'
+  },
+  {
+    entry: { codemirror: 'src/components/editor/codemirror/index.tsx' },
+    dts: true,
+    platform: 'browser'
   }
 ]);

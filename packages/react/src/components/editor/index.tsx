@@ -1,9 +1,9 @@
 import { Check, Copy, RefreshCw, RemoveFormatting } from 'lucide-react';
-import { type ComponentProps, isValidElement, type JSX, type ReactElement, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type ComponentProps, isValidElement, type JSX, type ReactElement, type ReactNode, useEffect, useId, useRef } from 'react';
 
 import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
 import { type EditorAdapter, EditorEngine } from '@/lib/editor-adapter';
-import { cn, generateId, useCopyToClipboard } from '@/lib/utils';
+import { cn, useCopyToClipboard } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
 import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
 import { Button } from '@/ui/button';
@@ -23,11 +23,10 @@ export interface ToolboxItemConfig {
   render?: (editor: EditorAdapter | null) => ReactNode;
 }
 
-const dtsCacheMap = new Map<string, string>();
-
 export interface CodesparkEditorBaseProps extends Pick<ConfigContextValue, 'theme'> {
-  id?: string;
+  readonly id?: string;
   value?: string;
+  className?: string;
   workspace?: Workspace;
   toolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[];
   useOPFS?: boolean;
@@ -35,31 +34,26 @@ export interface CodesparkEditorBaseProps extends Pick<ConfigContextValue, 'them
 }
 
 export interface CodesparkEditorEngineProps {
-  [EditorEngine.Monaco]: Pick<MonacoProps, 'width' | 'height' | 'onChange' | 'onMount' | 'className' | 'wrapperProps' | 'options'>;
-  [EditorEngine.CodeMirror]: Pick<CodeMirrorProps, 'width' | 'height' | 'extensions' | 'onChange' | 'onMount' | 'className' | 'basicSetup'>;
+  [EditorEngine.Monaco]: Pick<MonacoProps, 'width' | 'height' | 'onChange' | 'onMount' | 'wrapperProps' | 'options'>;
+  [EditorEngine.CodeMirror]: Pick<CodeMirrorProps, 'width' | 'height' | 'extensions' | 'onChange' | 'onMount' | 'readOnly' | 'basicSetup'>;
 }
 
-export interface CodesparkEditorEngineComponents {
-  [EditorEngine.Monaco]: typeof Monaco;
-  [EditorEngine.CodeMirror]: typeof CodeMirror;
-}
+export type CodesparkEditorEngineComponents = typeof Monaco | typeof CodeMirror;
 
 export type CodesparkEditorProps<E extends EditorEngine = EditorEngine.CodeMirror> = CodesparkEditorBaseProps & CodesparkEditorEngineProps[E];
 
-function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents[EditorEngine], kind: EditorEngine.Monaco): props is CodesparkEditorProps<EditorEngine.Monaco>;
-function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents[EditorEngine], kind: EditorEngine.CodeMirror): props is CodesparkEditorProps<EditorEngine.CodeMirror>;
-function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents[EditorEngine], kind: EditorEngine): boolean {
-  if ('editor' in props && (props.editor as CodesparkEditorEngineComponents[EditorEngine]).kind === kind) return true;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents, kind: EditorEngine.Monaco): props is CodesparkEditorProps<EditorEngine.Monaco>;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents, kind: EditorEngine.CodeMirror): props is CodesparkEditorProps<EditorEngine.CodeMirror>;
+function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: CodesparkEditorEngineComponents, kind: EditorEngine): boolean {
+  if ('editor' in props && (props.editor as CodesparkEditorEngineComponents)?.kind === kind) return true;
 
   return editor.kind === kind;
 }
 
-export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.CodeMirror>): JSX.Element;
+export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.CodeMirror> & { editor?: typeof CodeMirror }): JSX.Element;
 export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.Monaco> & { editor: typeof Monaco }): JSX.Element;
-export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.CodeMirror> & { editor: typeof CodeMirror }): JSX.Element;
-export function CodesparkEditor<E extends EditorEngine.CodeMirror>(props: CodesparkEditorProps<E>): JSX.Element;
-export function CodesparkEditor<E extends EditorEngine.Monaco>(props: CodesparkEditorProps<E>): JSX.Element;
-export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorProps<E> & { editor?: CodesparkEditorEngineComponents[E] }) {
+export function CodesparkEditor<E extends EditorEngine = never>(props: CodesparkEditorProps<E>): JSX.Element;
+export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { editor?: CodesparkEditorEngineComponents }) {
   const { theme: globalTheme, editor: globalEditor } = useConfig();
   const { workspace: contextWorkspace, theme: contextTheme } = useCodespark() || {};
   const {
@@ -74,20 +68,11 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
     containerProps
   } = props;
   const { files, currentFile, deps } = useWorkspace(workspace);
-  const idRef = useRef(id ?? generateId('editor'));
+  const uid = useId();
+  const editorId = id ?? `editor${uid}`;
   const editorRef = useRef<EditorAdapter | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
-  const [dts, setDts] = useState<Record<string, string>>(() => {
-    const internalDts = Object.fromEntries(deps.internal.map(({ alias, dts }) => [alias, dts]));
-    const externalDts = Object.fromEntries(deps.external.map(({ name }) => [name, '']));
-
-    return { ...internalDts, ...externalDts };
-  });
-  const language = useMemo(() => {
-    const ext = currentFile.name.split('.').pop()?.toLowerCase();
-    const langMap: Record<string, string> = { ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript', css: 'css', json: 'json', html: 'html', md: 'markdown' };
-    return ext ? langMap[ext] : undefined;
-  }, [currentFile.name]);
   const toolboxItems: Record<ToolboxItemId, ToolboxItemConfig> = {
     reset: {
       tooltip: 'Reset Document',
@@ -116,15 +101,90 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
     }
   };
 
-  useEffect(() => {
-    if (useOPFS) {
-      workspace[INTERNAL_INIT_OPFS]();
+  const handleEditorMount = (adapter: EditorAdapter) => {
+    editorRef.current = adapter;
+    workspace[INTERNAL_REGISTER_EDITOR](editorId, adapter);
+  };
+
+  const handleEditorChange = (newValue?: string) => {
+    if (newValue === currentFile.code) return;
+
+    if (!debounceTimerRef.current) {
+      workspace.setFile(currentFile.path, newValue || '');
     }
 
-    return () => {
-      workspace[INTERNAL_UNREGISTER_EDITOR](idRef.current);
-    };
-  }, []);
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      workspace.setFile(currentFile.path, newValue || '');
+      debounceTimerRef.current = null;
+    }, 500);
+  };
+
+  const renderEditor = () => {
+    const id = `${workspace.id}${editorId}`;
+
+    if (editor.kind === EditorEngine.Monaco && propsTypeGuard(props, editor, EditorEngine.Monaco)) {
+      const { height, width, wrapperProps, options, onChange, onMount } = props;
+
+      return (
+        <editor.Component
+          id={id}
+          value={value}
+          defaultValue={currentFile.code}
+          path={`file:///${id}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
+          theme={AVAILABLE_THEME[theme] ?? AVAILABLE_THEME.light}
+          files={files}
+          imports={deps.imports}
+          className={className}
+          height={height ?? 200}
+          width={width}
+          wrapperProps={wrapperProps}
+          options={{
+            padding: { top: 12, bottom: 12 },
+            lineDecorationsWidth: 12,
+            ...options
+          }}
+          onChange={(newValue, evt) => {
+            onChange?.(newValue, evt);
+            handleEditorChange(newValue);
+          }}
+          onMount={(editorInstance, monacoInstance) => {
+            onMount?.(editorInstance, monacoInstance);
+            handleEditorMount(editor.createAdapter(editorInstance));
+          }}
+        />
+      );
+    }
+
+    if (editor.kind === EditorEngine.CodeMirror && propsTypeGuard(props, editor, EditorEngine.CodeMirror)) {
+      const { height, width, basicSetup, onChange, onMount } = props;
+
+      return (
+        <editor.Component
+          id={id}
+          className={className}
+          value={currentFile.code}
+          height={height ?? '200px'}
+          width={width}
+          theme={theme}
+          basicSetup={basicSetup}
+          onChange={(newValue, viewUpdate) => {
+            onChange?.(newValue, viewUpdate);
+            handleEditorChange(newValue);
+          }}
+          onMount={editorInstance => {
+            onMount?.(editorInstance);
+            handleEditorMount(editor.createAdapter(editorInstance));
+          }}
+        />
+      );
+    }
+
+    return null;
+  };
 
   useEffect(() => {
     const editorValue = editorRef.current?.getValue();
@@ -140,39 +200,18 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
   }, [value]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || editor?.kind !== EditorEngine.Monaco) return;
-
-    const controllers = new Map<string, AbortController>();
-    Promise.all(
-      Object.entries(deps.imports).map(async ([name, url]) => {
-        if (dtsCacheMap.has(name)) return [name, dtsCacheMap.get(name)!];
-
-        const controller = new AbortController();
-        controllers.set(name, controller);
-
-        try {
-          const { headers } = await fetch(url, { method: 'HEAD', signal: controller.signal });
-          const dtsUrl = headers.get('X-TypeScript-Types');
-          if (dtsUrl) {
-            const dtsContent = await fetch(dtsUrl, { signal: controller.signal }).then(r => r.text());
-            dtsCacheMap.set(name, dtsContent);
-
-            return [name, dtsContent];
-          }
-
-          return [name, ''];
-        } catch {
-          return [name, ''];
-        }
-      })
-    )
-      .then(results => Object.fromEntries(results))
-      .then(setDts);
+    if (useOPFS) {
+      workspace[INTERNAL_INIT_OPFS]();
+    }
 
     return () => {
-      controllers.forEach(controller => controller.abort());
+      workspace[INTERNAL_UNREGISTER_EDITOR](editorId);
+
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
-  }, [deps.imports, editor]);
+  }, []);
 
   return (
     <div {...containerProps} className={cn('h-full divide-y', containerProps?.className)}>
@@ -219,63 +258,7 @@ export function CodesparkEditor<E extends EditorEngine>(props: CodesparkEditorPr
           )}
         </div>
       ) : null}
-      {editor.kind === EditorEngine.CodeMirror && propsTypeGuard(props, editor, EditorEngine.CodeMirror) ? (
-        <editor.Component
-          id={`${workspace.id}-${idRef.current}`}
-          className={className}
-          value={currentFile.code}
-          height={props.height ?? '200px'}
-          width={props.width}
-          theme={theme}
-          basicSetup={props.basicSetup}
-          onChange={(value, viewUpdate) => {
-            props.onChange?.(value, viewUpdate);
-
-            if (value === currentFile.code) return;
-            workspace.setFile(currentFile.path, value || '');
-          }}
-          onMount={editorInstance => {
-            props.onMount?.(editorInstance);
-
-            const adapter = editor.createAdapter(editorInstance);
-            editorRef.current = adapter;
-            workspace[INTERNAL_REGISTER_EDITOR](idRef.current, adapter);
-          }}
-        />
-      ) : editor.kind === EditorEngine.Monaco && propsTypeGuard(props, editor, EditorEngine.Monaco) ? (
-        <editor.Component
-          id={`${workspace.id}-${idRef.current}`}
-          value={value}
-          defaultValue={currentFile.code}
-          path={`file:///${workspace.id}-${idRef.current}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
-          theme={AVAILABLE_THEME[theme] ?? AVAILABLE_THEME.light}
-          dts={dts}
-          files={files}
-          language={language}
-          className={className}
-          height={props.height ?? 200}
-          width={props.width}
-          wrapperProps={props.wrapperProps}
-          options={{
-            padding: { top: 12, bottom: 12 },
-            lineDecorationsWidth: 12,
-            ...props.options
-          }}
-          onChange={(value, evt) => {
-            props.onChange?.(value, evt);
-
-            if (value === currentFile.code) return;
-            workspace.setFile(currentFile.path, value || '');
-          }}
-          onMount={(editorInstance, monacoInstance) => {
-            props.onMount?.(editorInstance, monacoInstance);
-
-            const adapter = editor.createAdapter(editorInstance);
-            editorRef.current = adapter;
-            workspace[INTERNAL_REGISTER_EDITOR](idRef.current, adapter);
-          }}
-        />
-      ) : null}
+      {renderEditor()}
     </div>
   );
 }
