@@ -16,6 +16,12 @@ export function Script(_props: ScriptProps) {
   return null;
 }
 
+export interface LinkProps extends React.LinkHTMLAttributes<HTMLLinkElement> {}
+
+export function Link(_props: LinkProps) {
+  return null;
+}
+
 export function useInjections(children: ReactNode) {
   const [injections, setInjections] = useState<string[]>([]);
 
@@ -37,6 +43,10 @@ export function useInjections(children: ReactNode) {
           const { children, ...attrs } = child.props as ScriptProps;
           const attrStr = getAttrStr(attrs);
           result.push(`<script${attrStr ? ` ${attrStr}` : ''}>${children?.trim() || ''}</script>`);
+        } else if (child.type === Link) {
+          const attrs = child.props as LinkProps;
+          const attrStr = getAttrStr(attrs);
+          result.push(`<link${attrStr ? ` ${attrStr}` : ''} />`);
         }
       }
     });

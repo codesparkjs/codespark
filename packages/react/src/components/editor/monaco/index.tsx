@@ -4,7 +4,7 @@ import type * as monaco from 'monaco-editor';
 import parserEstree from 'prettier/plugins/estree';
 import parserTypescript from 'prettier/plugins/typescript';
 import prettier from 'prettier/standalone';
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { createHighlighter } from 'shiki';
 
 import { EditorEngine, EditorEngineComponent } from '@/lib/editor-adapter';
@@ -95,6 +95,7 @@ const setup = async () => {
 
 const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   fontSize: 14,
+  fontFamily: 'Fira Code',
   lineHeight: 24,
   padding: { top: 16, bottom: 16 },
   automaticLayout: true,
@@ -132,7 +133,6 @@ const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions
 
 export interface MonacoProps extends MonacoEditorProps {
   readonly id?: string;
-  readonly name?: string;
   files?: Record<string, string>;
   imports?: Record<string, string>;
 }
@@ -144,49 +144,39 @@ const dtsCacheMap = new Map<string, string>();
 export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, monaco.editor.IStandaloneCodeEditor> = {
   kind: EditorEngine.Monaco,
   Component: memo(function Monaco(props) {
-    const { value = '', options = {}, onChange, onMount, width, height, id, name, files, imports, ...rest } = props;
+    const { value = '', options = {}, onChange, onMount, width, height, id, language, files, imports, ...rest } = props;
     const editorInstance = useRef<monaco.editor.IStandaloneCodeEditor>(null);
     const [monacoInstance, setMonacoInstance] = useState<typeof monaco | null>(null);
     const [MonacoEditor, setMonacoEditor] = useState<typeof import('@monaco-editor/react').default | null>(null);
-    const [dts, setDts] = useState<Record<string, string>>({});
-    const language = useMemo(() => {
-      const ext = name?.split('.').pop()?.toLowerCase();
-      const langMap: Record<string, string> = { ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript', css: 'css', json: 'json', html: 'html', md: 'markdown' };
+    const mergedOptions = { ...MONACO_DEFAULT_OPTIONS, ...Object.fromEntries(Object.entries(options).filter(([, v]) => v !== undefined)) };
 
-      return ext ? langMap[ext] : undefined;
-    }, [name]);
-
-    const handleEditorDidMount: OnMount = (editor, monaco) => {
+    const handleEditorDidMount: OnMount = useCallback((editor, monaco) => {
       onMount?.(editor, monaco);
       editorInstance.current = editor;
       setMonacoInstance(monaco);
-    };
+    }, []);
 
-    const handleEditorContentChange: OnChange = (value, evt) => {
+    const handleEditorContentChange: OnChange = useCallback((value, evt) => {
       onChange?.(value, evt);
-    };
+    }, []);
 
-    const addExtraLib = (libs: Record<string, string> = {}) => {
-      if (!monacoInstance) return;
-
-      Object.entries(libs).forEach(([module, content]) => {
+    const addExtraLib = (dts: Record<string, string> = {}) => {
+      Object.entries(dts).forEach(([module, content]) => {
         if (addedLibs.has(module)) return;
 
         if (module.startsWith('http://') || module.startsWith('https://')) {
-          monacoInstance.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
+          monacoInstance!.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
         } else {
-          monacoInstance.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, `file:///node_modules/${module}/index.d.ts`);
+          monacoInstance!.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, `file:///node_modules/${module}/index.d.ts`);
         }
         addedLibs.add(module);
       });
     };
 
     const createModels = (files: Record<string, string> = {}) => {
-      if (!monacoInstance || !id) return;
-
       const prefix = `file:///${id}/`;
       const filePaths = new Set(Object.keys(files).map(p => p.replace(/^(\.\.?\/)+/, '')));
-      monacoInstance.editor.getModels().forEach(model => {
+      monacoInstance!.editor.getModels().forEach(model => {
         const uriStr = model.uri.toString();
         if (uriStr.startsWith(prefix)) {
           const modelPath = uriStr.slice(prefix.length);
@@ -198,19 +188,17 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
 
       Object.entries(files).forEach(([filePath, code]) => {
         const normalizedPath = filePath.replace(/^(\.\.?\/)+/, '');
-        const uri = monacoInstance.Uri.parse(`${prefix}${normalizedPath}`);
+        const uri = monacoInstance!.Uri.parse(`${prefix}${normalizedPath}`);
 
         if (!monacoInstance!.editor.getModel(uri)) {
           const ext = filePath.split('.').pop();
           const lang = ['ts', 'tsx'].includes(ext!) ? 'typescript' : ext === 'css' ? 'css' : ext === 'json' ? 'json' : 'javascript';
-          monacoInstance.editor.createModel(code, lang, uri);
+          monacoInstance!.editor.createModel(code, lang, uri);
         }
       });
     };
 
     const addSuggestions = (paths: string[]) => {
-      if (!monacoInstance) return;
-
       const getRelativePath = (from: string, to: string): string => {
         const fromParts = from.replace(/^\.\//, '').split('/').slice(0, -1);
         const toParts = to.replace(/^\.\//, '').split('/');
@@ -225,7 +213,7 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
         return relativeParts.concat(toParts.slice(commonLength)).join('/');
       };
 
-      return monacoInstance.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
+      return monacoInstance!.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
         triggerCharacters: ['/', "'", '"'],
         provideCompletionItems(model, position) {
           const textUntilPosition = model.getValueInRange({
@@ -260,7 +248,7 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
               addedPaths.add(displayPath);
               suggestions.push({
                 label: displayPath,
-                kind: monacoInstance.languages.CompletionItemKind.File,
+                kind: monacoInstance!.languages.CompletionItemKind.File,
                 insertText: displayPath.slice(typedPath.length),
                 range: {
                   startLineNumber: position.lineNumber,
@@ -287,10 +275,8 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
     }, []);
 
     useEffect(() => {
-      addExtraLib(dts);
-    }, [dts, monacoInstance]);
+      if (typeof window === 'undefined' || !monacoInstance || !id) return;
 
-    useEffect(() => {
       createModels(files);
       const provider = addSuggestions(Object.keys(files || {}));
 
@@ -298,7 +284,7 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
     }, [files, monacoInstance]);
 
     useEffect(() => {
-      if (typeof window === 'undefined') return;
+      if (typeof window === 'undefined' || !monacoInstance) return;
 
       const controllers = new Map<string, AbortController>();
       Promise.all(
@@ -325,12 +311,12 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
         })
       )
         .then(results => Object.fromEntries(results))
-        .then(setDts);
+        .then(addExtraLib);
 
       return () => {
         controllers.forEach(controller => controller.abort());
       };
-    }, [imports]);
+    }, [imports, monacoInstance]);
 
     if (!MonacoEditor) {
       return (
@@ -344,7 +330,7 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
       );
     }
 
-    return <MonacoEditor value={value} language={language} options={{ ...MONACO_DEFAULT_OPTIONS, ...options }} width={width ?? '100%'} height={height} {...rest} onMount={handleEditorDidMount} onChange={handleEditorContentChange} />;
+    return <MonacoEditor value={value} language={language} options={mergedOptions} width={width ?? '100%'} height={height} {...rest} onMount={handleEditorDidMount} onChange={handleEditorContentChange} />;
   }),
   createAdapter: instance => {
     return new MonacoEditorAdapter(EditorEngine.Monaco, instance);

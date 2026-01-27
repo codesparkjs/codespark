@@ -1,4 +1,4 @@
-import { EditorView } from '@codemirror/view';
+import { EditorView } from '@uiw/react-codemirror';
 
 export const theme = EditorView.theme({
   '&': {
@@ -19,7 +19,8 @@ export const theme = EditorView.theme({
     minWidth: '36px'
   },
   '.cm-scroller': {
-    paddingTop: '8px'
+    paddingTop: '8px',
+    fontFamily: 'Fira Code'
   },
   '.cm-line': {
     padding: '0 12px',

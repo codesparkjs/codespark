@@ -12,13 +12,13 @@ export interface CodesparkFileExplorerProps extends React.ComponentPropsWithoutR
   className?: string;
 }
 
-function sortNodes(nodes: FileTreeNode[]): FileTreeNode[] {
+const sortNodes = (nodes: FileTreeNode[]) => {
   return [...nodes].sort((a, b) => {
     if (a.type !== b.type) return a.type === 'folder' ? -1 : 1;
 
     return a.name.localeCompare(b.name);
   });
-}
+};
 
 const FileTreeItem = ({ node, depth = 0 }: { node: FileTreeNode; depth?: number }) => {
   if (node.type === 'file') {

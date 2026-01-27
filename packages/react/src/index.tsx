@@ -13,7 +13,7 @@ import { useWorkspace, type Workspace } from '@/lib/workspace';
 
 export * from '@/components/editor';
 export * from '@/components/file-explorer';
-export { Script, type ScriptProps, Style, type StyleProps } from '@/components/inject';
+export { Link, type LinkProps, Script, type ScriptProps, Style, type StyleProps } from '@/components/inject';
 export * from '@/components/preview';
 export { CodesparkProvider, type CodesparkProviderProps, ConfigProvider, type ConfigProviderProps } from '@/context';
 export * from '@/lib/editor-adapter';

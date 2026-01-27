@@ -1,9 +1,9 @@
-import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Style, useWorkspace } from '@codespark/react';
+import { CodesparkEditor, CodesparkFileExplorer, CodesparkPreview, CodesparkProvider, Link, Style, Workspace } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { Monaco } from '@codespark/react/monaco';
 import { ChevronsUpDown, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type PanelImperativeHandle, usePanelRef } from 'react-resizable-panels';
 
 import { Button } from '~/components/ui/button';
@@ -79,13 +79,14 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const logIdRef = useRef(0);
   const fileExplorerPanelRef = usePanelRef();
   const consolePanelRef = usePanelRef();
-  const { workspace, compileError } = useWorkspace({ entry: './App.tsx', files });
+  // const { workspace, compileError } = useWorkspace({ entry: './App.tsx', files });
+  const workspace = useMemo(() => new Workspace({ entry: './App.tsx', files }), []);
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
   const hasRaw = examples.find(e => e.name === example)?.raw ?? true;
 
-  useEffect(() => {
-    setRuntimeError(compileError);
-  }, [compileError]);
+  // useEffect(() => {
+  //   setRuntimeError(compileError);
+  // }, [compileError]);
 
   useEffect(() => {
     if (!example) return;
@@ -159,6 +160,9 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                           return [...prev, { id: logIdRef.current++, level: level as LogLevel, args, timestamp: Date.now(), count: 1 }];
                         });
                       }}>
+                      <Link rel="preconnect" href="https://fonts.googleapis.com" />
+                      <Link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+                      <Link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet" />
                       <Style>{isMobile ? CUSTOM_MOBILE_STYLES : CUSTOM_STYLES}</Style>
                       {embedded || !hasRaw ? <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style> : null}
                     </CodesparkPreview>

@@ -13,6 +13,6 @@ export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter(), netlify(), mdx(MdxConfig), codespark()],
   resolve: { conditions: ['development', 'import'] },
   optimizeDeps: {
-    include: ['@codespark/react', '@codespark/framework', '@codespark/framework/markdown']
+    include: ['@codespark/react', '@codespark/react/monaco', '@codespark/framework', '@codespark/framework/markdown']
   }
 });

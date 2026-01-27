@@ -27,13 +27,15 @@
   "license": "MIT",
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.4",
-    "@codemirror/view": "^6.39.11",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language-data": "^6.5.2",
     "@codespark/framework": "workspace:*",
     "@monaco-editor/react": "^4.7.0",
     "@shikijs/monaco": "^3.20.0",
     "@uiw/react-codemirror": "^4.25.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "lodash-es": "^4.17.23",
     "lucide-react": "^0.562.0",
     "monaco-editor": "^0.55.1",
     "prettier": "^3.7.4",
@@ -46,6 +48,7 @@
     "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
     "@types/mdx": "^2.0.13",
     "@types/node": "^22.19.2",
     "@types/react": "^19.2.7",

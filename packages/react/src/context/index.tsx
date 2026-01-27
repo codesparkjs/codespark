@@ -7,6 +7,7 @@ import { type FileTreeNode, useWorkspace, Workspace, type WorkspaceDerivedState,
 export interface ConfigContextValue {
   theme?: 'light' | 'dark';
   imports?: Record<string, string>;
+  fontFamily?: string;
   editor?: typeof CodeMirror | typeof Monaco;
 }
 

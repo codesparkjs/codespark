@@ -1,6 +1,8 @@
 import { javascript } from '@codemirror/lang-javascript';
-import ReactCodeMirror, { type ReactCodeMirrorProps, type ReactCodeMirrorRef } from '@uiw/react-codemirror';
-import { useEffect, useRef, useState } from 'react';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
+import ReactCodeMirror, { EditorView, type Extension, type ReactCodeMirrorProps, type ReactCodeMirrorRef } from '@uiw/react-codemirror';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 import { EditorEngine, EditorEngineComponent } from '@/lib/editor-adapter';
 import { Skeleton } from '@/ui/skeleton';
@@ -8,19 +10,36 @@ import { Skeleton } from '@/ui/skeleton';
 import { CodeMirrorEditorAdapter } from './adapter';
 import { theme } from './theme';
 
-const EXTENSIONS = [javascript({ jsx: true }), theme];
+const LANGUAGE_EXTENSIONS: Record<string, Extension> = {
+  javascript: javascript({ jsx: true }),
+  markdown: markdown({ base: markdownLanguage, codeLanguages: languages })
+};
 
 export interface CodeMirrorProps extends ReactCodeMirrorProps {
   readonly id?: string;
   onMount?: (editor: ReactCodeMirrorRef) => void;
+  fontFamily?: string;
 }
 
 export const CodeMirror: EditorEngineComponent<EditorEngine.CodeMirror, CodeMirrorProps, ReactCodeMirrorRef> = {
   kind: EditorEngine.CodeMirror,
-  Component: function CodeMirror(props) {
-    const { id, basicSetup, extensions = [], width, height, onMount, ...rest } = props;
+  Component: memo(function CodeMirror(props) {
+    const { id, basicSetup, extensions = [], width, height, fontFamily, lang, onMount, ...rest } = props;
     const [mounted, setMounted] = useState(false);
     const editorRef = useRef<ReactCodeMirrorRef>(null);
+    const allExtensions = useMemo(() => {
+      const exts = [theme, ...extensions];
+
+      if (lang && LANGUAGE_EXTENSIONS[lang]) {
+        exts.unshift(LANGUAGE_EXTENSIONS[lang]);
+      } else {
+        exts.unshift(LANGUAGE_EXTENSIONS.javascript);
+      }
+
+      if (fontFamily) exts.push(EditorView.theme({ '& .cm-scroller': { fontFamily } }));
+
+      return exts;
+    }, [extensions, fontFamily]);
 
     useEffect(() => {
       setMounted(true);
@@ -58,13 +77,14 @@ export const CodeMirror: EditorEngineComponent<EditorEngine.CodeMirror, CodeMirr
                     ...basicSetup
                   }
             }
-            extensions={[...EXTENSIONS, ...extensions]}
+            extensions={allExtensions}
+            lang={lang}
             {...rest}
           />
         )}
       </div>
     );
-  },
+  }),
   createAdapter: instance => {
     return new CodeMirrorEditorAdapter(EditorEngine.CodeMirror, instance);
   }
