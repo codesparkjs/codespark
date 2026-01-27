@@ -13,7 +13,6 @@ describe('collectDependencies', () => {
     expect(result.entry.code).toBe(code);
     expect(result.entry.locals).toHaveLength(1);
     expect(result.files['./cd-button']).toContain('export const Button');
-    expect(result.dts['./cd-button']).toContain('Button');
   });
 
   it('should collect locals from host file', () => {

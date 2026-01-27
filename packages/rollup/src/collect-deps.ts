@@ -5,8 +5,6 @@ import type { CollectResult } from '_shared/types';
 import { parse } from '@babel/parser';
 import type { ImportDeclaration, Statement } from '@babel/types';
 
-import { generateDts } from './generate-dts';
-
 const pkgPath = process.cwd();
 const tsconfigJson = JSON.parse(fs.readFileSync(path.resolve(pkgPath, 'tsconfig.json'), 'utf-8'));
 const aliases = Object.keys(tsconfigJson.compilerOptions?.paths || {}).map(p => p.replace('/*', ''));
@@ -179,10 +177,8 @@ export function collectDependencies(code: string, hostFile: string): CollectResu
     collectFromFile(file, usedSources, fileInfos, visited);
 
     const files: Record<string, string> = {};
-    const dts: Record<string, string> = {};
     for (const [alias, info] of Object.entries(fileInfos)) {
       files[alias] = info.code;
-      dts[alias] = generateDts(info.resolved, info.externals);
     }
 
     const externalImports = hostImports
@@ -206,8 +202,8 @@ export function collectDependencies(code: string, hostFile: string): CollectResu
       })
       .filter((s): s is string => s !== null);
 
-    return { entry: { code, locals, imports: externalImports }, files, dts };
+    return { entry: { code, locals, imports: externalImports }, files };
   } catch {
-    return { entry: { code, locals: [], imports: [] }, files: {}, dts: {} };
+    return { entry: { code, locals: [], imports: [] }, files: {} };
   }
 }

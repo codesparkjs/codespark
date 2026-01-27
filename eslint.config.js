@@ -41,6 +41,7 @@ export default defineConfig([
       '@typescript-eslint/no-non-null-assertion': 'off',
       '@typescript-eslint/no-invalid-void-type': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', caughtErrors: 'all', caughtErrorsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true }],
+      '@typescript-eslint/unified-signatures': 'off',
       'no-console': 'error',
       'react/react-in-jsx-scope': 'off',
       'react/display-name': 'off',

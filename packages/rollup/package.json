@@ -21,7 +21,6 @@
     "@babel/parser": "^7.28.5",
     "@babel/traverse": "^7.28.5",
     "@babel/types": "^7.28.5",
-    "dts-bundle-generator": "^9.5.1",
     "rollup": "^4.54.0"
   },
   "devDependencies": {
