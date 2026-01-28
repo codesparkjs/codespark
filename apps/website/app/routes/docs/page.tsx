@@ -6,14 +6,15 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle, PageLastUpdate } from 'fumadocs-ui/layouts/docs/page';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { useTheme } from 'next-themes';
-import type { HTMLAttributes } from 'react';
+import { type HTMLAttributes, useRef } from 'react';
+import { useNavigate } from 'react-router';
 
 import { LLMCopyButton, ViewOptions } from '~/components/ai/page-actions';
 import { Icons } from '~/components/icons';
 import { mdxComponents } from '~/components/mdx-components';
 import { Button } from '~/components/ui/button';
 import { source } from '~/lib/source';
-import { cn } from '~/lib/utils';
+import { cn, encodeBase64URL } from '~/lib/utils';
 
 import type { Route } from './+types/page';
 
@@ -53,20 +54,35 @@ const clientLoader = browserCollections.docs.createClientLoader<{ url: string; p
                 return <defaultMdxComponents.CodeBlockTabs {...props} className={cn(className, 'bg-code rounded-lg border-none')} />;
               },
               pre: (props: HTMLAttributes<HTMLPreElement>) => {
+                const pre = useRef<HTMLPreElement>(null);
+                const navigate = useNavigate();
+
                 return (
                   <CodeBlock
                     {...props}
                     Actions={({ className, children }) => {
                       return (
                         <div className={cn('flex items-center pr-1.5', className)}>
-                          <Button variant="ghost" size="icon-sm">
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={async () => {
+                              const code = pre.current?.textContent;
+
+                              if (code) {
+                                navigate({
+                                  pathname: '/playground',
+                                  search: `?code=${await encodeBase64URL(code)}&embedded`
+                                });
+                              }
+                            }}>
                             <Icons.logo className="size-4" />
                           </Button>
                           {children}
                         </div>
                       );
                     }}>
-                    <Pre>{props.children}</Pre>
+                    <Pre ref={pre}>{props.children}</Pre>
                   </CodeBlock>
                 );
               }

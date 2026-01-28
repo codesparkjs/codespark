@@ -5,8 +5,6 @@ description: Learn how to use the Workspace API to manage files, editors, and co
 
 The `Workspace` is the core state management system in Codespark. It manages files, tracks changes, handles compilation, and provides an event system for reacting to workspace updates.
 
-<Callout title="Important Premise" type="warn">Workspace is immutable. It means that never change your workspace during runtime and keep it stabled.</Callout>
-
 ## Overview
 
 A workspace represents a complete code environment with:
@@ -18,7 +16,7 @@ A workspace represents a complete code environment with:
 
 ## Basic Usage
 
-`Codespark` component is out of box with an internal workspace. You can use `getWorkspace` props to access it.
+`Codespark` component has an out-of-box internal workspace. You can use `getWorkspace` props to access it.
 
 ```tsx
 import { Codespark, type Workspace } from '@codespark/react';
@@ -39,11 +37,13 @@ export default function App() {
 }
 ```
 
-### Create Manually
+## Create Manually
+
+<Callout>To reduce the complexity of the `Codespark` component and maintain out-of-the-box features, please use composable components when you need to create a custom workspace.</Callout>
+
+### Workspace
 
 To keep workspace immutable during runtime, you need to create a workspace outside the component or wrap it with `useMemo` .
-
-> To reduce the complexity of the `Codespark` component and maintain out-of-the-box features, please use composable components when you need to create a custom workspace.
 
 ```tsx
 import { CodesparkEditor, CodesparkPreview, CodesparkProvider, Workspace } from '@codespark/react';
@@ -53,7 +53,7 @@ const workspace = new Workspace({
   files: { './App.tsx': '...' }
 });
 export default function App() {
-  // or wrap with workspace
+  // or wrap with useMemo hooks
   // const workspace = useMemo(() => new Workspace({ entry: './App.tsx', files: {...} }), [])
 
   return (
@@ -66,6 +66,10 @@ export default function App() {
   );
 }
 ```
+
+### Using the Hook
+
+Another way to create a workspace is to use the `useWorkspace` hooks.
 
 ### Using createWorkspace
 
