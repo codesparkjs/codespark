@@ -10,9 +10,5 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import * as MdxConfig from './source.config';
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter(), netlify(), mdx(MdxConfig), codespark()],
-  resolve: { conditions: ['development', 'import'] },
-  optimizeDeps: {
-    include: ['@codespark/react', '@codespark/react/monaco', '@codespark/framework', '@codespark/framework/markdown']
-  }
+  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter(), netlify(), mdx(MdxConfig), codespark()]
 });

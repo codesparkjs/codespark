@@ -4,10 +4,20 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "_shared/*": ["../_shared/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "_shared/*": [
+        "../_shared/*"
+      ]
     }
   },
-  "include": ["src", "./*.ts"],
-  "exclude": ["dist", "node_modules"]
+  "include": [
+    "src",
+    "./*.ts"
+  ],
+  "exclude": [
+    "dist",
+    "node_modules"
+  ]
 }

@@ -3,13 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Rollup plugin for codespark ecosystem",
-  "exports": {
-    ".": {
-      "development": "./src/index.ts",
-      "types": "./dist/index.d.mts",
-      "import": "./dist/index.mjs"
-    }
-  },
+  "main": "dist/index.mjs",
+  "types": "dist/index.d.mts",
   "scripts": {
     "build": "tsdown",
     "test": "vitest run"

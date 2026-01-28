@@ -29,7 +29,7 @@ export default defineConfig([
   tseslint.configs.stylistic,
   pluginReact.configs.flat.recommended,
   pluginPrettierRecommended,
-  globalIgnores(['**/dist', '**/.react-router', '**/.source', '**/build', '**/netlify']),
+  globalIgnores(['**/dist', '**/.react-router', '**/.source', '**/build', '**/netlify', '**/next-env.d.ts']),
   {
     plugins: {
       'simple-import-sort': pluginSimpleImportSort
