@@ -1,13 +1,17 @@
 import { ConfigProvider } from '@codespark/react';
 import { useFumadocsLoader } from 'fumadocs-core/source/client';
 import browserCollections from 'fumadocs-mdx:collections/browser';
+import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle, PageLastUpdate } from 'fumadocs-ui/layouts/docs/page';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { useTheme } from 'next-themes';
+import type { HTMLAttributes } from 'react';
 
 import { LLMCopyButton, ViewOptions } from '~/components/ai/page-actions';
+import { Icons } from '~/components/icons';
 import { mdxComponents } from '~/components/mdx-components';
+import { Button } from '~/components/ui/button';
 import { source } from '~/lib/source';
 import { cn } from '~/lib/utils';
 
@@ -38,7 +42,7 @@ const clientLoader = browserCollections.docs.createClientLoader<{ url: string; p
         <DocsDescription>{frontmatter.description}</DocsDescription>
         <div className="flex flex-row flex-wrap items-center gap-2 border-b pb-6">
           <LLMCopyButton markdownUrl={markdownUrl} />
-          <ViewOptions markdownUrl={markdownUrl} githubUrl={`https://github.com/codesparkjs/codespark/blob/master/apps/website/content/docs/${path}`} />
+          <ViewOptions markdownUrl={markdownUrl} githubUrl={`https://github.com/codesparkjs/codespark/blob/main/apps/website/content/docs/${path}`} />
         </div>
         <DocsBody>
           <Mdx
@@ -47,6 +51,24 @@ const clientLoader = browserCollections.docs.createClientLoader<{ url: string; p
               ...mdxComponents,
               CodeBlockTabs: ({ className, ...props }) => {
                 return <defaultMdxComponents.CodeBlockTabs {...props} className={cn(className, 'bg-code rounded-lg border-none')} />;
+              },
+              pre: (props: HTMLAttributes<HTMLPreElement>) => {
+                return (
+                  <CodeBlock
+                    {...props}
+                    Actions={({ className, children }) => {
+                      return (
+                        <div className={cn('flex items-center pr-1.5', className)}>
+                          <Button variant="ghost" size="icon-sm">
+                            <Icons.logo className="size-4" />
+                          </Button>
+                          {children}
+                        </div>
+                      );
+                    }}>
+                    <Pre>{props.children}</Pre>
+                  </CodeBlock>
+                );
               }
             }}
           />

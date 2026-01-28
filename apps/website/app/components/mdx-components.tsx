@@ -11,7 +11,7 @@ export const mdxComponents = {
   Codespark: ({ code }: CodesparkProps) => {
     const { theme } = useTheme();
     const navigate = useNavigate();
-    const [tailwindcss, setTailwindcss] = useState(false);
+    const [tailwindcss, setTailwindcss] = useState(true);
     const playgroundCode = `import { Codespark } from '@codespark/react';
 
 const code = \`${code}\`;
@@ -27,12 +27,14 @@ export default function App() {
         toolbox={[
           'copy',
           {
-            tooltip: 'Toggle Tailwind',
+            tooltip: tailwindcss ? 'Disable Tailwind CSS' : 'Enable Tailwind CSS',
             render: () => {
               return (
-                <Toggle size="sm" pressed={tailwindcss} onPressedChange={setTailwindcss}>
-                  <Wind />
-                </Toggle>
+                <span>
+                  <Toggle size="sm" pressed={tailwindcss} onPressedChange={setTailwindcss}>
+                    <Wind />
+                  </Toggle>
+                </span>
               );
             }
           },
@@ -42,7 +44,7 @@ export default function App() {
             onClick: async () => {
               navigate({
                 pathname: '/playground',
-                search: `?code=${await encodeBase64URL(playgroundCode)}`
+                search: `?code=${await encodeBase64URL(playgroundCode)}&embedded`
               });
             }
           }

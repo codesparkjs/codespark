@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from 'fumadocs-ui/components/
 import { useCopyButton } from 'fumadocs-ui/utils/use-copy-button';
 import { Check, ChevronDown, Copy, ExternalLinkIcon, MessageCircleIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router';
 
 import { cn } from '~/lib/utils';
 
@@ -197,24 +198,17 @@ export function ViewOptions({
 
   return (
     <Popover>
-      <PopoverTrigger
-        className={cn(
-          buttonVariants({
-            color: 'secondary',
-            size: 'sm',
-            className: 'gap-2'
-          })
-        )}>
+      <PopoverTrigger className={cn(buttonVariants({ color: 'secondary', size: 'sm', className: 'gap-2' }))}>
         Open
         <ChevronDown className="text-fd-muted-foreground size-3.5" />
       </PopoverTrigger>
       <PopoverContent className="flex flex-col">
         {items.map(item => (
-          <a key={item.href} href={item.href} rel="noreferrer noopener" target="_blank" className={cn(optionVariants())}>
+          <Link key={item.href} to={item.href} rel="noreferrer noopener" target="_blank" className={cn(optionVariants())}>
             {item.icon}
             {item.title}
             <ExternalLinkIcon className="text-fd-muted-foreground ms-auto size-3.5" />
-          </a>
+          </Link>
         ))}
       </PopoverContent>
     </Popover>

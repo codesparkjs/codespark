@@ -1,6 +1,371 @@
 ---
 title: Workspace
-description: Workspace
+description: Learn how to use the Workspace API to manage files, editors, and compilation state in Codespark
 ---
 
-WIP...
+The `Workspace` is the core state management system in Codespark. It manages files, tracks changes, handles compilation, and provides an event system for reacting to workspace updates.
+
+<Callout title="Important Premise" type="warn">Workspace is immutable. It means that never change your workspace during runtime and keep it stabled.</Callout>
+
+## Overview
+
+A workspace represents a complete code environment with:
+- **File management**: Create, read, update, delete, and rename files
+- **Editor integration**: Track multiple editor instances
+- **Compilation state**: Automatic dependency analysis and code compilation
+- **Event system**: Subscribe to file changes, compilation events, and more
+- **OPFS support**: Persist files using Origin Private File System
+
+## Basic Usage
+
+`Codespark` component is out of box with an internal workspace. You can use `getWorkspace` props to access it.
+
+```tsx
+import { Codespark, type Workspace } from '@codespark/react';
+import { useEffect, useRef } from 'react';
+
+const code = `export default function App() {
+  return <div>Hello World</div>;
+}`;
+
+export default function App() {
+  const workspace = useRef<Workspace>(null);
+
+  useEffect(() => {
+    console.log(workspace.current?.files); // { './App.tsx': 'export default ...' }
+  }, []);
+
+  return <Codespark getWorkspace={workspace} code={code} />;
+}
+```
+
+### Create Manually
+
+To keep workspace immutable during runtime, you need to create a workspace outside the component or wrap it with `useMemo` .
+
+> To reduce the complexity of the `Codespark` component and maintain out-of-the-box features, please use composable components when you need to create a custom workspace.
+
+```tsx
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx', // the entry should be specific
+  files: { './App.tsx': '...' }
+});
+export default function App() {
+  // or wrap with workspace
+  // const workspace = useMemo(() => new Workspace({ entry: './App.tsx', files: {...} }), [])
+
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <div className="border-border relative w-full divide-y overflow-hidden rounded-lg border">
+        <CodesparkPreview className="border-border" />
+        <CodesparkEditor />
+      </div>
+    </CodesparkProvider>
+  );
+}
+```
+
+### Using createWorkspace
+
+The `createWorkspace` function provides a convenient way to create workspaces from React components:
+
+```tsx
+import { createWorkspace } from '@codespark/react';
+
+function MyComponent() {
+  return <div>Hello</div>;
+}
+
+// Packed mode (default): extracts imports and local definitions
+const workspace = createWorkspace(MyComponent, {
+  id: 'demo',
+  name: './App.tsx',
+  mode: 'packed'
+});
+
+// Raw mode: uses component source as-is
+const workspace2 = createWorkspace(MyComponent, {
+  mode: 'raw'
+});
+
+// Source mode: uses original source file
+const workspace3 = createWorkspace(MyComponent, {
+  mode: 'source'
+});
+```
+
+## Using the Workspace Hook
+
+The `useWorkspace` hook provides reactive access to workspace state:
+
+```tsx
+import { useWorkspace } from '@codespark/react';
+
+function MyEditor() {
+  const {
+    files,           // Current files object
+    currentFile,     // Currently selected file
+    fileTree,        // Hierarchical file tree structure
+    deps,            // Analyzed dependencies
+    compiled,        // Compiled code
+    compileError,    // Compilation error if any
+    workspace        // Workspace instance
+  } = useWorkspace();
+
+  return (
+    <div>
+      <h3>{currentFile.name}</h3>
+      <pre>{currentFile.code}</pre>
+    </div>
+  );
+}
+```
+
+### Available Events
+
+| Event | Parameters | Description |
+|-------|-----------|-------------|
+| `compiled` | `(code: string)` | Emitted when code compiles successfully |
+| `compileError` | `(error: Error)` | Emitted when compilation fails |
+| `setup` | `()` | Emitted when workspace is initialized |
+| `fileChange` | `(path: string, content: string)` | Emitted when a file is added or updated |
+| `filesChange` | `(files: Record<string, string>)` | Emitted when multiple files are updated |
+| `fileRename` | `(oldPath: string, newPath: string)` | Emitted when a file is renamed |
+| `fileDelete` | `(path: string)` | Emitted when a file is deleted |
+| `currentFileChange` | `(file: FileNode)` | Emitted when the current file changes |
+
+## Workspace Properties
+
+### Core Properties
+
+```tsx
+workspace.id              // Unique workspace identifier
+workspace.entry           // Entry file path (e.g., './App.tsx')
+workspace.files           // All files as Record<string, string>
+workspace.framework       // Framework instance or name
+workspace.currentFile     // Currently selected file
+workspace.editors         // Map of registered editor instances
+workspace.initialFiles    // Original files at creation time
+```
+
+### File Tree Structure
+
+The `useWorkspace` hook provides a hierarchical file tree:
+
+```tsx
+const { fileTree } = useWorkspace();
+
+// fileTree structure:
+[
+  {
+    type: 'file',
+    name: 'App.tsx',
+    path: './App.tsx',
+    code: '...',
+    language: 'typescript'
+  },
+  {
+    type: 'folder',
+    name: 'components',
+    path: 'components',
+    children: [
+      {
+        type: 'file',
+        name: 'Button.tsx',
+        path: 'components/Button.tsx',
+        code: '...',
+        language: 'typescript'
+      }
+    ]
+  }
+]
+```
+
+### Dependencies
+
+The workspace automatically analyzes dependencies:
+
+```tsx
+const { deps } = useWorkspace();
+
+// deps structure:
+{
+  style: [        // CSS imports
+    {
+      alias: './styles.css',
+      path: './styles.css',
+      code: '...',
+      deps: []
+    }
+  ],
+  internal: [     // Local file imports
+    {
+      alias: './utils',
+      path: './utils.ts',
+      code: '...',
+      deps: []
+    }
+  ],
+  external: [     // npm package imports
+    {
+      name: 'lodash',
+      version: 'latest',
+      imported: ['debounce', 'throttle']
+    }
+  ],
+  imports: {      // Import map for external dependencies
+    'lodash': 'https://esm.sh/lodash@latest',
+    'react': 'https://esm.sh/react@18',
+    'react-dom': 'https://esm.sh/react-dom@18'
+  }
+}
+```
+
+## OPFS Integration
+
+Workspaces automatically persist files to the Origin Private File System (OPFS) for browser-based storage:
+
+```tsx
+// Files are automatically written to OPFS when changed
+workspace.setFile('./App.tsx', 'export default function App() {}');
+
+// OPFS is initialized automatically when workspace is used
+// Files are stored under: navigator.storage.getDirectory() / workspace.id
+```
+
+OPFS provides:
+- **Private storage**: Files are isolated per origin
+- **Persistence**: Files survive page reloads
+- **Performance**: Fast read/write operations
+- **No quota prompts**: Uses available storage automatically
+
+## TypeScript Types
+
+```tsx
+interface WorkspaceInit {
+  id?: string;
+  framework?: Framework | (new () => Framework) | string;
+  entry: string;
+  files: Record<string, string>;
+}
+
+interface FileNode {
+  type: 'file';
+  name: string;
+  path: string;
+  code: string;
+  language?: string;
+}
+
+interface FolderNode {
+  type: 'folder';
+  name: string;
+  path: string;
+  children?: FileTreeNode[];
+}
+
+type FileTreeNode = FileNode | FolderNode;
+
+interface WorkspaceEvent {
+  compiled: (code: string) => void;
+  compileError: (error: Error) => void;
+  setup: () => void;
+  fileChange: (path: string, content: string) => void;
+  filesChange: (files: Record<string, string>) => void;
+  fileRename: (oldPath: string, newPath: string) => void;
+  fileDelete: (path: string) => void;
+  currentFileChange: (file: FileNode) => void;
+}
+
+interface WorkspaceDerivedState {
+  fileTree: FileTreeNode[];
+  deps: {
+    style: InternalDep[];
+    internal: InternalDep[];
+    external: ExternalDep[];
+    imports: Record<string, string>;
+  };
+  compiled: string;
+  compileError: Error | null;
+}
+```
+
+## Advanced Usage
+
+### Multiple Workspaces
+
+You can create and manage multiple workspaces:
+
+```tsx
+const workspace1 = new Workspace({
+  id: 'demo-1',
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+
+const workspace2 = new Workspace({
+  id: 'demo-2',
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+
+// Use different workspaces in different components
+function Editor1() {
+  const { files } = useWorkspace(workspace1);
+  return <div>Editor 1</div>;
+}
+
+function Editor2() {
+  const { files } = useWorkspace(workspace2);
+  return <div>Editor 2</div>;
+}
+```
+
+### Custom Framework
+
+```tsx
+import { Framework } from '@codespark/framework';
+
+class MyFramework extends Framework {
+  analyze(entry: string, files: Record<string, string>) {
+    // Custom dependency analysis
+    return [];
+  }
+
+  compile(entry: string, files: Record<string, string>) {
+    // Custom compilation logic
+    return 'compiled code';
+  }
+}
+
+const workspace = new Workspace({
+  framework: new MyFramework(),
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+```
+
+### Programmatic Compilation
+
+```tsx
+const { compiled, compileError, deps } = useWorkspace();
+
+if (compileError) {
+  console.error('Compilation failed:', compileError);
+} else {
+  console.log('Compiled code:', compiled);
+  console.log('External dependencies:', deps.external);
+  console.log('Import map:', deps.imports);
+}
+```
+
+## Best Practices
+
+1. **Use unique IDs**: Always provide a unique `id` for each workspace to avoid OPFS conflicts
+2. **Handle errors**: Subscribe to `compileError` events to handle compilation failures gracefully
+3. **Cleanup subscriptions**: Always unsubscribe from events when components unmount
+4. **Batch updates**: Use `setFiles()` instead of multiple `setFile()` calls for better performance
+5. **Normalize paths**: Use relative paths starting with `./` for consistency
+6. **Entry file first**: The entry file appears first in the file tree automatically

@@ -117,7 +117,7 @@ export function Toolbox(props: ToolboxProps) {
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon-sm" asChild>
-                  <Link target="_blank" to={`https://github.com/codesparkjs/codespark/tree/develop/apps/website/app/routes/examples/${example}`}>
+                  <Link target="_blank" to={`https://github.com/codesparkjs/codespark/tree/main/apps/website/app/routes/examples/${example}`}>
                     <Github />
                   </Link>
                 </Button>

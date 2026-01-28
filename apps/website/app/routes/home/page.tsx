@@ -41,7 +41,7 @@ export default function Home() {
             <br />
             The Park for Your Codes
           </h1>
-          <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">A code playground sparks your ideas to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
+          <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">A live-running code playground sparks your ideas to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <Button asChild>
               <Link to="/docs/getting-started">Get Started</Link>

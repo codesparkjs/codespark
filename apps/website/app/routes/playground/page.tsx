@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~
 import { Sidebar, SidebarContent, SidebarProvider } from '~/components/ui/sidebar';
 import { Switch } from '~/components/ui/switch';
 import { useIsMobile } from '~/hooks/use-mobile';
+import { useUpdateEffect } from '~/hooks/use-update-effect';
 import { decodeBase64URL, devModuleProxy, isDEV, isSSR } from '~/lib/utils';
 
 import type { Route } from './+types/page';
@@ -58,7 +59,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     files = { './App.tsx': '' };
   }
 
-  return { files, examples, boilerplate: meta, embedded };
+  return { files, examples, boilerplate: code ? void 0 : meta, embedded };
 }
 
 export function meta() {
@@ -79,16 +80,11 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const logIdRef = useRef(0);
   const fileExplorerPanelRef = usePanelRef();
   const consolePanelRef = usePanelRef();
-  // const { workspace, compileError } = useWorkspace({ entry: './App.tsx', files });
   const workspace = useMemo(() => new Workspace({ entry: './App.tsx', files }), []);
   const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
-  const hasRaw = examples.find(e => e.name === example)?.raw ?? true;
+  const hasRaw = examples.find(e => e.name === example)?.raw ?? !!boilerplate;
 
-  // useEffect(() => {
-  //   setRuntimeError(compileError);
-  // }, [compileError]);
-
-  useEffect(() => {
+  useUpdateEffect(() => {
     if (!example) return;
 
     getExample(location.origin, example).then(files => {
@@ -98,6 +94,12 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
       workspace.setFiles(!embedded && rawFiles && hasRaw ? rawFiles : embeddedFiles);
     });
   }, [example, embedded]);
+
+  useEffect(() => {
+    workspace.on('compileError', error => {
+      setRuntimeError(error);
+    });
+  }, []);
 
   if (isMobile === null) return null;
 
@@ -164,7 +166,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                       <Link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                       <Link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet" />
                       <Style>{isMobile ? CUSTOM_MOBILE_STYLES : CUSTOM_STYLES}</Style>
-                      {embedded || !hasRaw ? <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style> : null}
+                      <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
                     </CodesparkPreview>
                     {runtimeError && (
                       <div className="bg-background absolute inset-0 z-20 overflow-auto p-6">

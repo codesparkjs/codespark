@@ -3,4 +3,89 @@ title: File System
 description: File System
 ---
 
-WIP...
+## File Management
+
+### Adding/Updating Files
+
+```tsx
+// Add or update a single file
+workspace.setFile('./utils.ts', 'export const add = (a, b) => a + b;');
+
+// Update multiple files at once
+workspace.setFiles({
+  './App.tsx': '...',
+  './utils.ts': '...',
+  './styles.css': '...'
+});
+```
+
+### Renaming Files
+
+```tsx
+// Rename a file
+workspace.renameFile('./utils.ts', 'helpers.ts');
+// Result: ./helpers.ts
+
+// Rename a folder (renames all nested files)
+workspace.renameFile('src/components', 'ui');
+// src/components/Button.tsx → ui/Button.tsx
+```
+
+### Deleting Files
+
+```tsx
+// Delete a file
+workspace.deleteFile('./utils.ts');
+
+// Delete a folder (deletes all nested files)
+workspace.deleteFile('src/components');
+```
+
+### Switching Files
+
+```tsx
+// Set the current active file
+workspace.setCurrentFile('./App.tsx');
+```
+
+## Event System
+
+Subscribe to workspace events to react to changes:
+
+```tsx
+// Listen to file changes
+const unsubscribe = workspace.on('fileChange', (path, content) => {
+  console.log(`File ${path} changed`);
+});
+
+// Listen to compilation events
+workspace.on('compiled', (code) => {
+  console.log('Compilation successful');
+});
+
+workspace.on('compileError', (error) => {
+  console.error('Compilation failed:', error);
+});
+
+// Listen to file operations
+workspace.on('fileRename', (oldPath, newPath) => {
+  console.log(`Renamed ${oldPath} to ${newPath}`);
+});
+
+workspace.on('fileDelete', (path) => {
+  console.log(`Deleted ${path}`);
+});
+
+// Listen to current file changes
+workspace.on('currentFileChange', (file) => {
+  console.log(`Switched to ${file.name}`);
+});
+
+// Listen to workspace setup
+workspace.on('setup', () => {
+  console.log('Workspace initialized');
+});
+
+// Unsubscribe when done
+unsubscribe();
+```
