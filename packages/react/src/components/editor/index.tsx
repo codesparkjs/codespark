@@ -1,12 +1,12 @@
 import { debounce } from 'lodash-es';
 import { Check, Copy, RefreshCw, RemoveFormatting } from 'lucide-react';
-import { type ComponentProps, isValidElement, type JSX, type ReactElement, type ReactNode, useCallback, useEffect, useId, useMemo, useRef } from 'react';
+import { type ComponentProps, isValidElement, type JSX, type ReactElement, type ReactNode, useCallback, useEffect, useId, useRef } from 'react';
 
 import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
 import { type EditorAdapter, EditorEngine } from '@/lib/editor-adapter';
 import { cn, useCopyToClipboard } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
-import { INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
+import { INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
 import { Button } from '@/ui/button';
 import { getIconForLanguageExtension } from '@/ui/icons';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
@@ -20,6 +20,7 @@ type ToolboxItemId = 'reset' | 'format' | 'copy';
 export interface ToolboxItemConfig {
   tooltip?: string;
   icon?: ReactNode;
+  asChild?: boolean;
   onClick?: (editor: EditorAdapter | null) => void;
   render?: (editor: EditorAdapter | null) => ReactNode;
 }
@@ -30,7 +31,6 @@ export interface CodesparkEditorBaseProps extends Pick<ConfigContextValue, 'them
   className?: string;
   workspace?: Workspace;
   toolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[];
-  useOPFS?: boolean;
   containerProps?: ComponentProps<'div'>;
 }
 
@@ -65,7 +65,6 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
     editor = globalEditor ?? CodeMirror,
     className,
     toolbox = true,
-    useOPFS = false,
     containerProps
   } = props;
   const { files, currentFile, deps } = useWorkspace(workspace);
@@ -73,12 +72,6 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
   const editorId = id ?? `editor${uid}`;
   const editorRef = useRef<EditorAdapter | null>(null);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
-  const language = useMemo(() => {
-    const ext = currentFile.name?.split('.').pop()?.toLowerCase();
-    const langMap: Record<string, string> = { ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript', css: 'css', json: 'json', html: 'html', md: 'markdown' };
-
-    return ext ? langMap[ext] : undefined;
-  }, [currentFile.name]);
   const toolboxItems: Record<ToolboxItemId, ToolboxItemConfig> = {
     reset: {
       tooltip: 'Reset Document',
@@ -145,7 +138,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
           height={height ?? 200}
           width={width}
           wrapperProps={wrapperProps}
-          language={language}
+          language={currentFile.language}
           options={{
             padding: { top: 12, bottom: 12 },
             lineDecorationsWidth: 12,
@@ -177,7 +170,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
           theme={theme}
           basicSetup={basicSetup}
           fontFamily={fontFamily ?? globalFontFamily}
-          lang={language}
+          lang={currentFile.language}
           onChange={(newValue, viewUpdate) => {
             onChange?.(newValue, viewUpdate);
             handleEditorChange(newValue);
@@ -207,10 +200,6 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
   }, [value]);
 
   useEffect(() => {
-    if (useOPFS) {
-      workspace[INTERNAL_INIT_OPFS]();
-    }
-
     return () => {
       workspace[INTERNAL_UNREGISTER_EDITOR](editorId);
     };
@@ -234,7 +223,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
                 const item = typeof t === 'string' ? toolboxItems[t as ToolboxItemId] : (t as ToolboxItemConfig);
                 if (!item) return null;
 
-                const { tooltip, icon, onClick, render } = item;
+                const { tooltip, icon, asChild = true, onClick, render } = item;
 
                 function renderTriggerContent(): ReactNode {
                   if (icon) {
@@ -252,7 +241,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
 
                 return (
                   <Tooltip key={index}>
-                    <TooltipTrigger asChild>{renderTriggerContent()}</TooltipTrigger>
+                    <TooltipTrigger asChild={asChild}>{renderTriggerContent()}</TooltipTrigger>
                     <TooltipContent>{tooltip}</TooltipContent>
                   </Tooltip>
                 );

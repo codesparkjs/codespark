@@ -1,7 +1,7 @@
 import { registerFramework } from '@codespark/framework';
 import { react } from '@codespark/framework/react';
 import { Maximize } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type RefObject, useEffect, useState } from 'react';
 
 import { CodesparkEditor, type CodesparkEditorEngineComponents, type CodesparkEditorProps } from '@/components/editor';
 import { CodesparkFileExplorer } from '@/components/file-explorer';
@@ -30,7 +30,7 @@ export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<
   showPreview?: boolean;
   readonly?: boolean;
   defaultExpanded?: boolean;
-  getWorkspace?: (ws: Workspace) => void;
+  getWorkspace?: RefObject<Workspace | null>;
   editor?: CodesparkEditorEngineComponents;
 }
 
@@ -70,12 +70,14 @@ export function Codespark(props: CodesparkProps) {
   }, [compileError]);
 
   useEffect(() => {
-    getWorkspace?.(workspace);
+    if (getWorkspace) {
+      getWorkspace.current = workspace;
+    }
   }, []);
 
   return (
     <CodesparkProvider workspace={workspace} theme={theme}>
-      <div className={cn('border-border relative overflow-hidden rounded-lg border', showPreview && showEditor ? 'divide-y' : '', className)}>
+      <div className={cn('border-border relative w-full overflow-hidden rounded-lg border', showPreview && showEditor ? 'divide-y' : '', className)}>
         <div className="border-border relative">
           {showPreview ? (
             <CodesparkPreview

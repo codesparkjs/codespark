@@ -56,3 +56,10 @@ export function useCopyToClipboard(timeout = 2000) {
 
   return { copyToClipboard, isCopied };
 }
+
+export function getLanguageFromFile(name: string) {
+  const ext = name.split('.').pop()?.toLowerCase();
+  const langMap: Record<string, string> = { ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript', css: 'css', json: 'json', html: 'html', md: 'markdown' };
+
+  return ext ? langMap[ext] : void 0;
+}

@@ -6,16 +6,25 @@ import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
 import type { EditorAdapter } from '@/lib/editor-adapter';
-import { constructESMUrl } from '@/lib/utils';
+import { constructESMUrl, getLanguageFromFile } from '@/lib/utils';
 
-import { INTERNAL_BOUND, INTERNAL_INIT_OPFS, INTERNAL_REGISTER_EDITOR, INTERNAL_SET_ID, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
+import { INTERNAL_BOUND, INTERNAL_EMIT, INTERNAL_REGISTER_EDITOR, INTERNAL_SET_ID, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
 import { OPFS } from './opfs';
 
-export interface FileTreeNode {
+export type FileTreeNode = FileNode | FolderNode;
+
+export interface FileNode {
+  type: 'file';
   name: string;
-  type: 'file' | 'folder';
   path: string;
-  code?: string;
+  code: string;
+  language?: string;
+}
+
+export interface FolderNode {
+  type: 'folder';
+  name: string;
+  path: string;
   children?: FileTreeNode[];
 }
 
@@ -24,6 +33,18 @@ export interface WorkspaceInit {
   framework?: Framework | (new () => Framework) | string;
   entry: string;
   files: Record<string, string>;
+  OPFS?: boolean;
+}
+
+export interface WorkspaceEvent {
+  compiled: (code: string) => void;
+  compileError: (error: Error) => void;
+  setup: () => void;
+  fileChange: (path: string, content: string) => void;
+  filesChange: (files: Record<string, string>) => void;
+  fileRename: (oldPath: string, newPath: string) => void;
+  fileDelete: (path: string) => void;
+  currentFileChange: (file: FileNode) => void;
 }
 
 export class Workspace extends OPFS {
@@ -31,38 +52,47 @@ export class Workspace extends OPFS {
   initialFiles: Record<string, string>;
 
   private listeners = new Set<() => void>();
-  private _currentFile: FileTreeNode | null = null;
+  private events = new Map<keyof WorkspaceEvent, Set<WorkspaceEvent[keyof WorkspaceEvent]>>();
+  private _currentFile: FileNode | null = null;
   private _editors = new Map<string, EditorAdapter>();
   private _bound = false;
 
   constructor(private config: WorkspaceInit) {
     super();
-    this.id = config.id || '';
-    this.initialFiles = { ...config.files };
+    const { id, OPFS = false, files } = config;
+    this.id = id || '';
+    this.initialFiles = { ...files };
+
+    if (OPFS) {
+      super.initOPFS(this.files);
+    }
   }
 
   private notifyListeners(): void {
     this.listeners.forEach(fn => fn());
   }
 
-  private createEntryFileNode(code?: string): FileTreeNode {
+  private createEntryFileNode(code?: string) {
+    const name = this.entry.split('/').pop() || this.entry;
+
     return {
-      name: this.entry.split('/').pop() || this.entry,
+      name,
       type: 'file',
       path: this.entry,
-      code: code ?? this.files[this.entry]
-    };
+      code: code ?? this.files[this.entry],
+      language: getLanguageFromFile(name)
+    } as FileNode;
   }
 
-  private normalizePath(path: string): string {
+  private normalizePath(path: string) {
     return path.replace(/^\.\//, '');
   }
 
-  private getFile(path: string): FileTreeNode | undefined {
+  private getFile(path: string) {
     const code = this.files[path];
-    if (code === undefined) return undefined;
+    if (code === undefined) return;
 
-    return { name: path.split('/').pop() || path, type: 'file', path, code };
+    return { name: path.split('/').pop() || path, type: 'file', path, code } as FileNode;
   }
 
   get entry() {
@@ -108,6 +138,7 @@ export class Workspace extends OPFS {
       this._currentFile = { ...this._currentFile, code: content };
     }
     this.notifyListeners();
+    this.emit('fileChange', path, content);
   }
 
   setFiles(files: Record<string, string>) {
@@ -122,6 +153,7 @@ export class Workspace extends OPFS {
       }
     }
     this.notifyListeners();
+    this.emit('filesChange', files);
   }
 
   renameFile(oldPath: string, newName: string) {
@@ -154,6 +186,7 @@ export class Workspace extends OPFS {
     }
 
     this.notifyListeners();
+    this.emit('fileRename', oldPath, newPath);
   }
 
   deleteFile(path: string) {
@@ -193,6 +226,7 @@ export class Workspace extends OPFS {
     }
 
     this.notifyListeners();
+    this.emit('fileDelete', path);
   }
 
   setCurrentFile(path: string) {
@@ -200,7 +234,25 @@ export class Workspace extends OPFS {
     if (file) {
       this._currentFile = file;
       this.notifyListeners();
+      this.emit('currentFileChange', file);
     }
+  }
+
+  on<E extends keyof WorkspaceEvent>(event: E, callback: WorkspaceEvent[E]) {
+    if (!this.events.has(event)) {
+      this.events.set(event, new Set());
+    }
+    this.events.get(event)!.add(callback as WorkspaceEvent[keyof WorkspaceEvent]);
+
+    return () => this.off(event, callback);
+  }
+
+  off<E extends keyof WorkspaceEvent>(event: E, callback: WorkspaceEvent[E]) {
+    this.events.get(event)?.delete(callback as WorkspaceEvent[keyof WorkspaceEvent]);
+  }
+
+  private emit<E extends keyof WorkspaceEvent>(event: E, ...args: Parameters<WorkspaceEvent[E]>) {
+    this.events.get(event)?.forEach(cb => (cb as (...args: Parameters<WorkspaceEvent[E]>) => void)(...args));
   }
 
   [INTERNAL_SUBSCRIBE](listener: () => void) {
@@ -209,27 +261,28 @@ export class Workspace extends OPFS {
     return () => this.listeners.delete(listener);
   }
 
-  [INTERNAL_REGISTER_EDITOR](id: string, editor: EditorAdapter): void {
+  [INTERNAL_REGISTER_EDITOR](id: string, editor: EditorAdapter) {
     this._editors.set(id, editor);
   }
 
-  [INTERNAL_UNREGISTER_EDITOR](id: string): void {
+  [INTERNAL_UNREGISTER_EDITOR](id: string) {
     this._editors.delete(id);
-  }
-
-  async [INTERNAL_INIT_OPFS]() {
-    await super.initOPFS(this.files);
   }
 
   [INTERNAL_BOUND]() {
     if (this._bound) return true;
     this._bound = true;
+    this.emit('setup');
 
     return false;
   }
 
   [INTERNAL_SET_ID](id: string) {
     this.id = id;
+  }
+
+  [INTERNAL_EMIT]<E extends keyof WorkspaceEvent>(event: E, ...args: Parameters<WorkspaceEvent[E]>) {
+    this.emit(event, ...args);
   }
 }
 
@@ -316,9 +369,9 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
           currentPath = currentPath ? `${currentPath}/${name}` : name;
 
           if (isLast && !isEmptyFolder) {
-            current.push({ name, type: 'file', path: filePath, code });
+            current.push({ name, type: 'file', path: filePath, code, language: getLanguageFromFile(name) });
           } else {
-            let folder = current.find(n => n.type === 'folder' && n.name === name);
+            let folder = current.find((n): n is FolderNode => n.type === 'folder' && n.name === name);
             if (!folder) {
               folder = { name, type: 'folder', path: currentPath, children: [] };
               current.push(folder);
@@ -365,18 +418,17 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     };
     const getCompileInfo = () => {
       try {
-        return { compiled: framework.compile(workspace.entry, files), compileError: null };
+        const compiled = framework.compile(workspace.entry, files);
+        workspace[INTERNAL_EMIT]('compiled', compiled);
+        return { compiled, compileError: null };
       } catch (error) {
+        workspace[INTERNAL_EMIT]('compileError', error as Error);
         return { compiled: '', compileError: error as Error };
       }
     };
 
     return { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
   }, [files]);
-
-  // useEffect(() => {
-  //   return () => framework.revoke();
-  // }, []);
 
   return {
     files: context?.files ?? files,
