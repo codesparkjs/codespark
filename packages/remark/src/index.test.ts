@@ -119,4 +119,95 @@ npm install
     expect(output).toContain('<Codespark');
     expect(output).toContain('```bash');
   });
+
+  it('should merge consecutive file blocks into files property', () => {
+    const input = `\`\`\`tsx codespark file="./button.tsx"
+export const Button = () => <button>Click</button>
+\`\`\`
+
+\`\`\`tsx codespark file="./App.tsx"
+import { Button } from './button'
+export default () => <Button />
+\`\`\``;
+    const output = process(input);
+    expect(output).toContain('<Codespark');
+    expect(output).toContain('files={');
+    expect(output).toContain('./button.tsx');
+    expect(output).toContain('./App.tsx');
+    expect(output).not.toContain('code=');
+    // Should only have one Codespark component
+    expect((output.match(/<Codespark/g) || []).length).toBe(1);
+  });
+
+  it('should not merge file blocks separated by other content', () => {
+    const input = `\`\`\`tsx codespark file="./button.tsx"
+export const Button = () => <button>Click</button>
+\`\`\`
+
+Some text in between
+
+\`\`\`tsx codespark file="./App.tsx"
+export default () => <div />
+\`\`\``;
+    const output = process(input);
+    // Should have two separate Codespark components
+    expect((output.match(/<Codespark/g) || []).length).toBe(2);
+  });
+
+  it('should not merge file blocks with different attributes', () => {
+    const input = `\`\`\`tsx codespark file="./button.tsx" editable
+export const Button = () => <button>Click</button>
+\`\`\`
+
+\`\`\`tsx codespark file="./App.tsx"
+export default () => <div />
+\`\`\``;
+    const output = process(input);
+    // Should have two separate Codespark components due to different attributes
+    expect((output.match(/<Codespark/g) || []).length).toBe(2);
+  });
+
+  it('should preserve shared attributes when merging file blocks', () => {
+    const input = `\`\`\`tsx codespark file="./button.tsx" readonly height=400
+export const Button = () => <button>Click</button>
+\`\`\`
+
+\`\`\`tsx codespark file="./App.tsx" readonly height=400
+export default () => <div />
+\`\`\``;
+    const output = process(input);
+    expect(output).toContain('files={');
+    expect(output).toContain('readonly={true}');
+    expect(output).toContain('height={400}');
+    expect((output.match(/<Codespark/g) || []).length).toBe(1);
+  });
+
+  it('should handle single file block without merging', () => {
+    const input = `\`\`\`tsx codespark file="./App.tsx"
+export default () => <div>Single file</div>
+\`\`\``;
+    const output = process(input);
+    expect(output).toContain('<Codespark');
+    expect(output).toContain('files={');
+    expect(output).toContain('./App.tsx');
+  });
+
+  it('should handle mix of file blocks and regular code blocks', () => {
+    const input = `\`\`\`tsx codespark file="./button.tsx"
+export const Button = () => <button>Click</button>
+\`\`\`
+
+\`\`\`tsx codespark file="./App.tsx"
+export default () => <div />
+\`\`\`
+
+\`\`\`tsx codespark
+export default () => <span>Regular</span>
+\`\`\``;
+    const output = process(input);
+    // Should have two Codespark components: one merged files, one regular code
+    expect((output.match(/<Codespark/g) || []).length).toBe(2);
+    expect(output).toContain('files={');
+    expect(output).toContain('code=');
+  });
 });
