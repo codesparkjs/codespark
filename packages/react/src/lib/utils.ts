@@ -1,5 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -55,6 +55,13 @@ export function useCopyToClipboard(timeout = 2000) {
   );
 
   return { copyToClipboard, isCopied };
+}
+
+export function useLatest<T>(value: T) {
+  const ref = useRef(value);
+  ref.current = value;
+
+  return ref;
 }
 
 export function getLanguageFromFile(name: string) {

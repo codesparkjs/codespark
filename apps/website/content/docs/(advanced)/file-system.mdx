@@ -1,17 +1,89 @@
 ---
 title: File System
-description: File System
+description: Learn how to manage multiple files in Codespark with a structured file system
 ---
+
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
+import MultiFiles from '../../../app/routes/examples/multi-files/embedded/App.tsx'
+
+Codespark provides a structured file system that supports multi-file previews.
+
+## Quick Start
+
+Suppose you want to create a file tree with the following structure:
+
+<Files>
+  <Folder name="components" defaultOpen>
+    <File name="button.tsx" />
+  </Folder>
+  <File name="App.tsx" />
+</Files>
+
+You can define the `files` object according to the file hierarchy and pass it to the `Codespark` component:
+
+```tsx preview="multi-files"
+import { Codespark } from '@codespark/react';
+
+const files = {
+  './App.tsx': '...', // Entry point file
+  './components/button.tsx': '...'
+};
+
+export default function App() {
+  return <Codespark files={files} />;
+}
+```
+
+<MultiFiles />
+
+<Callout title="File Name Convention" type="warn">
+All file names **MUST START WITH './'** to distinguish between local file dependencies and external package references.
+
+For example, if you define a file named 'components/button.tsx' without the './' prefix, it becomes ambiguous whether it refers to a local file or an external npm package during import resolution.
+</Callout>
 
 ## File Management
 
-### Adding/Updating Files
+### File Tree Structure
+
+The `useWorkspace` hook provides access to a hierarchical file tree representation:
 
 ```tsx
-// Add or update a single file
+const { fileTree } = useWorkspace();
+
+// Example fileTree structure:
+[
+  {
+    type: 'file',
+    name: 'App.tsx',
+    path: './App.tsx',
+    code: '...',
+    language: 'typescript'
+  },
+  {
+    type: 'folder',
+    name: 'components',
+    path: 'components',
+    children: [
+      {
+        type: 'file',
+        name: 'Button.tsx',
+        path: 'components/Button.tsx',
+        code: '...',
+        language: 'typescript'
+      }
+    ]
+  }
+]
+```
+
+### Creating and Updating Files
+
+```tsx
+// Create or update a single file
 workspace.setFile('./utils.ts', 'export const add = (a, b) => a + b;');
 
-// Update multiple files at once
+// Create or update multiple files simultaneously
 workspace.setFiles({
   './App.tsx': '...',
   './utils.ts': '...',
@@ -22,13 +94,13 @@ workspace.setFiles({
 ### Renaming Files
 
 ```tsx
-// Rename a file
+// Rename a single file
 workspace.renameFile('./utils.ts', 'helpers.ts');
 // Result: ./helpers.ts
 
-// Rename a folder (renames all nested files)
+// Rename a folder (all nested files are automatically renamed)
 workspace.renameFile('src/components', 'ui');
-// src/components/Button.tsx → ui/Button.tsx
+// Example: src/components/Button.tsx → ui/Button.tsx
 ```
 
 ### Deleting Files
@@ -37,55 +109,13 @@ workspace.renameFile('src/components', 'ui');
 // Delete a file
 workspace.deleteFile('./utils.ts');
 
-// Delete a folder (deletes all nested files)
+// Delete a folder (all nested files are automatically deleted)
 workspace.deleteFile('src/components');
 ```
 
-### Switching Files
+### Setting Active File
 
 ```tsx
-// Set the current active file
+// Set the currently active file in the editor
 workspace.setCurrentFile('./App.tsx');
-```
-
-## Event System
-
-Subscribe to workspace events to react to changes:
-
-```tsx
-// Listen to file changes
-const unsubscribe = workspace.on('fileChange', (path, content) => {
-  console.log(`File ${path} changed`);
-});
-
-// Listen to compilation events
-workspace.on('compiled', (code) => {
-  console.log('Compilation successful');
-});
-
-workspace.on('compileError', (error) => {
-  console.error('Compilation failed:', error);
-});
-
-// Listen to file operations
-workspace.on('fileRename', (oldPath, newPath) => {
-  console.log(`Renamed ${oldPath} to ${newPath}`);
-});
-
-workspace.on('fileDelete', (path) => {
-  console.log(`Deleted ${path}`);
-});
-
-// Listen to current file changes
-workspace.on('currentFileChange', (file) => {
-  console.log(`Switched to ${file.name}`);
-});
-
-// Listen to workspace setup
-workspace.on('setup', () => {
-  console.log('Workspace initialized');
-});
-
-// Unsubscribe when done
-unsubscribe();
 ```

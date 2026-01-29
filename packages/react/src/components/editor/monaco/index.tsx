@@ -4,7 +4,7 @@ import type * as monaco from 'monaco-editor';
 import parserEstree from 'prettier/plugins/estree';
 import parserTypescript from 'prettier/plugins/typescript';
 import prettier from 'prettier/standalone';
-import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { createHighlighter } from 'shiki';
 
 import { EditorEngine, EditorEngineComponent } from '@/lib/editor-adapter';
@@ -19,9 +19,8 @@ const setup = async () => {
   if (typeof window === 'undefined' || initialized) return;
   initialized = true;
 
-  const [{ loader }, monaco, highlighter] = await Promise.all([
+  const [mod, highlighter] = await Promise.all([
     import('@monaco-editor/react'),
-    import('monaco-editor'),
     createHighlighter({
       themes: [AVAILABLE_THEME.light, AVAILABLE_THEME.dark],
       langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'css', 'html'],
@@ -47,50 +46,52 @@ const setup = async () => {
     }
   };
 
-  loader.config({ monaco });
-  loader.init().then((Monaco: typeof monaco) => {
-    Monaco.languages.register({ id: 'tsx' });
-    Monaco.languages.register({ id: 'jsx' });
-    shikiToMonaco(highlighter, Monaco);
+  return mod.loader
+    .init()
+    .then((Monaco: typeof monaco) => {
+      Monaco.languages.register({ id: 'tsx' });
+      Monaco.languages.register({ id: 'jsx' });
+      shikiToMonaco(highlighter, Monaco);
 
-    Monaco.typescript.typescriptDefaults.setEagerModelSync(true);
+      Monaco.typescript.typescriptDefaults.setEagerModelSync(true);
 
-    Monaco.typescript.typescriptDefaults.setDiagnosticsOptions({
-      noSemanticValidation: false,
-      noSyntaxValidation: false
-    });
+      Monaco.typescript.typescriptDefaults.setDiagnosticsOptions({
+        noSemanticValidation: false,
+        noSyntaxValidation: false
+      });
 
-    Monaco.typescript.typescriptDefaults.setCompilerOptions({
-      strict: true,
-      noImplicitAny: false,
-      noUnusedLocals: false,
-      noUnusedParameters: false,
-      allowUnreachableCode: true,
-      allowUnusedLabels: true,
-      allowImportingTsExtensions: true,
-      target: Monaco.typescript.ScriptTarget.ESNext,
-      allowNonTsExtensions: true,
-      moduleResolution: Monaco.typescript.ModuleResolutionKind.NodeJs,
-      module: Monaco.typescript.ModuleKind.ESNext,
-      noEmit: true,
-      jsx: Monaco.typescript.JsxEmit.Preserve,
-      esModuleInterop: true
-    });
+      Monaco.typescript.typescriptDefaults.setCompilerOptions({
+        strict: true,
+        noImplicitAny: false,
+        noUnusedLocals: false,
+        noUnusedParameters: false,
+        allowUnreachableCode: true,
+        allowUnusedLabels: true,
+        allowImportingTsExtensions: true,
+        target: Monaco.typescript.ScriptTarget.ESNext,
+        allowNonTsExtensions: true,
+        moduleResolution: Monaco.typescript.ModuleResolutionKind.NodeJs,
+        module: Monaco.typescript.ModuleKind.ESNext,
+        noEmit: true,
+        jsx: Monaco.typescript.JsxEmit.Preserve,
+        esModuleInterop: true
+      });
 
-    Monaco.languages.registerDocumentFormattingEditProvider('typescript', {
-      async provideDocumentFormattingEdits(model, options) {
-        const text = model.getValue();
-        const formatted = await prettier.format(text, {
-          parser: 'typescript',
-          plugins: [parserTypescript, parserEstree],
-          tabWidth: options.tabSize,
-          useTabs: !options.insertSpaces
-        });
+      Monaco.languages.registerDocumentFormattingEditProvider('typescript', {
+        async provideDocumentFormattingEdits(model, options) {
+          const text = model.getValue();
+          const formatted = await prettier.format(text, {
+            parser: 'typescript',
+            plugins: [parserTypescript, parserEstree],
+            tabWidth: options.tabSize,
+            useTabs: !options.insertSpaces
+          });
 
-        return [{ range: model.getFullModelRange(), text: formatted }];
-      }
-    });
-  });
+          return [{ range: model.getFullModelRange(), text: formatted }];
+        }
+      });
+    })
+    .then(() => mod.default);
 };
 
 const MONACO_DEFAULT_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
@@ -150,15 +151,15 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
     const [MonacoEditor, setMonacoEditor] = useState<typeof import('@monaco-editor/react').default | null>(null);
     const mergedOptions = { ...MONACO_DEFAULT_OPTIONS, ...Object.fromEntries(Object.entries(options).filter(([, v]) => v !== undefined)) };
 
-    const handleEditorDidMount: OnMount = useCallback((editor, monaco) => {
+    const handleEditorDidMount: OnMount = (editor, monaco) => {
       onMount?.(editor, monaco);
       editorInstance.current = editor;
       setMonacoInstance(monaco);
-    }, []);
+    };
 
-    const handleEditorContentChange: OnChange = useCallback((value, evt) => {
+    const handleEditorContentChange: OnChange = (value, evt) => {
       onChange?.(value, evt);
-    }, []);
+    };
 
     const addExtraLib = (dts: Record<string, string> = {}) => {
       Object.entries(dts).forEach(([module, content]) => {
@@ -267,11 +268,15 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
 
     useEffect(() => {
       (async () => {
-        await setup();
-        setTimeout(() => {
-          import('@monaco-editor/react').then(mod => setMonacoEditor(() => mod.default));
-        }, 0);
+        const MonacoEditorReact = await setup();
+        if (MonacoEditorReact) {
+          setMonacoEditor(() => MonacoEditorReact);
+        }
       })();
+
+      return () => {
+        initialized = false;
+      };
     }, []);
 
     useEffect(() => {

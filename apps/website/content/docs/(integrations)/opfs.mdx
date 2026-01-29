@@ -3,4 +3,21 @@ title: OPFS
 description: OPFS
 ---
 
-WIP...
+
+## OPFS Integration
+
+Workspaces automatically persist files to the Origin Private File System (OPFS) for browser-based storage:
+
+```tsx
+// Files are automatically written to OPFS when changed
+workspace.setFile('./App.tsx', 'export default function App() {}');
+
+// OPFS is initialized automatically when workspace is used
+// Files are stored under: navigator.storage.getDirectory() / workspace.id
+```
+
+OPFS provides:
+- **Private storage**: Files are isolated per origin
+- **Persistence**: Files survive page reloads
+- **Performance**: Fast read/write operations
+- **No quota prompts**: Uses available storage automatically

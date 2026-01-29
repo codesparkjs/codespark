@@ -4,7 +4,7 @@ import { type ComponentProps, isValidElement, type JSX, type ReactElement, type 
 
 import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
 import { type EditorAdapter, EditorEngine } from '@/lib/editor-adapter';
-import { cn, useCopyToClipboard } from '@/lib/utils';
+import { cn, useCopyToClipboard, useLatest } from '@/lib/utils';
 import { useWorkspace, Workspace } from '@/lib/workspace';
 import { INTERNAL_REGISTER_EDITOR, INTERNAL_UNREGISTER_EDITOR } from '@/lib/workspace/internals';
 import { Button } from '@/ui/button';
@@ -32,6 +32,7 @@ export interface CodesparkEditorBaseProps extends Pick<ConfigContextValue, 'them
   workspace?: Workspace;
   toolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[];
   containerProps?: ComponentProps<'div'>;
+  debounceWait?: number;
 }
 
 export interface CodesparkEditorEngineProps {
@@ -65,12 +66,14 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
     editor = globalEditor ?? CodeMirror,
     className,
     toolbox = true,
-    containerProps
+    containerProps,
+    debounceWait = 500
   } = props;
   const { files, currentFile, deps } = useWorkspace(workspace);
   const uid = useId();
   const editorId = id ?? `editor${uid}`;
   const editorRef = useRef<EditorAdapter | null>(null);
+  const currentFileRef = useLatest(currentFile);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
   const toolboxItems: Record<ToolboxItemId, ToolboxItemConfig> = {
     reset: {
@@ -100,23 +103,24 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
     }
   };
 
-  const handleEditorMount = (adapter: EditorAdapter) => {
-    editorRef.current = adapter;
-    workspace[INTERNAL_REGISTER_EDITOR](editorId, adapter);
-  };
-
   const handleEditorChange = useCallback(
     debounce(
       (newValue?: string) => {
-        if (newValue === currentFile.code) return;
+        const { code, path } = currentFileRef.current;
+        if (newValue === code) return;
 
-        workspace.setFile(currentFile.path, newValue || '');
+        workspace.setFile(path, newValue || '');
       },
-      500,
+      debounceWait,
       { leading: true, trailing: true }
     ),
-    []
+    [debounceWait]
   );
+
+  const handleEditorMount = useCallback((adapter: EditorAdapter) => {
+    editorRef.current = adapter;
+    workspace[INTERNAL_REGISTER_EDITOR](editorId, adapter);
+  }, []);
 
   const renderEditor = () => {
     const id = `${workspace.id}${editorId}`;
@@ -128,8 +132,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
       return (
         <editor.Component
           id={id}
-          value={value}
-          defaultValue={currentFile.code}
+          value={value || currentFile.code}
           path={`file:///${id}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
           theme={AVAILABLE_THEME[theme] ?? AVAILABLE_THEME.light}
           files={files}
@@ -164,7 +167,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
         <editor.Component
           id={id}
           className={className}
-          value={currentFile.code}
+          value={value || currentFile.code}
           height={height ?? '200px'}
           width={width}
           theme={theme}

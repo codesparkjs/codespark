@@ -1,0 +1,76 @@
+---
+title: Smart Imports
+description: Automatic dependency resolution for npm packages and local files
+---
+
+Codespark implements an intelligent dependency analysis system that automatically collects import dependencies (internal or external) in your code. You can import any browser-compatible npm package without additional configuration.
+
+## Basic Usage
+
+Import npm packages directly in your code. Codespark automatically resolves and loads them from esm.sh.
+
+``` tsx codespark
+import { Heart, Sparkles, Star } from 'lucide-react';
+
+export default function App() {
+  const icons = [Heart, Star, Sparkles];
+
+  return (
+    <div className="flex items-center justify-center gap-6 p-6">
+      {icons.map((Icon, i) => (
+        <Icon key={i} className="h-8 w-8" />
+      ))}
+    </div>
+  );
+}
+```
+
+## via URL
+
+Import packages directly from URLs using ESM CDNs like esm.sh or unpkg.
+
+``` tsx codespark
+import confetti from 'https://esm.sh/canvas-confetti@1.6.0';
+
+export default function App() {
+  return (
+    <div className="flex justify-center">
+      <button className="rounded-lg bg-gray-100 px-4 py-2 dark:bg-gray-700" onClick={() => confetti()}>
+        import & run
+      </button>
+    </div>
+  );
+}
+```
+
+## Local Dependency
+
+Import components from other files in your workspace. Codespark automatically resolves relative imports between files.
+
+``` tsx codespark file="./welcome.tsx";
+export function Welcome() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}
+```
+
+``` tsx codespark file="./App.tsx"
+import { Welcome } from './welcome';
+
+export default function App() {
+  return <Welcome />;
+}
+```
+
+## Limitations
+
+Dependency resolution is powered by [esm.sh](https://esm.sh/), which means private scoped npm packages cannot be imported directly.
+
+If you need to preview private npm packages, consider these options:
+
+1. **Self-host esm.sh** - Follow the [esm.sh self-hosting guide](https://github.com/esm-dev/esm.sh/blob/main/HOSTING.md) to set up your own CDN instance
+2. **Custom import maps** - Configure custom import maps to point to your private package URLs

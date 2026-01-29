@@ -1,0 +1,63 @@
+---
+title: Multi-file Support
+description: Create and manage multi-file projects with the Workspace
+---
+
+Multi-file preview is a core feature of Codespark. You can easily create a multi-file system and manage files through the Workspace.
+
+## Files
+
+Pass multiple files as an object to the `files` prop. Each key represents a file path, and the value contains the file content.
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const files = {
+  './welcome.tsx': `export function Welcome() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`,
+  './App.tsx': `import { Welcome } from './welcome';
+
+export default function App() {
+  return <Welcome />;
+}`
+};
+
+export default function App() {
+  return <Codespark files={files} />;
+}
+```
+
+## Specify the Entry Point
+
+By default, `./App.tsx` is used as the entry file. If you want to use a different entry point, specify it using the `name` prop.
+
+```tsx preview
+// [!code word:./index.tsx]
+import { Codespark } from '@codespark/react';
+
+const files = {
+  './index.tsx': `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`
+};
+
+export default function App() {
+  return <Codespark name="./index.tsx" files={files} />;
+}
+```
+
+
+## File Management
+
+For more information about file system operations, see the [Workspace](/docs/workspace) & [File System](/docs/file-system) documentation.

@@ -39,7 +39,6 @@ export interface WorkspaceInit {
 export interface WorkspaceEvent {
   compiled: (code: string) => void;
   compileError: (error: Error) => void;
-  setup: () => void;
   fileChange: (path: string, content: string) => void;
   filesChange: (files: Record<string, string>) => void;
   fileRename: (oldPath: string, newPath: string) => void;
@@ -272,7 +271,6 @@ export class Workspace extends OPFS {
   [INTERNAL_BOUND]() {
     if (this._bound) return true;
     this._bound = true;
-    this.emit('setup');
 
     return false;
   }

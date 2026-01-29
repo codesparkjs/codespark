@@ -1,4 +1,4 @@
-import { Button } from './src';
+import { Button } from './components/button';
 
 export default function App() {
   return (

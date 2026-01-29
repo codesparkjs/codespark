@@ -23,13 +23,13 @@ export default defineConfig({
       },
       parseMetaString(meta) {
         const regex = /(?<=^|\s)(?<name>\w+)(?:=(?:"([^"]*)"|'([^']*)'))?/g;
-        const attributes: Record<string, string | null> = {};
+        const attributes: Record<string, string | boolean> = {};
         let rest = meta;
 
         rest = rest.replaceAll(regex, (match, name, value_1, value_2) => {
-          const allowedNames = ['jumpTo'];
+          const allowedNames = ['preview'];
           if (allowedNames.includes(name)) {
-            attributes[name] = value_1 ?? value_2 ?? null;
+            attributes[name] = value_1 ?? value_2 ?? true;
             return '';
           }
           return match;
