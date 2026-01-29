@@ -1,6 +1,7 @@
-import { Codespark, CodesparkProps } from '@codespark/react';
+import { Codespark, CodesparkPreview, CodesparkProps, Style } from '@codespark/react';
+import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
-import { SquareArrowOutUpRight, Wind } from 'lucide-react';
+import { Codepen, SquareArrowOutUpRight, Wind } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
 import { type HTMLAttributes, useRef } from 'react';
@@ -10,47 +11,74 @@ import { Icons } from '~/components/icons';
 import { Button } from '~/components/ui/button';
 import { Toggle } from '~/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
-import { cn, encodeBase64URL } from '~/lib/utils';
+import { cn, devModuleProxy, encodeBase64URL } from '~/lib/utils';
 
 export const mdxComponents = {
   pre: ({ preview, ...props }: HTMLAttributes<HTMLPreElement> & { preview?: string | boolean }) => {
     const pre = useRef<HTMLPreElement>(null);
     const navigate = useNavigate();
+    const [code, setCode] = useState<string | undefined>(void 0);
 
     return (
       <CodeBlock
         {...props}
+        className={cn(props.className, code ? 'bg-background! pb-0' : '')}
         Actions={({ className, children }) => {
           return (
-            <div className={cn(preview ? 'flex items-center pr-1.5' : '', className)}>
+            <div className={cn(className, preview ? 'flex items-center gap-x-1 pr-1.5' : '', code ? 'bg-surface' : '')}>
               {preview ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={async () => {
-                        if (typeof preview === 'string') {
-                          navigate({ pathname: '/playground', search: `?boilerplate=${preview}` });
-                        } else {
-                          const code = pre.current?.textContent;
+                <div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={async () => {
+                          if (typeof preview === 'string') {
+                            navigate({ pathname: '/playground', search: `?boilerplate=${preview}` });
+                          } else {
+                            const code = pre.current?.textContent;
 
-                          if (code) {
-                            navigate({ pathname: '/playground', search: `?code=${await encodeBase64URL(code)}&embedded` });
+                            if (code) {
+                              navigate({ pathname: '/playground', search: `?code=${await encodeBase64URL(code)}&embedded` });
+                            }
                           }
-                        }
-                      }}>
-                      <Icons.logo className="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Try in Playground</TooltipContent>
-                </Tooltip>
+                        }}>
+                        <Icons.logo className="size-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Try in Playground</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => {
+                          setCode(code => (code ? '' : pre.current?.textContent));
+                        }}>
+                        <Codepen />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{code ? 'Show Code' : 'Show Preview'}</TooltipContent>
+                  </Tooltip>
+                </div>
               ) : null}
               {children}
             </div>
           );
         }}>
-        <Pre ref={pre}>{props.children}</Pre>
+        {code ? (
+          <CodesparkPreview
+            code={code}
+            className="box-content h-[451px] pt-10"
+            imports={devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client'])}>
+            <Style>{`body { padding: 0 } #root { width: 100% }`}</Style>
+            <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
+          </CodesparkPreview>
+        ) : (
+          <Pre ref={pre}>{props.children}</Pre>
+        )}
       </CodeBlock>
     );
   },
