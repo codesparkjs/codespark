@@ -2,10 +2,10 @@
   "pages": [
     "smart-imports",
     "multi-file-support",
-    "composable",
     "css",
     "dark-mode",
     "markdown-syntax",
-    "global-config"
+    "global-config",
+    "modular"
   ]
 }

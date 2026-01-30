@@ -1,6 +1,111 @@
 ---
 title: CSS
-description: CSS
+description: Learn how to style your components using Tailwind CSS, CSS files, and injection components
 ---
 
-WIP...
+Codespark provides several ways to use CSS to style your components in the preview sandbox:
+
+- Tailwind CSS
+- Import CSS files directly
+- Use injection component
+
+## Tailwind CSS
+
+Codespark supports full Tailwind CSS v4 features for styling out of the box. You can use any Tailwind class name on the components you want to preview.
+
+```tsx codespark previewHeight=300
+export default function App() {
+  return (
+    <div className="flex items-center gap-8 rounded-2xl p-7 shadow-lg">
+      <div>
+        <img className="size-48 rounded-md shadow-xl" alt="" src="https://tailwindcss.com/_next/static/media/cover.f75d494c.png" />
+      </div>
+      <div className="flex flex-col items-start">
+        <span className="text-2xl font-medium">Class Warfare</span>
+        <span className="font-medium text-sky-500">The Anti-Patterns</span>
+        <span className="flex gap-2 font-medium text-gray-600 dark:text-gray-400">
+          <span>No. 4</span>
+          <span>·</span>
+          <span>2025</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+```
+
+## Import CSS files
+
+Based on Codespark's multi-file system, you can import .css files directly. They will be transformed into `<style>` elements and appended to the preview iframe's `<head>` element.
+
+```tsx codespark file="./style.css"
+#root {
+  background: #000;
+  color: #fff;
+}
+```
+
+```tsx codespark file="./App.tsx"
+import './style.css';
+
+export default function App() {
+  return <div>To be or not to be, that is the question</div>;
+}
+```
+
+### Tailwind flag
+
+In some cases, your .css file may contain Tailwind CSS directives, like `@theme`, `@custom-variant`, etc. If you want this compiled by Tailwind, you need to change your CSS file's extension to **.tw.css**.
+
+Style tags generated in this way will have the attribute `type="text/tailwindcss"` added, which allows them to be recognized by Tailwind.
+
+```tsx codespark file="./style.tw.css"
+@theme inline {
+  --color-secondary: oklch(0.97 0 0);
+}
+```
+
+```tsx codespark file="./App.tsx"
+import './style.tw.css';
+
+export default function App() {
+  return <div className="bg-secondary">To be or not to be, that is the question</div>;
+}
+```
+
+## Injection Components
+
+Codespark provides a `<Style />` component called "injection component" for runtime styling.
+
+Just like using a `<style>` tag in HTML markup, pass this component as children and it will be automatically injected into the `<head>` element.
+
+```tsx preview
+import { Codespark, Style } from '@codespark/react';
+
+const CUSTOM_STYLE = `
+#my_button {
+  height: 24px;
+  padding: 6px 12px;
+  background: #000;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: content-box;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.65);
+  }
+}`;
+
+const code = `export default function App() {
+  return <button id="my_button">My Button</button>;
+}`;
+
+export default function App() {
+  return (
+    <Codespark code={code}>
+      <Style>{CUSTOM_STYLE}</Style>
+    </Codespark>
+  );
+}
+```

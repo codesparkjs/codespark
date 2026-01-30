@@ -71,13 +71,13 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   }, [tailwindcss]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !code || !!workspace) return;
+    if (typeof window === 'undefined' || !code) return;
 
-    preview(code);
+    workspace.setFile(workspace.entry, code);
   }, [code]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !compiled || !workspace) return;
+    if (typeof window === 'undefined' || !compiled) return;
 
     preview(compiled);
   }, [compiled]);
