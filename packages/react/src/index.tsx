@@ -32,10 +32,32 @@ export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<
   defaultExpanded?: boolean;
   getWorkspace?: RefObject<Workspace | null>;
   editor?: CodesparkEditorEngineComponents;
+  editorHeight?: number;
+  previewHeight?: number;
 }
 
 export function Codespark(props: CodesparkProps) {
-  const { code, files, name = './App.tsx', theme, editor, framework = 'react', showEditor = true, showPreview = true, readonly: readOnly, className, toolbox, tailwindcss, onConsole, onError, children, defaultExpanded, getWorkspace } = props;
+  const {
+    code,
+    files,
+    name = './App.tsx',
+    theme,
+    editor,
+    framework = 'react',
+    showEditor = true,
+    showPreview = true,
+    readonly: readOnly,
+    className,
+    toolbox,
+    tailwindcss,
+    onConsole,
+    onError,
+    children,
+    defaultExpanded,
+    getWorkspace,
+    editorHeight,
+    previewHeight
+  } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
   const [expanded, setExpanded] = useState(defaultExpanded ?? fileTree.length > 1);
@@ -59,10 +81,10 @@ export function Codespark(props: CodesparkProps) {
     };
 
     if (editor?.kind === EditorEngine.Monaco) {
-      return <CodesparkEditor editor={editor} {...sharedProps} options={{ readOnly }} />;
+      return <CodesparkEditor editor={editor} {...sharedProps} height={editorHeight} options={{ readOnly }} />;
     }
 
-    return <CodesparkEditor editor={editor} {...sharedProps} readOnly={readOnly} />;
+    return <CodesparkEditor editor={editor} {...sharedProps} height={editorHeight ? `${editorHeight}px` : void 0} readOnly={readOnly} />;
   };
 
   useEffect(() => {
@@ -86,7 +108,8 @@ export function Codespark(props: CodesparkProps) {
               onError={error => {
                 onError?.(error);
                 setRuntimeError(error as Error);
-              }}>
+              }}
+              height={previewHeight}>
               {children}
             </CodesparkPreview>
           ) : null}

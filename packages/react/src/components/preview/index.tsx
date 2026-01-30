@@ -13,6 +13,7 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
   className?: string;
   tailwindcss?: boolean;
   children?: ReactNode;
+  height?: number;
   onError?: (error: unknown) => void;
   onLoad?: (iframe: HTMLIFrameElement) => void;
   onRendered?: () => void;
@@ -31,6 +32,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
     imports,
     theme = contextTheme ?? globalTheme ?? 'light',
     children,
+    height,
     onError,
     onLoad,
     onRendered,
@@ -81,7 +83,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   }, [compiled]);
 
   return (
-    <div className={cn('relative flex h-50 items-center justify-center', className)}>
+    <div className={cn('relative flex h-50 items-center justify-center', className)} style={{ height }}>
       {running ? (
         <div className="absolute right-2 bottom-2 z-10 h-8 w-8 **:box-border">
           <div className="flex -translate-x-1 translate-y-[9px] scale-[0.13] **:absolute **:h-24 **:w-24">

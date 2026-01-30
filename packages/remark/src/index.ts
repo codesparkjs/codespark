@@ -10,6 +10,19 @@ interface CodeBlockMetaParams extends Record<string, string | boolean | undefine
   file?: string;
 }
 
+interface FileBlock {
+  file: string;
+  code: string;
+  index: number;
+}
+
+interface Transformation {
+  parent: Parent;
+  index: number;
+  deleteCount: number;
+  replacement: MdxJsxFlowElement;
+}
+
 function createExpressionValue(value: unknown): MdxJsxAttribute['value'] {
   const estree = valueToEstree(value);
 
@@ -92,19 +105,6 @@ function parseMetaString(meta: string | null | undefined): CodeBlockMetaParams {
   }
 
   return params;
-}
-
-interface FileBlock {
-  file: string;
-  code: string;
-  index: number;
-}
-
-interface Transformation {
-  parent: Parent;
-  index: number;
-  deleteCount: number;
-  replacement: MdxJsxFlowElement;
 }
 
 function isCodesparkBlock(lang: string | null | undefined, params: CodeBlockMetaParams): boolean {
