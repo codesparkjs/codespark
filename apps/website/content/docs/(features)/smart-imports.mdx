@@ -3,7 +3,7 @@ title: Smart Imports
 description: Automatic dependency resolution for npm packages and local files
 ---
 
-Codespark implements an intelligent dependency analysis system that automatically collects import dependencies (internal or external) in your code. You can import any browser-compatible npm package without additional configuration.
+Codespark implements an intelligent dependency analysis system that automatically collects import dependencies in your code. You can import any browser-compatible npm package without additional configuration.
 
 ## Basic Usage
 
@@ -23,6 +23,19 @@ export default function App() {
     </div>
   );
 }
+```
+
+## Package Version
+
+Use the `imports` prop to pin specific package versions. Each key represents the package name used in your import statements, and the value is a valid [esm.sh](https://esm.sh/) URL. The `imports` object is injected into the preview iframe's import map, allowing you to override default package resolutions.
+
+```tsx twoslash
+import { Codespark } from '@codespark/react';
+// ---cut---
+const code = `import * as _ from 'lodash-es';`
+
+// @noErrors
+<Codespark imports={{ 'lodash-es': 'https://esm.sh/lodash-es@4.17.21' }} />
 ```
 
 ## via URL
@@ -45,7 +58,7 @@ export default function App() {
 
 ## Local Dependency
 
-Import components from other files in your workspace. Codespark automatically resolves relative imports between files.
+You can also import components from other files in your workspace.
 
 ``` tsx codespark file="./welcome.tsx";
 export function Welcome() {

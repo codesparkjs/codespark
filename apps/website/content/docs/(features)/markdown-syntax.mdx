@@ -1,6 +1,50 @@
 ---
 title: Markdown Syntax
-description: Markdown Syntax
+description: Render markdown content with Codespark.
 ---
 
-WIP...
+In addition to React syntax, Codespark also supports markdown rendering.
+
+## Installation & Usage
+
+To render markdown syntax, you need to install the markdown framework package and pass the `framework` prop to the component.
+
+```npm
+npm install @codespark/framework
+```
+
+```tsx
+import { markdown } from '@codespark/framework/markdown';
+
+<Codespark framework={markdown} />;
+```
+
+## Markdown Framework
+
+Once the framework is configured, simply pass your markdown code to the `code` prop to preview it.
+
+```tsx preview
+import { markdown } from '@codespark/framework/markdown';
+import { Codespark } from '@codespark/react';
+
+export default function App() {
+  return <Codespark framework={markdown} name="index.md" code="# Hello World" tailwindcss={false} />;
+}
+```
+
+<Callout title="Note">
+You need to change the `name` suffix to `.md` to enable markdown syntax highlighting in the editor.
+
+And you also need to disable Tailwind CSS by setting `tailwindcss={false}`, because Tailwind CSS normalizes default element styles with [Preflight](https://tailwindcss.com/docs/preflight).
+</Callout>
+
+## More Syntax Support?
+
+Codespark currently has built-in support for the following frameworks:
+
+- React
+- Markdown
+- MDX
+- Vue
+
+If you want to customize other frameworks, please refer to the [Framework](/docs/framework) documentation. Pull requests are welcome!

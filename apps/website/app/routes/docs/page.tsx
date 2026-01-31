@@ -1,6 +1,7 @@
 import { ConfigProvider } from '@codespark/react';
 import { useFumadocsLoader } from 'fumadocs-core/source/client';
 import browserCollections from 'fumadocs-mdx:collections/browser';
+import * as Twoslash from 'fumadocs-twoslash/ui';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle, PageLastUpdate } from 'fumadocs-ui/layouts/docs/page';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
@@ -44,6 +45,7 @@ const clientLoader = browserCollections.docs.createClientLoader<{ url: string; p
           <Mdx
             components={{
               ...defaultMdxComponents,
+              ...Twoslash,
               ...mdxComponents,
               CodeBlockTabs: ({ className, ...props }) => {
                 return <defaultMdxComponents.CodeBlockTabs {...props} className={cn(className, 'bg-code rounded-lg border-none')} />;

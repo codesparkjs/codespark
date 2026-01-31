@@ -16,22 +16,34 @@ Codespark supports full Tailwind CSS v4 features for styling out of the box. You
 ```tsx codespark previewHeight=300
 export default function App() {
   return (
-    <div className="flex items-center gap-8 rounded-2xl p-7 shadow-lg">
-      <div>
-        <img className="size-48 rounded-md shadow-xl" alt="" src="https://tailwindcss.com/_next/static/media/cover.f75d494c.png" />
-      </div>
-      <div className="flex flex-col items-start">
-        <span className="text-2xl font-medium">Class Warfare</span>
-        <span className="font-medium text-sky-500">The Anti-Patterns</span>
-        <span className="flex gap-2 font-medium text-gray-600 dark:text-gray-400">
-          <span>No. 4</span>
-          <span>·</span>
-          <span>2025</span>
-        </span>
+    <div className="rounded-3xl bg-black/5 p-2 outline outline-white/15 backdrop-blur-md dark:bg-white/10">
+      <div className="flex items-center gap-8 rounded-2xl bg-white p-7 dark:bg-gray-950">
+        <div>
+          <img className="size-48 rounded-md shadow-xl dark:outline-1 dark:-outline-offset-1 dark:outline-white/10" alt="" src="https://tailwindcss.com/_next/static/media/cover.f75d494c.png" />
+        </div>
+        <div className="flex flex-col items-start">
+          <span className="text-2xl font-medium">Class Warfare</span>
+          <span className="font-medium text-sky-500">The Anti-Patterns</span>
+          <span className="flex gap-2 font-medium text-gray-600 dark:text-gray-400">
+            <span>No. 4</span>
+            <span>·</span>
+            <span>2025</span>
+          </span>
+        </div>
       </div>
     </div>
   );
 }
+```
+
+### Disable / Enable
+
+You can disable or enable Tailwind CSS capability by setting `tailwindcss` prop.
+
+```tsx twoslash
+// @noErrors
+<Codespark tailwindcss={false} />
+//         ^?
 ```
 
 ## Import CSS files
@@ -78,6 +90,12 @@ export default function App() {
 Codespark provides a `<Style />` component called "injection component" for runtime styling.
 
 Just like using a `<style>` tag in HTML markup, pass this component as children and it will be automatically injected into the `<head>` element.
+
+```tsx
+<Codespark code={code}>
+  <Style>some css style code</Style>
+</Codespark>
+```
 
 ```tsx preview
 import { Codespark, Style } from '@codespark/react';

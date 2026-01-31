@@ -1,3 +1,13 @@
 {
-  "pages": ["codespark", "codespark-editor", "codespark-preview", "codespark-file-explorer", "codespark-provider", "style", "script"]
+  "pages": [
+    "codespark",
+    "codespark-editor",
+    "codespark-preview",
+    "codespark-file-explorer",
+    "codespark-provider",
+    "config-provider",
+    "style",
+    "script",
+    "link"
+  ]
 }

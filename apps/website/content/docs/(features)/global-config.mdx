@@ -1,6 +1,28 @@
 ---
 title: Global Config
-description: Global Config
+description: Configure global settings with ConfigProvider.
 ---
 
-WIP...
+Repeatedly configuring basic settings can be tedious. Use the `ConfigProvider` component to set global configurations that apply to all Codespark instances.
+
+## Usage
+
+Import the `ConfigProvider` component and wrap your entire app:
+
+```tsx twoslash
+import { ConfigProvider } from '@codespark/react';
+
+// @noErrors
+<ConfigProvider theme="...">                  
+  {/* your app root */}
+</ConfigProvider>
+```
+
+## Props
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `theme` | `'light' \| 'dark'` | The color theme for all Codespark instances. |
+| `imports` | `Record<string, string>` | Custom import mappings for the bundler. |
+| `fontFamily` | `string` | The font family for the editor. |
+| `editor` | `typeof CodeMirror \| typeof Monaco` | The editor component to use. |

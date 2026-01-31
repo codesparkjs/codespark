@@ -1,6 +1,152 @@
 ---
 title: Modular
-description: Modular
+description: Build your own Codespark with modular components.
 ---
 
-WIP...
+Modular architecture makes Codespark highly flexible and extendable. You can combine different components to customize your own Codespark, or use individual components as needed.
+
+## Components
+
+```ts twoslash
+import {
+  CodesparkEditor,
+  CodesparkFileExplorer,
+  CodesparkPreview,
+  CodesparkProvider
+} from '@codespark/react';
+```
+
+### CodesparkProvider
+
+`CodesparkProvider` is a bridge that connects the editor and preview components, managing the state of the entire module. If you want to use the out-of-the-box Edit → Preview live preview capability, wrap the editor and preview components with `CodesparkProvider`.
+
+```tsx
+<CodesparkProvider>
+  <CodesparkEditor />
+  <CodesparkPreview />
+</CodesparkProvider>
+```
+
+### CodesparkEditor
+
+`CodesparkEditor` is a code editor with syntax highlighting built on [CodeMirror](https://codemirror.net/5/). You can also use Monaco as the editor engine. See the [Monaco documentation](/docs/monaco) for details.
+
+```tsx codespark-editor
+import { CodesparkEditor } from '@codespark/react';
+
+export default function App() {
+  return <CodesparkEditor />;
+}
+```
+
+### CodesparkPreview
+
+`CodesparkPreview` is a secure and isolated sandbox with rendering capabilities. It runs in an independent iframe environment and never affects the host code, ensuring code isolation. Simply pass the code to preview and the component will be rendered on the page.
+
+```tsx
+<CodesparkPreview code="anything you want to preview...">
+```
+
+```tsx codespark-preview height=120
+import { CodesparkPreview } from '@codespark/react';
+
+const code = `import dayjs from 'https://esm.sh/dayjs@1.11.10';
+import { useEffect, useState } from 'react';
+
+export default function App() {
+  const [time, setTime] = useState(dayjs());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(dayjs()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center gap-6 p-4">
+      <div className="text-center">
+        <p className="text-3xl font-bold tabular-nums">{time.format('HH:mm:ss')}</p>
+        <p className="text-sm text-gray-500">{time.format('YYYY-MM-DD')}</p>
+      </div>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <CodesparkPreview code={code} height={120} />;
+}
+```
+
+### CodesparkFileExplorer
+
+`CodesparkFileExplorer` is a component for displaying the current file tree. **It must be placed inside a `CodesparkProvider` to work.**
+
+```tsx preview height=250
+import { CodesparkFileExplorer, CodesparkProvider, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: {
+    './App.tsx': '',
+    './src/index.ts': '',
+    './components/button.tsx': '',
+    './components/input.tsx': ''
+  }
+});
+
+export default function App() {
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <div className="flex justify-center">
+        <CodesparkFileExplorer />
+      </div>
+    </CodesparkProvider>
+  );
+}
+```
+
+## Custom Layouts
+
+Combine components freely to create your own custom editor experience:
+
+- **Vertical layout**: Stack editor and preview top-to-bottom
+- **Horizontal layout**: Place editor and preview side-by-side
+- **Tabbed layout**: Switch between editor and preview with tabs
+- **Three-column layout**: Add file explorer alongside editor and preview
+- **Preview-only mode**: Display just the preview for read-only demos
+
+```tsx codespark-preview
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider } from '@codespark/react';
+import { Code, Eye } from 'lucide-react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codespark!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return (
+    <CodesparkProvider>
+      <div className="border-border overflow-hidden rounded-xl border">
+        <div className="border-border border-b">
+          <div className="bg-muted/50 text-muted-foreground flex items-center gap-2 px-4 py-2 text-xs font-medium">
+            <Code className="h-4 w-4" />
+            App.tsx
+          </div>
+          <CodesparkEditor height="200px" value={code} toolbox={false} />
+        </div>
+        <div>
+          <div className="bg-muted/50 text-muted-foreground flex items-center gap-2 px-4 py-2 text-xs font-medium">
+            <Eye className="h-4 w-4" />
+            Preview
+          </div>
+          <CodesparkPreview className="h-[150px]" />
+        </div>
+      </div>
+    </CodesparkProvider>
+  );
+}
+```

@@ -3,13 +3,11 @@ title: Usage
 description: Learn how to use the Codespark component in your React application.
 ---
 
-import CustomizeCodespark from '../../app/routes/examples/customize-codespark/embedded/App.tsx';
-
 ## Basic Usage
 
 Pass your code as a string to the `Codespark` component:
 
-```tsx preview
+```tsx lineNumbers preview
 import { Codespark } from '@codespark/react';
 
 const code = `export default function App() {
@@ -26,19 +24,59 @@ export default function App() {
 }
 ```
 
+<Callout title="Note">
+To render something in the preview, your code must have an **export function** to tell Codespark which component to render. The function name is not restricted.
+
+The following export patterns are supported:
+
+- Named default exports: `export default function App() {...}`
+- Unnamed default exports: `export default function() {...}`
+- Named exports: `export function Button() {...}`
+- Default exports with arrow function: `export default () => {...}`
+</Callout>
+
 ## Customize Your Own
 
-Codespark features a modular architecture with composable components. Mix and match `CodesparkEditor`, `CodesparkPreview`, and other building blocks to create your own custom layout. [Try in playground](/playground?boilerplate=customize-codespark).
+Codespark features a modular architecture with composable components. Mix and match `CodesparkEditor`, `CodesparkPreview`, and other building blocks to create your own custom layout.
 
 ```tsx
 import { CodesparkEditor, CodesparkPreview, CodesparkProvider } from '@codespark/react';
 ```
 
-```tsx
+```tsx preview="customize-codespark"
 <CodesparkProvider>
   <CodesparkEditor />
   <CodesparkPreview />
 </CodesparkProvider>
 ```
 
-<CustomizeCodespark />
+```tsx codespark-preview
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return (
+    <CodesparkProvider>
+      <div className="border-border grid grid-cols-3 divide-x overflow-hidden rounded-lg border">
+        <div className="border-border col-span-2">
+          <div className="bg-muted/50 border-border flex items-center gap-2 border-b px-4 py-3">
+            <span className="h-3 w-3 rounded-full bg-red-500" />
+            <span className="h-3 w-3 rounded-full bg-yellow-500" />
+            <span className="h-3 w-3 rounded-full bg-green-500" />
+          </div>
+          <CodesparkEditor height="400px" value={code} toolbox={false} />
+        </div>
+        <CodesparkPreview className="h-full" />
+      </div>
+    </CodesparkProvider>
+  );
+}
+```

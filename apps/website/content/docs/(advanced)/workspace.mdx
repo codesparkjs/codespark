@@ -102,7 +102,7 @@ The `createWorkspace` function provides a convenient way to create workspaces fr
 
 It's useful when you want to make a component work directly instead of writing code as strings. It automatically collects all required dependencies and generates a workspace that may contain multiple files.
 
-<Callout title="Plugin Required" type="warn">Before using `createWorkspace`, you need to install the required plugins.</Callout>
+<Callout title="Plugin Required" type="warn">The `createWorkspace` function performs static code analysis to extract dependencies. You need to install the required plugins before using it.</Callout>
 
 ```tsx
 import { createWorkspace } from '@codespark/react';
@@ -126,7 +126,17 @@ const workspace = createWorkspace(() => {
 
 ## File Management Actions
 
-The Workspace provides several APIs to help you manage files. For more details, visit the [File System](/docs/file-system) documentation.
+The Workspace provides several APIs to help you manage files.
+
+| Method | Parameters | Description |
+|--------|-----------|-------------|
+| `setFile` | `(path: string, content: string)` | Create or update a single file |
+| `setFiles` | `(files: Record<string, string>)` | Create or update multiple files simultaneously |
+| `renameFile` | `(oldPath: string, newName: string)` | Rename a file or folder (nested files are automatically renamed) |
+| `deleteFile` | `(path: string)` | Delete a file or folder (nested files are automatically deleted) |
+| `setCurrentFile` | `(path: string)` | Set the currently active file in the editor |
+
+For more details, visit the [File System](/docs/file-system) documentation.
 
 ## Event System
 

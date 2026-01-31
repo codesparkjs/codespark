@@ -1,20 +1,20 @@
 ---
 title: Dark Mode
-description: Dark Mode
+description: Enable dark mode to match your design system.
 ---
 
-Codespark has a fulient dark mode that match your design system perfectly. To the `theme` props to enable dark mode.
+Codespark has a fluent dark mode that matches your design system perfectly. Use the `theme` prop to enable dark mode. Click the theme toggle button on the right side of the page header to preview the dark mode effect.
 
-```tsx
-<Codespark theme="dark | light" />
+```tsx twoslash
+import { Codespark } from '@codespark/react';
+// ---cut---
+// @noErrors
+<Codespark theme="" />
+//                ^|
 ```
 
-```tsx preview
-import { Codespark } from '@codespark/react';
-import { Moon, Sun } from 'lucide-react';
+```tsx codespark
 import { useState } from 'react';
-
-const code = `import { useState } from 'react';
 
 export default function App() {
   const [count, setCount] = useState(0);
@@ -23,27 +23,6 @@ export default function App() {
     <button className="rounded-lg bg-black px-4 py-2 text-white dark:bg-white dark:text-black" onClick={() => setCount(c => c + 1)}>
       Count: {count}
     </button>
-  );
-}`;
-
-export default function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const isDark = theme === 'dark';
-
-  return (
-    <Codespark
-      code={code}
-      theme={theme}
-      toolbox={[
-        {
-          tooltip: isDark ? 'Dark Mode' : 'Light Mode',
-          icon: isDark ? <Moon className="size-3.5!" /> : <Sun className="size-3.5!" />,
-          onClick: () => {
-            setTheme(isDark ? 'light' : 'dark');
-          }
-        }
-      ]}
-    />
   );
 }
 ```

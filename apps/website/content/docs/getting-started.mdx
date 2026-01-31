@@ -49,3 +49,70 @@ module.exports = {
   // ... rest of your config
 }
 ```
+
+## Font Configuration
+
+Codespark uses "Fira Code" as the default font family. Install the font for a better editing experience.
+
+### Using Fontsource
+
+Install the font package:
+
+```npm
+npm install @fontsource/fira-code
+```
+
+Import the font in your app entry file:
+
+```ts title="main.tsx"
+import '@fontsource/fira-code';
+```
+
+### Using Google Fonts CDN
+
+Add the following to your HTML `<head>`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap">
+```
+
+Or import in your CSS file:
+
+```css title="global.css"
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap');
+```
+
+### Using Next.js
+
+Next.js has built-in font optimization with `next/font`. Configure the font in your layout file:
+
+```tsx title="app/layout.tsx"
+import { Fira_Code } from 'next/font/google';
+
+const firaCode = Fira_Code({
+  subsets: ['latin'],
+  variable: '--font-fira-code',
+});
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className={firaCode.variable}>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+Then add the CSS variable to your global styles:
+
+```css title="global.css"
+:root {
+  --font-mono: var(--font-fira-code), ui-monospace, monospace;
+}
+```

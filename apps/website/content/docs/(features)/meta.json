@@ -1,7 +1,7 @@
 {
   "pages": [
-    "smart-imports",
     "multi-file-support",
+    "smart-imports",
     "css",
     "dark-mode",
     "markdown-syntax",

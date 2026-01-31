@@ -1,6 +1,8 @@
 import remarkCodespark from '@codespark/plugin-remark';
+import { rehypeCodeDefaultOptions, remarkMdxFiles } from 'fumadocs-core/mdx-plugins';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 import lastModified from 'fumadocs-mdx/plugins/last-modified';
+import { transformerTwoslash } from 'fumadocs-twoslash';
 
 export const docs = defineDocs({
   dir: 'content/docs',
@@ -15,21 +17,30 @@ export default defineConfig({
   plugins: [lastModified()],
   mdxOptions: {
     providerImportSource: '@codespark/react',
-    remarkPlugins: [remarkCodespark],
+    remarkPlugins: [remarkMdxFiles, remarkCodespark],
     rehypeCodeOptions: {
       themes: {
         dark: 'github-dark',
-        light: 'github-light-default'
+        light: 'github-light'
       },
+      transformers: [...(rehypeCodeDefaultOptions.transformers ?? []), transformerTwoslash()],
+      langs: ['js', 'jsx', 'ts', 'tsx'],
       parseMetaString(meta) {
-        const regex = /(?<=^|\s)(?<name>\w+)(?:=(?:"([^"]*)"|'([^']*)'))?/g;
-        const attributes: Record<string, string | boolean> = {};
+        const regex = /(?<=^|\s)(?<name>\w+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
+        const attributes: Record<string, string | boolean | number> = {};
         let rest = meta;
 
-        rest = rest.replaceAll(regex, (match, name, value_1, value_2) => {
-          const allowedNames = ['preview'];
+        rest = rest.replaceAll(regex, (match, name, value_1, value_2, value_3) => {
+          const allowedNames = ['preview', 'height', 'title'];
           if (allowedNames.includes(name)) {
-            attributes[name] = value_1 ?? value_2 ?? true;
+            const value = value_1 ?? value_2 ?? value_3;
+            if (value === undefined) {
+              attributes[name] = true;
+            } else if (!isNaN(Number(value))) {
+              attributes[name] = Number(value);
+            } else {
+              attributes[name] = value;
+            }
             return '';
           }
           return match;
