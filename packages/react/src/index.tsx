@@ -21,13 +21,14 @@ export * from '@/lib/workspace';
 
 registerFramework(react);
 
-export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
+export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework' | 'imports'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
   code?: string;
   files?: Record<string, string>;
   name?: string;
   className?: string;
   showEditor?: boolean;
   showPreview?: boolean;
+  showFileExplorer?: boolean;
   readonly?: boolean;
   defaultExpanded?: boolean;
   getWorkspace?: RefObject<Workspace | null>;
@@ -46,6 +47,7 @@ export function Codespark(props: CodesparkProps) {
     framework = 'react',
     showEditor = true,
     showPreview = true,
+    showFileExplorer = true,
     readonly: readOnly,
     className,
     toolbox,
@@ -122,7 +124,7 @@ export function Codespark(props: CodesparkProps) {
         </div>
         {showEditor ? (
           <div className="flex h-full w-full divide-x">
-            {expanded ? <CodesparkFileExplorer /> : null}
+            {expanded && showFileExplorer ? <CodesparkFileExplorer /> : null}
             {renderEditor()}
           </div>
         ) : null}
@@ -132,5 +134,5 @@ export function Codespark(props: CodesparkProps) {
 }
 
 export const useMDXComponents = () => {
-  return { Codespark };
+  return { Codespark, CodesparkEditor, CodesparkPreview };
 };

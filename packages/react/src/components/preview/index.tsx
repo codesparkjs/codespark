@@ -23,22 +23,8 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
 export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
   const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark() || {};
-  const {
-    code = '',
-    framework = contextFramework,
-    workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }),
-    className,
-    tailwindcss = true,
-    imports,
-    theme = contextTheme ?? globalTheme ?? 'light',
-    children,
-    height,
-    onError,
-    onLoad,
-    onRendered,
-    onConsole
-  } = props;
-  const { compiled, deps } = useWorkspace(workspace);
+  const { code = '', framework = contextFramework, className, tailwindcss = true, imports, theme = contextTheme ?? globalTheme ?? 'light', children, height, onError, onLoad, onRendered, onConsole } = props;
+  const { compiled, deps, workspace } = useWorkspace(props.workspace ?? contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }));
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCSS();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({

@@ -58,18 +58,8 @@ export function CodesparkEditor<E extends EditorEngine = never>(props: Codespark
 export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { editor?: CodesparkEditorEngineComponents }) {
   const { theme: globalTheme, editor: globalEditor, fontFamily: globalFontFamily } = useConfig();
   const { workspace: contextWorkspace, theme: contextTheme } = useCodespark() || {};
-  const {
-    id,
-    value = '',
-    workspace = contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }),
-    theme = contextTheme ?? globalTheme ?? 'light',
-    editor = globalEditor ?? CodeMirror,
-    className,
-    toolbox = true,
-    containerProps,
-    debounceWait = 500
-  } = props;
-  const { files, currentFile, deps } = useWorkspace(workspace);
+  const { id, value = '', theme = contextTheme ?? globalTheme ?? 'light', editor = globalEditor ?? CodeMirror, className, toolbox = true, containerProps, debounceWait = 500 } = props;
+  const { files, currentFile, deps, workspace } = useWorkspace(props.workspace ?? contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': value } }));
   const uid = useId();
   const editorId = id ?? `editor${uid}`;
   const editorRef = useRef<EditorAdapter | null>(null);
