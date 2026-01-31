@@ -210,4 +210,94 @@ export default () => <span>Regular</span>
     expect(output).toContain('files={');
     expect(output).toContain('code=');
   });
+
+  it('should transform codespark-editor to CodesparkEditor with value prop', () => {
+    const input = '```tsx codespark-editor\nexport default () => <div>Hello</div>\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkEditor');
+    expect(output).toContain('value={"export default () => <div>Hello</div>"}');
+    expect(output).not.toContain('<Codespark ');
+  });
+
+  it('should transform codespark-preview to CodesparkPreview with code prop', () => {
+    const input = '```tsx codespark-preview\nexport default () => <div>Hello</div>\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkPreview');
+    expect(output).toContain('code={"export default () => <div>Hello</div>"}');
+    expect(output).not.toContain('<Codespark ');
+  });
+
+  it('should pass extra attributes to CodesparkEditor', () => {
+    const input = '```tsx codespark-editor height=400 readonly\nexport default () => <div />\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkEditor');
+    expect(output).toContain('height={400}');
+    expect(output).toContain('readonly={true}');
+  });
+
+  it('should pass extra attributes to CodesparkPreview', () => {
+    const input = '```tsx codespark-preview height=300 showCode\nexport default () => <div />\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkPreview');
+    expect(output).toContain('height={300}');
+    expect(output).toContain('showCode={true}');
+  });
+
+  it('should not override value prop in codespark-editor', () => {
+    const input = '```tsx codespark-editor value="ignored"\nexport default () => <div />\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkEditor');
+    expect(output).toContain('value={"export default () => <div />"}');
+    expect(output).not.toContain('value="ignored"');
+  });
+
+  it('should not override code prop in codespark-preview', () => {
+    const input = '```tsx codespark-preview code="ignored"\nexport default () => <div />\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkPreview');
+    expect(output).toContain('code={"export default () => <div />"}');
+    expect(output).not.toContain('code="ignored"');
+  });
+
+  it('should ignore file param for codespark-editor', () => {
+    const input = '```tsx codespark-editor file="./App.tsx"\nexport default () => <div />\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkEditor');
+    expect(output).toContain('value=');
+    expect(output).not.toContain('files=');
+  });
+
+  it('should ignore file param for codespark-preview', () => {
+    const input = '```tsx codespark-preview file="./App.tsx"\nexport default () => <div />\n```';
+    const output = process(input);
+    expect(output).toContain('<CodesparkPreview');
+    expect(output).toContain('code=');
+    expect(output).not.toContain('files=');
+  });
+
+  it('should not merge consecutive codespark-editor blocks', () => {
+    const input = `\`\`\`tsx codespark-editor file="./a.tsx"
+export const A = () => <div>A</div>
+\`\`\`
+
+\`\`\`tsx codespark-editor file="./b.tsx"
+export const B = () => <div>B</div>
+\`\`\``;
+    const output = process(input);
+    expect((output.match(/<CodesparkEditor/g) || []).length).toBe(2);
+    expect(output).not.toContain('files=');
+  });
+
+  it('should not merge consecutive codespark-preview blocks', () => {
+    const input = `\`\`\`tsx codespark-preview file="./a.tsx"
+export const A = () => <div>A</div>
+\`\`\`
+
+\`\`\`tsx codespark-preview file="./b.tsx"
+export const B = () => <div>B</div>
+\`\`\``;
+    const output = process(input);
+    expect((output.match(/<CodesparkPreview/g) || []).length).toBe(2);
+    expect(output).not.toContain('files=');
+  });
 });

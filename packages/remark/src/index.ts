@@ -4,8 +4,14 @@ import type { MdxJsxAttribute, MdxJsxFlowElement } from 'mdast-util-mdx-jsx';
 import type { Plugin } from 'unified';
 import { visit } from 'unist-util-visit';
 
+const DIRECTIVE_KEYS = ['codespark', 'codespark-editor', 'codespark-preview'];
+
+type CodesparkDirective = 'codespark' | 'codespark-editor' | 'codespark-preview';
+
 interface CodeBlockMetaParams extends Record<string, string | boolean | undefined> {
   codespark?: boolean;
+  'codespark-editor'?: boolean;
+  'codespark-preview'?: boolean;
   name?: string;
   file?: string;
 }
@@ -71,13 +77,24 @@ function createJsxExpressionAttribute(name: string, value: string | unknown[] | 
   return createJsxAttribute(name, createExpressionValue(value));
 }
 
-function createCodesparkComponent(attributes: MdxJsxAttribute[]): MdxJsxFlowElement {
+function createCodesparkComponent(name: string, attributes: MdxJsxAttribute[]): MdxJsxFlowElement {
   return {
     type: 'mdxJsxFlowElement',
-    name: 'Codespark',
+    name,
     attributes,
     children: []
   };
+}
+
+function getComponentConfig(directive: CodesparkDirective): { componentName: string; codePropName: string } {
+  switch (directive) {
+    case 'codespark-editor':
+      return { componentName: 'CodesparkEditor', codePropName: 'value' };
+    case 'codespark-preview':
+      return { componentName: 'CodesparkPreview', codePropName: 'code' };
+    default:
+      return { componentName: 'Codespark', codePropName: 'code' };
+  }
 }
 
 function parseMetaString(meta: string | null | undefined): CodeBlockMetaParams {
@@ -86,7 +103,7 @@ function parseMetaString(meta: string | null | undefined): CodeBlockMetaParams {
   }
 
   const params: CodeBlockMetaParams = {};
-  const regex = /(\w+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
+  const regex = /([\w-]+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
   let match;
 
   while ((match = regex.exec(meta)) !== null) {
@@ -107,13 +124,29 @@ function parseMetaString(meta: string | null | undefined): CodeBlockMetaParams {
   return params;
 }
 
+function getCodesparkDirective(params: CodeBlockMetaParams): CodesparkDirective | null {
+  if (params['codespark-editor'] === true) {
+    return 'codespark-editor';
+  }
+
+  if (params['codespark-preview'] === true) {
+    return 'codespark-preview';
+  }
+
+  if (params.codespark === true) {
+    return 'codespark';
+  }
+
+  return null;
+}
+
 function isCodesparkBlock(lang: string | null | undefined, params: CodeBlockMetaParams): boolean {
   const supportedLanguages = ['js', 'jsx', 'ts', 'tsx'];
-  return supportedLanguages.includes(lang || '') && params.codespark === true;
+  return supportedLanguages.includes(lang || '') && getCodesparkDirective(params) !== null;
 }
 
 function extractSharedAttributes(params: CodeBlockMetaParams): [string, string | boolean | undefined][] {
-  return Object.entries(params).filter(([key]) => key !== 'codespark' && key !== 'file');
+  return Object.entries(params).filter(([key]) => !DIRECTIVE_KEYS.includes(key) && key !== 'file');
 }
 
 function attributesMatch(attrs1: [string, string | boolean | undefined][], attrs2: [string, string | boolean | undefined][]): boolean {
@@ -177,10 +210,18 @@ function createAttributesForFileBlocks(filesObject: Record<string, string>, shar
   return attributes;
 }
 
-function createAttributesForCodeBlock(code: string, params: CodeBlockMetaParams): MdxJsxAttribute[] {
-  const attributes: MdxJsxAttribute[] = [createJsxAttribute('name', params.name || './App.tsx'), createJsxExpressionAttribute('code', code)];
+function createAttributesForCodeBlock(code: string, params: CodeBlockMetaParams, directive: CodesparkDirective): MdxJsxAttribute[] {
+  const { codePropName } = getComponentConfig(directive);
+  const attributes: MdxJsxAttribute[] = [];
 
-  const extraAttributes = Object.entries(params).filter(([key]) => key !== 'codespark' && key !== 'name' && key !== 'code');
+  if (directive === 'codespark') {
+    attributes.push(createJsxAttribute('name', params.name || './App.tsx'));
+  }
+
+  attributes.push(createJsxExpressionAttribute(codePropName, code));
+
+  const excludeKeys = [...DIRECTIVE_KEYS, 'name', 'code', 'value'];
+  const extraAttributes = Object.entries(params).filter(([key]) => !excludeKeys.includes(key));
 
   for (const [key, value] of extraAttributes) {
     attributes.push(createJsxAttribute(key, parseAttributeValue(value)));
@@ -207,7 +248,10 @@ const remarkCodespark: Plugin<[], Root> = () => {
       }
 
       try {
-        if (params.file) {
+        const directive = getCodesparkDirective(params)!;
+        const { componentName } = getComponentConfig(directive);
+
+        if (directive === 'codespark' && params.file) {
           const fileBlocks = collectConsecutiveFileBlocks(parent, index, params, value);
           const filesObject = createFilesObject(fileBlocks);
           const sharedAttributes = extractSharedAttributes(params);
@@ -217,20 +261,20 @@ const remarkCodespark: Plugin<[], Root> = () => {
             parent,
             index,
             deleteCount: fileBlocks.length,
-            replacement: createCodesparkComponent(attributes)
+            replacement: createCodesparkComponent(componentName, attributes)
           });
 
           for (const { index: blockIndex } of fileBlocks) {
             processedIndices.add(blockIndex);
           }
         } else {
-          const attributes = createAttributesForCodeBlock(value, params);
+          const attributes = createAttributesForCodeBlock(value, params, directive);
 
           transformations.push({
             parent,
             index,
             deleteCount: 1,
-            replacement: createCodesparkComponent(attributes)
+            replacement: createCodesparkComponent(componentName, attributes)
           });
 
           processedIndices.add(index);
