@@ -7,8 +7,8 @@ import type { OutputItem } from '../registry';
 const blobUrlMap = new Map<string, string>();
 
 export function compile(outputs: Map<OutputType, OutputItem[]>): string {
-  const modules = outputs.get(OutputType.ESModule) ?? [];
-  return transformModulesToBlob(modules.reverse());
+  const modules = [...(outputs.get(OutputType.ESModule) ?? [])];
+  return transformModulesToBlob(modules);
 }
 
 function transformModulesToBlob(modules: OutputItem[]) {
@@ -47,4 +47,12 @@ function transformCodeWithBlobUrls(mod: OutputItem) {
   }
 
   return s.toString();
+}
+
+/** Clean up blob URLs to prevent memory leaks */
+export function revokeBlobUrls() {
+  for (const url of blobUrlMap.values()) {
+    URL.revokeObjectURL(url);
+  }
+  blobUrlMap.clear();
 }
