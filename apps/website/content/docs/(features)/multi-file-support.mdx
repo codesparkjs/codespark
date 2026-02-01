@@ -33,6 +33,12 @@ export default function App() {
 }
 ```
 
+<Callout title="File Name Convention" type="warn">
+All file names **MUST START WITH './'** to distinguish between local file dependencies and external package references.
+
+For example, if you define a file named 'components/button.tsx' without the './' prefix, it becomes ambiguous whether it refers to a local file or an external npm package during import resolution.
+</Callout>
+
 ## Specify the Entry Point
 
 By default, `./App.tsx` is used as the entry file. If you want to use a different entry point, specify it using the `name` prop.

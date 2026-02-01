@@ -62,11 +62,18 @@ export default function App() {
 }
 ```
 
-<Callout title="File Name Convention" type="warn">
-All file names **MUST START WITH './'** to distinguish between local file dependencies and external package references.
+## Through Workspace
 
-For example, if you define a file named 'components/button.tsx' without the './' prefix, it becomes ambiguous whether it refers to a local file or an external npm package during import resolution.
-</Callout>
+Creating and managing files through Workspace offers greater flexibility and control. You can create a multi-file system by specifying the entry file and files in the Workspace.
+
+```tsx twoslash
+import { CodesparkProvider, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({ entry: './App.tsx', files: { './App.tsx': '...' } });
+
+// @noErrors
+<CodesparkProvider workspace={workspace} />
+```
 
 ## File Management
 
@@ -150,7 +157,7 @@ workspace.setCurrentFile('./App.tsx');
 
 This demo showcases all file management operations. Click the buttons to see each operation in action.
 
-```tsx codespark-preview height=537
+```tsx codespark-preview height=538
 import { CodesparkEditor, CodesparkFileExplorer, CodesparkProvider, useWorkspace } from '@codespark/react';
 import { FilePlus, FileText, Pencil, RotateCcw, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';

@@ -3,6 +3,9 @@ title: Getting Started
 description: Create your first interactive code playground in minutes.
 ---
 
+import { Icons } from '../../app/components/icons';
+import { Codepen, Clipboard } from 'lucide-react';
+
 ## Requirements
 
 - Node.js 18+
@@ -17,7 +20,7 @@ npm install @codespark/react
 
 ## Tailwind CSS Configuration
 
-Codespark is built with Tailwind CSS and [shadcn/ui](https://ui.shadcn.com/) design system.
+Codespark uses Tailwind CSS and shadcn/ui for styling. Ensure [Tailwind CSS is installed](https://tailwindcss.com/docs/installation/framework-guides) in your project before proceeding.
 
 ### Tailwind v4
 
@@ -50,7 +53,7 @@ module.exports = {
 }
 ```
 
-## Font Configuration
+## Font Configuration (Optional)
 
 Codespark uses "Fira Code" as the default font family. Install the font for a better editing experience.
 
@@ -114,5 +117,23 @@ Then add the CSS variable to your global styles:
 ```css title="global.css"
 :root {
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
+}
+```
+
+## Reading Tips
+
+This documentation is built with Codespark, featuring interactive code examples throughout. Look for these action buttons in the top-right corner of code blocks:
+
+| Icon | Action | Description |
+| :--: | ------ | ----------- |
+| <Icons.logo className="inline-block size-5" /> | Open in Playground | Launch the code in a full-featured playground environment for experimentation. |
+| <Codepen className="inline-block size-5" /> | Toggle Preview | Switch between viewing the source code and a live preview of the rendered output. |
+| <Clipboard className="inline-block size-5" /> | Copy Code | Copy the code snippet to your clipboard. |
+
+Try it out:
+
+```tsx preview height=50
+export default function App() {
+  return <h1 className="text-center text-2xl font-bold">Hello, Codespark!</h1>;
 }
 ```

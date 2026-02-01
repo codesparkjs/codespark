@@ -3,4 +3,73 @@ title: Framework
 description: Framework
 ---
 
-WIP...
+To extend Codespark's capabilities, a Framework plugin system was designed to support various language frameworks such as React, Markdown, MDX, Vue, etc. Once a Framework is configured, Codespark gains the ability to compile the corresponding language, allowing you to write code in that framework in the editor and preview it.
+
+## Installation
+
+```npm
+npm install @codespark/framework
+```
+
+```ts twoslash
+import { markdown } from '@codespark/framework/markdown';
+import { react } from '@codespark/framework/react';
+```
+
+<Callout>Codespark has built-in support for React, so you don't need to manually integrate `@codespark/framework/react`.</Callout>
+
+## Usage
+
+### Codespark
+
+You can specify the Framework directly through the `framework` prop in the `Codespark` component.
+
+```tsx preview
+import { markdown } from '@codespark/framework/markdown';
+import { Codespark } from '@codespark/react';
+
+export default function App() {
+  return <Codespark framework={markdown} name="index.md" code="# Hello World" tailwindcss={false} />;
+}
+```
+
+### Provider
+
+When using custom composable components, you can pass `framework` to `CodesparkProvider`.
+
+```tsx
+<CodesparkProvider framework={markdown} />
+```
+
+### Workspace
+
+You can also specify the Framework through Workspace. All Codespark instances using this Workspace will support the corresponding language.
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+// ---cut---
+new Workspace({ framework: markdown, ... })
+```
+
+### Global
+
+Codespark also provides a way to register Frameworks globally. Import it in your project's entry file:
+
+```ts twoslash
+import { registerFramework } from '@codespark/framework';
+import { markdown } from '@codespark/framework/markdown';
+
+registerFramework(markdown);
+registerFramework(markdown, 'md'); // customize framework's name
+```
+
+Once you've registered a Framework globally, you can configure it by its name.
+
+```tsx
+<Codespark framework="markdown">
+<Codespark framework="md">
+
+<CodesparkProvider framework="markdown">
+new Workspace({ framework: 'md', ... })
+```
