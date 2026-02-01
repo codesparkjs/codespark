@@ -1,4 +1,3 @@
-import type { Dep, ExternalDep, InternalDep } from '_shared/types';
 import { parse } from '@babel/parser';
 import { availablePresets } from '@babel/standalone';
 import { Framework as Base } from '@codespark/framework';
@@ -6,17 +5,10 @@ import { Framework as Base } from '@codespark/framework';
 import { CSSLoader } from '../loaders/css-loader';
 import { ESLoader } from '../loaders/es-loader';
 import { JSONLoader } from '../loaders/json-loader';
-import { type Loader, type LoaderOutput, OutputType } from '../loaders/types';
-
-const EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'];
-
-interface CompileContext {
-  files: Record<string, string>;
-  visited: Set<string>;
-  outputs: Map<OutputType, { path: string; content: string }[]>;
-  externals: Map<string, ExternalDep>;
-  blobUrlMap: Map<string, string>;
-}
+import { type Loader, OutputType } from '../loaders/types';
+import type { OutputItem } from '../registry';
+import { analyze } from './analyze';
+import { compile } from './compile';
 
 export class Framework extends Base {
   readonly name = 'react';
@@ -27,7 +19,6 @@ export class Framework extends Base {
   };
 
   private loaders: Loader[] = [];
-  private blobUrlMap = new Map<string, string>();
 
   constructor() {
     super();
@@ -41,209 +32,14 @@ export class Framework extends Base {
     ];
   }
 
-  analyze(entry: string, files: Record<string, string>): Dep[] {
-    const ctx: CompileContext = {
-      files,
-      visited: new Set(),
-      outputs: new Map(),
-      externals: new Map(),
-      blobUrlMap: new Map()
-    };
-
-    Object.values(OutputType).forEach(type => {
-      ctx.outputs.set(type, []);
-    });
-
-    const deps: Dep[] = [];
-    const output = this.processFile(entry, ctx);
-    if (!output) return deps;
-
-    for (const depPath of output.dependencies) {
-      const dep = this.buildInternalDep(depPath, ctx, depPath);
-      if (dep) deps.push(dep);
-    }
-
-    deps.push(...output.externals);
-    return deps;
+  analyze(entry: string, files: Record<string, string>) {
+    return analyze(entry, files, this.loaders);
   }
 
-  compile(entry: string, files: Record<string, string>) {
-    const wrappedSource = this.wrapEntrySource(files[entry]);
-    const wrappedFiles = { ...files, [entry]: wrappedSource };
-
-    const ctx: CompileContext = {
-      files: wrappedFiles,
-      visited: new Set(),
-      outputs: new Map(),
-      externals: new Map(),
-      blobUrlMap: new Map()
-    };
-
-    Object.values(OutputType).forEach(type => {
-      ctx.outputs.set(type, []);
-    });
-
-    this.processFile(entry, ctx);
-
-    const entryCode = this.generateFinalCode(entry, ctx);
-
-    this.blobUrlMap = ctx.blobUrlMap;
-
-    return entryCode;
-  }
-
-  revoke(): void {
-    for (const url of this.blobUrlMap.values()) {
-      URL.revokeObjectURL(url);
-    }
-    this.blobUrlMap.clear();
-  }
-
-  private matchLoader(path: string): Loader | null {
-    return this.loaders.find(l => l.test.test(path)) ?? null;
-  }
-
-  private resolve(source: string, from: string, files: Record<string, string>): string | null {
-    if (!source.startsWith('.') && !source.startsWith('/')) {
-      return null;
-    }
-
-    const fromDir = from.split('/').slice(0, -1);
-    for (const part of source.split('/')) {
-      if (part === '..') fromDir.pop();
-      else if (part !== '.') fromDir.push(part);
-    }
-    const resolved = fromDir.join('/') || '.';
-
-    if (files[resolved] !== undefined) return resolved;
-
-    for (const ext of EXTENSIONS) {
-      if (files[resolved + ext] !== undefined) return resolved + ext;
-    }
-
-    for (const ext of EXTENSIONS) {
-      const indexPath = resolved + '/index' + ext;
-      if (files[indexPath] !== undefined) return indexPath;
-    }
-
-    return null;
-  }
-
-  private processFile(path: string, ctx: CompileContext): LoaderOutput | null {
-    if (ctx.visited.has(path)) return null;
-    ctx.visited.add(path);
-
-    const loader = this.matchLoader(path);
-    if (!loader) return null;
-
-    const source = ctx.files[path];
-    if (source === undefined) return null;
-
-    const output = loader.transform(source, {
-      resourcePath: path,
-      getSource: p => ctx.files[p],
-      resolve: src => this.resolve(src, path, ctx.files)
-    });
-
-    ctx.outputs.get(output.type)!.push({ path, content: output.content });
-
-    for (const ext of output.externals) {
-      const existing = ctx.externals.get(ext.name);
-      if (existing) {
-        ext.imported.forEach(i => {
-          if (!existing.imported.includes(i)) {
-            existing.imported.push(i);
-          }
-        });
-      } else {
-        ctx.externals.set(ext.name, { ...ext });
-      }
-    }
-
-    for (const dep of output.dependencies) {
-      this.processFile(dep, ctx);
-    }
-
-    return output;
-  }
-
-  private buildInternalDep(path: string, ctx: CompileContext, alias: string): InternalDep | null {
-    const source = ctx.files[path];
-    if (source === undefined) return null;
-
-    const loader = this.matchLoader(path);
-    if (!loader) return null;
-
-    const output = loader.transform(source, {
-      resourcePath: path,
-      getSource: p => ctx.files[p],
-      resolve: src => this.resolve(src, path, ctx.files)
-    });
-
-    const deps: Dep[] = [];
-
-    for (const depPath of output.dependencies) {
-      const dep = this.buildInternalDep(depPath, ctx, depPath);
-      if (dep) deps.push(dep);
-    }
-
-    deps.push(...output.externals);
-
-    return {
-      name: path.split('/').pop() || path,
-      alias,
-      code: source,
-      deps
-    };
-  }
-
-  private generateFinalCode(entry: string, ctx: CompileContext): string {
-    const modules = (ctx.outputs.get(OutputType.ESModule) || []).reverse();
-
-    for (const mod of modules) {
-      if (mod.path === entry) continue;
-
-      const code = this.replaceImportsWithBlobUrls(mod.content, mod.path, ctx);
-      const blob = new Blob([code], { type: 'application/javascript' });
-      const blobUrl = URL.createObjectURL(blob);
-      ctx.blobUrlMap.set(mod.path, blobUrl);
-    }
-
-    const entryModule = modules.find(m => m.path === entry);
-    if (entryModule) {
-      return this.replaceImportsWithBlobUrls(entryModule.content, entryModule.path, ctx);
-    }
-
-    return '';
-  }
-
-  private replaceImportsWithBlobUrls(code: string, fromPath: string, ctx: CompileContext): string {
-    const ast = parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
-    const s = this.createBuilder(code);
-
-    for (const node of ast) {
-      if (node.type === 'ImportDeclaration') {
-        const importSource = node.source.value;
-        const resolved = this.resolve(importSource, fromPath, ctx.files);
-        if (resolved) {
-          const blobUrl = ctx.blobUrlMap.get(resolved);
-          if (blobUrl) {
-            // 模块已被转换为 ESModule 并生成了 blob URL，替换 import 路径
-            s.update(node.source.start! + 1, node.source.end! - 1, blobUrl);
-          } else {
-            // 模块没有生成 blob URL（如 CSS、JSON 等非 ESModule 输出），移除 import
-            s.remove(node.start!, node.end!);
-          }
-        }
-      }
-    }
-
-    return s.toString();
-  }
-
-  private wrapEntrySource(source: string): string {
-    const builder = this.createBuilder(source);
-    const ast = parse(source, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
+  compile(outputs: Map<OutputType, OutputItem[]>) {
+    const transformed = compile(outputs);
+    const builder = this.createBuilder(transformed);
+    const ast = parse(transformed, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
     let name: string | undefined;
     for (const node of ast) {
@@ -282,7 +78,7 @@ export class Framework extends Base {
     builder.async(`
       const { createRoot } = await import('react-dom/client');
       window.__root__ = window.__root__ || createRoot(${builder.root});
-      window.__root__.render(${name ? `<${name} />` : 'null'});
+      window.__root__.render(${name ? `_jsx(${name}, {})` : 'null'});
     `);
 
     return builder.toString();

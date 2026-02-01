@@ -1,6 +1,6 @@
 import type { CollectResult } from '_shared/types';
-import type { Dep, ExternalDep, InternalDep } from '_shared/types';
-import { type Framework, registry } from '@codespark/framework';
+import type { ExternalDep, InternalDep } from '_shared/types';
+import { type Framework, OutputType, registry } from '@codespark/framework';
 import { type ComponentType, type ReactElement, useId, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
@@ -346,7 +346,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
       return { fileTree, deps, compiled, compileError };
     }
 
-    const buildFileTree = () => {
+    const fileTree = (() => {
       const root: FileTreeNode[] = [];
       const entries = Object.entries(files);
       const entryItem = entries.find(([path]) => path === workspace.entry);
@@ -380,52 +380,69 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
       }
 
       return root;
-    };
-    const computeDeps = () => {
-      const style: InternalDep[] = [];
-      const internal: InternalDep[] = [];
-      const external: ExternalDep[] = [];
-      const collect = (items: Dep[]) => {
-        for (const dep of items) {
-          if ('code' in dep) {
-            if (dep.alias.endsWith('.css')) style.push(dep);
-            internal.push(dep);
-            collect(dep.deps);
-          } else if ('version' in dep) {
-            external.push(dep);
+    })();
+
+    try {
+      const outputs = framework.analyze(workspace.entry, files);
+      const esModules = outputs.get(OutputType.ESModule) ?? [];
+      const styleOutputs = outputs.get(OutputType.Style) ?? [];
+      const style: InternalDep[] = styleOutputs.map(s => ({
+        name: s.path.split('/').pop() || '',
+        alias: s.path,
+        code: files[s.path],
+        deps: []
+      }));
+      const internal: InternalDep[] = esModules.map(m => ({
+        name: m.path.split('/').pop() || '',
+        alias: m.path,
+        code: files[m.path],
+        deps: []
+      }));
+      const externalMap = new Map<string, ExternalDep>();
+      for (const mod of esModules) {
+        for (const ext of mod.externals) {
+          const existing = externalMap.get(ext.name);
+          if (existing) {
+            for (const imp of ext.imported) {
+              if (!existing.imported.includes(imp)) {
+                existing.imported.push(imp);
+              }
+            }
+          } else {
+            externalMap.set(ext.name, { ...ext, imported: [...ext.imported] });
           }
         }
+      }
+      const external = [...externalMap.values()];
+      const imports = {
+        ...external.reduce<Record<string, string>>(
+          (pre, { name, version, imported }) => ({
+            ...pre,
+            [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
+          }),
+          {}
+        ),
+        ...framework.imports
       };
-      collect(framework.analyze(workspace.entry, files));
+      const compiled = framework.compile(outputs);
+      workspace[INTERNAL_EMIT]('compiled', compiled);
 
       return {
-        style,
-        internal,
-        external,
-        imports: {
-          ...external.reduce<Record<string, string>>(
-            (pre, { name, version, imported }) => ({
-              ...pre,
-              [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
-            }),
-            {}
-          ),
-          ...framework.imports
-        }
+        fileTree,
+        deps: { style, internal, external, imports },
+        compiled,
+        compileError: null
       };
-    };
-    const getCompileInfo = () => {
-      try {
-        const compiled = framework.compile(workspace.entry, files);
-        workspace[INTERNAL_EMIT]('compiled', compiled);
-        return { compiled, compileError: null };
-      } catch (error) {
-        workspace[INTERNAL_EMIT]('compileError', error as Error);
-        return { compiled: '', compileError: error as Error };
-      }
-    };
+    } catch (error) {
+      workspace[INTERNAL_EMIT]('compileError', error as Error);
 
-    return { fileTree: buildFileTree(), deps: computeDeps(), ...getCompileInfo() };
+      return {
+        fileTree,
+        deps: { style: [], internal: [], external: [], imports: {} },
+        compiled: '',
+        compileError: error as Error
+      };
+    }
   }, [files]);
 
   return {

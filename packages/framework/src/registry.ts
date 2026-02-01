@@ -1,5 +1,7 @@
-import type { Dep } from '_shared/types';
+import type { ExternalDep } from '_shared/types';
 import MagicString from 'magic-string';
+
+import { OutputType } from './loaders/types';
 
 class RuntimeBuilder {
   private s: MagicString;
@@ -52,12 +54,19 @@ class RuntimeBuilder {
   }
 }
 
+export interface OutputItem {
+  path: string;
+  content: string;
+  externals: ExternalDep[];
+  imports: Map<string, string>; // source -> resolved path
+}
+
 export abstract class Framework {
   abstract readonly name: string;
   abstract readonly imports: Record<string, string>;
 
-  abstract analyze(entry: string, files: Record<string, string>): Dep[];
-  abstract compile(entry: string, files: Record<string, string>): string;
+  abstract analyze(entry: string, files: Record<string, string>): Map<OutputType, OutputItem[]>;
+  abstract compile(outputs: Map<OutputType, OutputItem[]>): string;
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   revoke(): void {}
 
