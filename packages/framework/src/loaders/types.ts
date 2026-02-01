@@ -1,3 +1,5 @@
+import type { ExternalDep } from '_shared/types';
+
 export enum OutputType {
   ESModule = 'esmodule',
   Style = 'style',
@@ -10,12 +12,6 @@ export interface LoaderOutput {
   content: string;
   dependencies: string[];
   externals: ExternalDep[];
-}
-
-export interface ExternalDep {
-  name: string;
-  version: string;
-  imported: string[];
 }
 
 export interface LoaderContext {

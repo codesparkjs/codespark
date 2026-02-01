@@ -140,7 +140,17 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                     </SelectContent>
                   </Select>
                 </Toolbox>
-                <CodesparkEditor id="main" editor={Monaco} containerProps={{ className: 'flex-1' }} wrapperProps={{ className: 'h-full!' }} options={{ fixedOverflowWidgets: true }} onChange={() => setRuntimeError(null)} toolbox={false} />
+                <CodesparkEditor
+                  id="main"
+                  editor={Monaco}
+                  containerProps={{ className: 'flex-1' }}
+                  wrapperProps={{ className: 'h-full!' }}
+                  options={{ fixedOverflowWidgets: true }}
+                  onChange={() => {
+                    setRuntimeError(null);
+                  }}
+                  toolbox={false}
+                />
               </ResizablePanel>
               <ResizableHandle />
               <ResizablePanel minSize="200px">

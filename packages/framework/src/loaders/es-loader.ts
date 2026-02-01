@@ -1,8 +1,9 @@
+import type { ExternalDep } from '_shared/types';
 import { parse } from '@babel/parser';
 import { availablePresets, transform } from '@babel/standalone';
 import type { Identifier, ImportDeclaration, ImportSpecifier, Statement } from '@babel/types';
 
-import type { ExternalDep, Loader, LoaderContext, LoaderOutput } from './types';
+import type { Loader, LoaderContext, LoaderOutput } from './types';
 import { OutputType } from './types';
 
 const parseCode = (code: string) => parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
