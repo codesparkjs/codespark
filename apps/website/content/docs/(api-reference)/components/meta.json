@@ -5,9 +5,7 @@
     "codespark-preview",
     "codespark-file-explorer",
     "codespark-provider",
-    "config-provider",
     "style",
-    "script",
-    "link"
+    "script"
   ]
 }
