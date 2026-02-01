@@ -1,5 +1,5 @@
 import remarkCodespark from '@codespark/plugin-remark';
-import { rehypeCodeDefaultOptions, remarkMdxFiles } from 'fumadocs-core/mdx-plugins';
+import { rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-plugins';
 import { defineConfig, defineDocs } from 'fumadocs-mdx/config';
 import lastModified from 'fumadocs-mdx/plugins/last-modified';
 import { transformerTwoslash } from 'fumadocs-twoslash';
@@ -17,7 +17,7 @@ export default defineConfig({
   plugins: [lastModified()],
   mdxOptions: {
     providerImportSource: '@codespark/react',
-    remarkPlugins: [remarkMdxFiles, remarkCodespark],
+    remarkPlugins: [remarkCodespark],
     rehypeCodeOptions: {
       themes: {
         dark: 'github-dark',

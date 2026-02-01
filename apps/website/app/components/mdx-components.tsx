@@ -69,7 +69,7 @@ function MdxPre({ preview, height, ...props }: PreProps) {
     return (
       <div className={containerClassName}>
         {hasPreview && (
-          <>
+          <div>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link to={link} className={buttonVariants({ variant: 'ghost', size: 'icon-sm' })}>
@@ -88,7 +88,7 @@ function MdxPre({ preview, height, ...props }: PreProps) {
                 <TooltipContent>{showPreview ? 'Show Code' : 'Show Preview'}</TooltipContent>
               </Tooltip>
             )}
-          </>
+          </div>
         )}
         {children}
       </div>
