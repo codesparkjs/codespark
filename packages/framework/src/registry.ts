@@ -18,6 +18,11 @@ class RuntimeBuilder {
     return this;
   }
 
+  remove(start: number, end: number) {
+    this.s.remove(start, end);
+    return this;
+  }
+
   setHTML(content: string) {
     this.s.append(`document.getElementById('root').innerHTML = ${content};`);
     return this;
@@ -64,8 +69,8 @@ export abstract class Framework {
 class FrameworkRegistry {
   private frameworks = new Map<string, Framework>();
 
-  register(framework: Framework): void {
-    this.frameworks.set(framework.name, framework);
+  register(framework: Framework, name?: string): void {
+    this.frameworks.set(name ?? framework.name, framework);
   }
 
   get(name: string): Framework | undefined {
@@ -79,6 +84,6 @@ class FrameworkRegistry {
 
 export const registry = new FrameworkRegistry();
 
-export function registerFramework(framework: Framework): void {
-  registry.register(framework);
+export function registerFramework(framework: Framework, name?: string): void {
+  registry.register(framework, name);
 }
