@@ -1,9 +1,9 @@
 ---
 title: Framework
-description: Extend Codespark with framework plugins for React, Markdown, MDX, and more.
+description: Extend Codespark with runtime plugins.
 ---
 
-To extend Codespark's capabilities, a Framework plugin system was designed to support various language frameworks such as React, Markdown, MDX, Vue, etc. Once a Framework is configured, Codespark gains the ability to compile the corresponding language, allowing you to write code in that framework in the editor and preview it.
+To extend Codespark's capabilities, a framework plugin system was designed to support various language frameworks. Once a framework is configured, Codespark gains the ability to compile the corresponding language, allowing you to write code in that framework in the editor and preview it.
 
 ## Installation
 
@@ -25,20 +25,21 @@ import { react } from '@codespark/framework/react';
 
 You can specify the framework directly through the `framework` prop in the `Codespark` component.
 
-```tsx preview
-import { markdown } from '@codespark/framework/markdown';
+```tsx twoslash
+// @noErrors
 import { Codespark } from '@codespark/react';
-
-export default function App() {
-  return <Codespark framework={markdown} name="index.md" code="# Hello World" tailwindcss={false} />;
-}
+// ---cut---
+<Codespark framework={markdown} />
 ```
 
 ### Provider
 
 When using custom composable components, you can pass `framework` to `CodesparkProvider`.
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkProvider } from '@codespark/react';
+// ---cut---
 <CodesparkProvider framework={markdown} />
 ```
 
@@ -55,7 +56,7 @@ new Workspace({ framework: markdown, ... })
 
 ### Global
 
-Codespark also provides a way to register frameworks globally. Import it in your project's entry file:
+Codespark also provides a way to register frameworks globally. Use `registerFramework` in your project's entry file:
 
 ```ts title="App.tsx" twoslash
 import { registerFramework } from '@codespark/framework';
@@ -84,13 +85,12 @@ import { react } from '@codespark/framework/react';
 ```
 
 React framework provides full support for React components rendering with the following features:
-- Smart dependency analysis
+- Auto dependency analysis
 - Multi-file support
 - TypeScript/TSX syntax support
 - Import `.css`, `.json`, and `.md` files
 - Automatic JSX runtime (no need to `import React`)
 - Extension auto-resolution (e.g., `import './Button'` resolves to `./Button.tsx`)
-- Index file resolution (e.g., `import './components'` resolves to `./components/index.tsx`)
 - External npm package support via ESM CDN
 
 ### Vue
@@ -101,6 +101,50 @@ WIP...
 
 ```ts
 import { markdown } from '@codespark/framework/markdown';
+```
+
+```tsx codespark-preview
+import { markdown } from '@codespark/framework/markdown';
+import { Codespark } from '@codespark/react';
+
+export default function App() {
+  return <Codespark framework={markdown} name="index.md" code="# Hello World" tailwindcss={false} />;
+}
+```
+
+### HTML
+
+```ts
+import { html } from '@codespark/framework/html';
+```
+
+```tsx codespark-preview
+import { html } from '@codespark/framework/html';
+import { Codespark } from '@codespark/react';
+
+const files = {
+  './index.html': `<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheel" href="./style.css" >
+</head>
+<body>
+  <div id="app"></div>
+  <script src="./utils.js"></script>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>  
+`,
+  './style.css': 'body { margin: 0 }',
+  './utils.js': 'window.utils = { log: console.log }',
+  './main.js': `import { helper } from './helper.js'
+helper()`,
+  './helper.js': 'export function helper() { console.log("hello"); }'
+}
+
+export default function App() {
+  return <Codespark framework={html} name="./index.html" files={files} />;
+}
 ```
 
 ### MDX

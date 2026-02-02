@@ -63,7 +63,7 @@ const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set<string
 
 export interface ESLoaderOptions {
   /** JSX preset, e.g. [availablePresets.react, { runtime: 'automatic' }] */
-  jsxPreset: [unknown, Record<string, unknown>];
+  jsxPreset?: [unknown, Record<string, unknown>];
   /** Whether to enable TSX support, default false */
   isTSX?: boolean;
 }
@@ -75,9 +75,10 @@ export class ESLoader implements Loader<LoaderType.ESModule> {
   private jsxPreset: ESLoaderOptions['jsxPreset'];
   private isTSX: boolean;
 
-  constructor(options: ESLoaderOptions) {
-    this.jsxPreset = options.jsxPreset;
-    this.isTSX = options.isTSX ?? false;
+  constructor(options?: ESLoaderOptions) {
+    const { jsxPreset, isTSX = false } = options || {};
+    this.jsxPreset = jsxPreset;
+    this.isTSX = isTSX;
   }
 
   transform(source: string, ctx: LoaderContext): ESModuleLoaderOutput {
@@ -103,9 +104,10 @@ export class ESLoader implements Loader<LoaderType.ESModule> {
     }
 
     const { typescript } = availablePresets;
+    const defaultPresets = [typescript, { isTSX: this.isTSX, allExtensions: true }];
     const { code } = transform(source, {
       filename: ctx.resourcePath,
-      presets: [this.jsxPreset, [typescript, { isTSX: this.isTSX, allExtensions: true }]]
+      presets: this.jsxPreset ? [this.jsxPreset, defaultPresets] : [defaultPresets]
     });
 
     return { type: LoaderType.ESModule, content: code || '', dependencies, externals };

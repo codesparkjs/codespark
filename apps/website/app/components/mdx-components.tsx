@@ -24,7 +24,10 @@ const injectTheme = (code: string, theme: string) => {
 
 const StandalonePreview = ({ code, height, className }: StandalonePreviewProps) => {
   const { resolvedTheme } = useTheme();
-  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
+  const imports =
+    isDEV && !isSSR
+      ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/framework/html', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client'])
+      : {};
   const processedCode = code && resolvedTheme ? injectTheme(code, resolvedTheme) : code;
 
   return (
