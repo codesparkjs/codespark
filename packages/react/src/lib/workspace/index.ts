@@ -1,6 +1,4 @@
-import type { CollectResult } from '_shared/types';
-import type { ExternalDep, InternalDep } from '_shared/types';
-import { type Framework, OutputType, registry } from '@codespark/framework';
+import { type Framework, LoaderType, type Output, registry } from '@codespark/framework';
 import { type ComponentType, type ReactElement, useId, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
@@ -10,6 +8,11 @@ import { constructESMUrl, getLanguageFromFile } from '@/lib/utils';
 
 import { INTERNAL_BOUND, INTERNAL_EMIT, INTERNAL_REGISTER_EDITOR, INTERNAL_SET_ID, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
 import { OPFS } from './opfs';
+
+interface CollectResult {
+  entry: { code: string; locals: string[]; imports: string[] };
+  files: Record<string, string>;
+}
 
 export type FileTreeNode = FileNode | FolderNode;
 
@@ -91,7 +94,8 @@ export class Workspace extends OPFS {
     const code = this.files[path];
     if (code === undefined) return;
 
-    return { name: path.split('/').pop() || path, type: 'file', path, code } as FileNode;
+    const name = path.split('/').pop() || path;
+    return { name, type: 'file', path, code, language: getLanguageFromFile(name) } as FileNode;
   }
 
   get entry() {
@@ -286,14 +290,13 @@ export class Workspace extends OPFS {
 
 export interface WorkspaceDerivedState {
   fileTree: FileTreeNode[];
-  deps: {
-    style: InternalDep[];
-    internal: InternalDep[];
-    external: ExternalDep[];
-    imports: Record<string, string>;
-  };
   compiled: string;
   compileError: Error | null;
+  vendor: {
+    modules: Output<LoaderType.ESModule>[];
+    styles: Output<LoaderType.Style>[];
+    imports: Record<string, string>;
+  };
 }
 
 export function useWorkspace(init?: WorkspaceInit | Workspace) {
@@ -341,9 +344,9 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
   );
   const derivedState = useMemo<WorkspaceDerivedState>(() => {
     if (context) {
-      const { fileTree, deps, compiled, compileError } = context;
+      const { fileTree, vendor, compiled, compileError } = context;
 
-      return { fileTree, deps, compiled, compileError };
+      return { fileTree, vendor, compiled, compileError };
     }
 
     const fileTree = (() => {
@@ -383,64 +386,46 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
     })();
 
     try {
-      const outputs = framework.analyze(workspace.entry, files);
-      const esModules = outputs.get(OutputType.ESModule) ?? [];
-      const styleOutputs = outputs.get(OutputType.Style) ?? [];
-      const style: InternalDep[] = styleOutputs.map(s => ({
-        name: s.path.split('/').pop() || '',
-        alias: s.path,
-        code: files[s.path],
-        deps: []
-      }));
-      const internal: InternalDep[] = esModules.map(m => ({
-        name: m.path.split('/').pop() || '',
-        alias: m.path,
-        code: files[m.path],
-        deps: []
-      }));
-      const externalMap = new Map<string, ExternalDep>();
-      for (const mod of esModules) {
-        for (const ext of mod.externals) {
-          const existing = externalMap.get(ext.name);
-          if (existing) {
-            for (const imp of ext.imported) {
-              if (!existing.imported.includes(imp)) {
-                existing.imported.push(imp);
-              }
-            }
-          } else {
-            externalMap.set(ext.name, { ...ext, imported: [...ext.imported] });
-          }
-        }
-      }
-      const external = [...externalMap.values()];
-      const imports = {
-        ...external.reduce<Record<string, string>>(
-          (pre, { name, version, imported }) => ({
-            ...pre,
-            [name]: constructESMUrl({ pkg: name, version, external: ['react', 'react-dom'], exports: imported.length ? imported : undefined })
-          }),
-          {}
-        ),
-        ...framework.imports
-      };
-      const compiled = framework.compile(outputs);
+      framework.analyze(workspace.entry, files);
+      const compiled = framework.compile();
       workspace[INTERNAL_EMIT]('compiled', compiled);
+      const modules = framework.getOutput(LoaderType.ESModule);
+      const styles = framework.getOutput(LoaderType.Style);
 
       return {
         fileTree,
-        deps: { style, internal, external, imports },
         compiled,
-        compileError: null
+        compileError: null,
+        vendor: {
+          modules,
+          styles,
+          imports: {
+            ...modules
+              .map(({ externals }) => externals)
+              .flat()
+              .reduce<Record<string, string>>((pre, { name, imported }) => {
+                return {
+                  ...pre,
+                  [name]: constructESMUrl({
+                    pkg: name,
+                    version: '',
+                    external: Object.keys(framework.imports),
+                    exports: imported.length ? imported : undefined
+                  })
+                };
+              }, {}),
+            ...framework.imports
+          }
+        }
       };
     } catch (error) {
       workspace[INTERNAL_EMIT]('compileError', error as Error);
 
       return {
         fileTree,
-        deps: { style: [], internal: [], external: [], imports: {} },
         compiled: '',
-        compileError: error as Error
+        compileError: error as Error,
+        vendor: { modules: [], styles: [], imports: {} }
       };
     }
   }, [files]);

@@ -24,14 +24,14 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
   const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark() || {};
   const { code = '', framework = contextFramework, className, tailwindcss = true, imports, theme = contextTheme ?? globalTheme ?? 'light', children, height, onError, onLoad, onRendered, onConsole } = props;
-  const { compiled, deps, workspace } = useWorkspace(props.workspace ?? contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }));
+  const { compiled, vendor, workspace } = useWorkspace(props.workspace ?? contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }));
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCSS();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
     theme,
-    presets: [...injections, ...deps.style.map(({ alias, code }) => (alias.endsWith('.tw.css') ? `<style type="text/tailwindcss">${code}</style>` : `<style>${code}</style>`))],
+    presets: [...injections, ...vendor.styles.map(({ path, content }) => (path.endsWith('.tw.css') ? `<style type="text/tailwindcss">${content}</style>` : `<style>${content}</style>`))],
     imports: {
-      ...deps.imports,
+      ...vendor.imports,
       ...globalImports,
       ...contextImports,
       ...imports

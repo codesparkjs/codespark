@@ -1,13 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { CollectResult } from '_shared/types';
 import { parse } from '@babel/parser';
 import traverse from '@babel/traverse';
 import * as t from '@babel/types';
 import { describe, expect, it } from 'vitest';
 
 import { transformJsx } from './transform-jsx';
+
+interface CollectResult {
+  entry: { code: string; locals: string[]; imports: string[] };
+  files: Record<string, string>;
+}
 
 const fixturesDir = path.resolve(__dirname, '__fixtures__');
 

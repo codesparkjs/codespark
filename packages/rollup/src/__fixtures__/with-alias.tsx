@@ -1,3 +1,6 @@
-import type { CollectResult } from '_shared/types';
+interface CollectResult {
+  entry: { code: string; locals: string[]; imports: string[] };
+  files: Record<string, string>;
+}
 
 export const App = (result: CollectResult) => <div>{result.entry.code}</div>;

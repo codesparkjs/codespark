@@ -1,9 +1,19 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import type { CollectResult } from '_shared/types';
 import { parse } from '@babel/parser';
 import type { ImportDeclaration, Statement } from '@babel/types';
+
+interface FileInfo {
+  code: string;
+  resolved: string;
+  externals: string[];
+}
+
+interface CollectResult {
+  entry: { code: string; locals: string[]; imports: string[] };
+  files: Record<string, string>;
+}
 
 const pkgPath = process.cwd();
 const tsconfigJson = JSON.parse(fs.readFileSync(path.resolve(pkgPath, 'tsconfig.json'), 'utf-8'));
@@ -86,12 +96,6 @@ const isLocalImport = (source: string): boolean => {
   if (source.startsWith('.') || source.startsWith('/')) return true;
   return aliases.some(alias => source === alias || source.startsWith(alias + '/'));
 };
-
-interface FileInfo {
-  code: string;
-  resolved: string;
-  externals: string[];
-}
 
 const collectFromFile = (file: string, usedSources: Set<string>, result: Record<string, FileInfo>, visited: Set<string>): void => {
   if (visited.has(file)) return;

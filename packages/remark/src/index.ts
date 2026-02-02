@@ -149,14 +149,15 @@ function extractSharedAttributes(params: CodeBlockMetaParams): [string, string |
   return Object.entries(params).filter(([key]) => !DIRECTIVE_KEYS.includes(key) && key !== 'file');
 }
 
-function attributesMatch(attrs1: [string, string | boolean | undefined][], attrs2: [string, string | boolean | undefined][]): boolean {
-  return JSON.stringify(attrs1) === JSON.stringify(attrs2);
+interface CollectedFileBlocks {
+  fileBlocks: FileBlock[];
+  lastParams: CodeBlockMetaParams;
 }
 
-function collectConsecutiveFileBlocks(parent: Parent, startIndex: number, startParams: CodeBlockMetaParams, startValue: string): FileBlock[] {
+function collectConsecutiveFileBlocks(parent: Parent, startIndex: number, startParams: CodeBlockMetaParams, startValue: string): CollectedFileBlocks {
   const fileBlocks: FileBlock[] = [{ file: startParams.file as string, code: startValue, index: startIndex }];
 
-  const sharedAttributes = extractSharedAttributes(startParams);
+  let lastParams = startParams;
   let currentIndex = startIndex + 1;
 
   while (currentIndex < parent.children.length) {
@@ -172,22 +173,17 @@ function collectConsecutiveFileBlocks(parent: Parent, startIndex: number, startP
       break;
     }
 
-    const currentAttributes = extractSharedAttributes(currentParams);
-
-    if (!attributesMatch(sharedAttributes, currentAttributes)) {
-      break;
-    }
-
     fileBlocks.push({
       file: currentParams.file as string,
       code: currentNode.value,
       index: currentIndex
     });
 
+    lastParams = currentParams;
     currentIndex++;
   }
 
-  return fileBlocks;
+  return { fileBlocks, lastParams };
 }
 
 function createFilesObject(fileBlocks: FileBlock[]): Record<string, string> {
@@ -200,8 +196,18 @@ function createFilesObject(fileBlocks: FileBlock[]): Record<string, string> {
   return filesObject;
 }
 
-function createAttributesForFileBlocks(filesObject: Record<string, string>, sharedAttributes: [string, string | boolean | undefined][]): MdxJsxAttribute[] {
-  const attributes: MdxJsxAttribute[] = [createJsxExpressionAttribute('files', filesObject)];
+function createAttributesForFileBlocks(filesObject: Record<string, string>, lastParams: CodeBlockMetaParams): MdxJsxAttribute[] {
+  const attributes: MdxJsxAttribute[] = [];
+
+  // Add name attribute with the last file's name
+  if (lastParams.file) {
+    attributes.push(createJsxAttribute('name', lastParams.file as string));
+  }
+
+  attributes.push(createJsxExpressionAttribute('files', filesObject));
+
+  // Extract attributes from the last block only (excluding directive keys and file)
+  const sharedAttributes = extractSharedAttributes(lastParams);
 
   for (const [key, value] of sharedAttributes) {
     attributes.push(createJsxAttribute(key, parseAttributeValue(value)));
@@ -252,10 +258,9 @@ const remarkCodespark: Plugin<[], Root> = () => {
         const { componentName } = getComponentConfig(directive);
 
         if (directive === 'codespark' && params.file) {
-          const fileBlocks = collectConsecutiveFileBlocks(parent, index, params, value);
+          const { fileBlocks, lastParams } = collectConsecutiveFileBlocks(parent, index, params, value);
           const filesObject = createFilesObject(fileBlocks);
-          const sharedAttributes = extractSharedAttributes(params);
-          const attributes = createAttributesForFileBlocks(filesObject, sharedAttributes);
+          const attributes = createAttributesForFileBlocks(filesObject, lastParams);
 
           transformations.push({
             parent,
