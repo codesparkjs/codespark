@@ -3,23 +3,55 @@ title: Markdown Syntax
 description: Render markdown content with Codespark.
 ---
 
-In addition to React syntax, Codespark also supports markdown rendering.
+In addition to React syntax, Codespark also supports markdown rendering. There are two ways to preview markdown code:
 
-## Installation & Usage
+- Import markdown file as a React component
+- Use framework for pure markdown rendering
 
-To render markdown syntax, you need to install the markdown framework package and pass the `framework` prop to the component.
+## Import Markdown File
+
+You can import a markdown file just like a regular React component.
+
+```ts
+import Doc from './doc.md';
+
+<Doc />
+```
+
+```tsx codespark-preview
+import { Codespark } from '@codespark/react';
+
+const files = {
+  './App.tsx': `import Doc from './doc.md';
+
+export default function App() {
+  return <Doc />
+};
+`,
+  './doc.md': '# Hello World'
+}
+
+export default function App() {
+  return <Codespark files={files} tailwindcss={false} />;
+}
+```
+
+## Use Markdown Framework
+
+If you choose to use the Markdown Framework, your `<Codespark />` component will only support Markdown syntax.
+
+First, you need to install an additional npm package, then pass the `framework` prop to the component.
 
 ```npm
 npm install @codespark/framework
 ```
 
-```tsx
+```tsx twoslash
 import { markdown } from '@codespark/framework/markdown';
 
+// @noErrors
 <Codespark framework={markdown} />;
 ```
-
-## Markdown Framework
 
 Once the framework is configured, simply pass your markdown code to the `code` prop to preview it.
 
@@ -33,18 +65,7 @@ export default function App() {
 ```
 
 <Callout title="Note">
-You need to change the `name` suffix to `.md` to enable markdown syntax highlighting in the editor.
+By changing the name suffix to .md like `index.md` will enable markdown syntax highlighting in the editor.
 
 And you also need to disable Tailwind CSS by setting `tailwindcss={false}`, because Tailwind CSS normalizes default element styles with [Preflight](https://tailwindcss.com/docs/preflight).
 </Callout>
-
-## More Syntax Support?
-
-Codespark currently has built-in support for the following frameworks:
-
-- React
-- Markdown
-- MDX
-- Vue
-
-If you want to customize other frameworks, please refer to the [Framework](/docs/framework) documentation. Pull requests are welcome!

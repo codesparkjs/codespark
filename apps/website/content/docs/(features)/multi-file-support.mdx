@@ -9,10 +9,17 @@ Multi-file preview is a core feature of Codespark. You can easily create a multi
 
 Pass multiple files as an object to the `files` prop. Each key represents a file path, and the value contains the file content.
 
+By default, `./App.tsx` is used as the entry file. 
+
 ```tsx preview
 import { Codespark } from '@codespark/react';
 
 const files = {
+  './App.tsx': `import { Welcome } from './welcome';
+
+export default function App() {
+  return <Welcome />;
+}`,
   './welcome.tsx': `export function Welcome() {
   return (
     <div className="text-center">
@@ -20,11 +27,6 @@ const files = {
       <p>This is my first Codes Park!</p>
     </div>
   );
-}`,
-  './App.tsx': `import { Welcome } from './welcome';
-
-export default function App() {
-  return <Welcome />;
 }`
 };
 
@@ -41,7 +43,7 @@ For example, if you define a file named 'components/button.tsx' without the './'
 
 ## Specify the Entry Point
 
-By default, `./App.tsx` is used as the entry file. If you want to use a different entry point, specify it using the `name` prop.
+If you want to use a different entry point, specify it using the `name` prop.
 
 ```tsx preview
 // [!code word:./index.tsx]
