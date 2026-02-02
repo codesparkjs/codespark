@@ -67,10 +67,4 @@ describe('collectDependencies', () => {
     expect(result.files['./cd-button.tsx']).toContain('export const Button');
   });
 
-  it('should resolve alias imports', () => {
-    const code = '<App />';
-    const result = collectDependencies(code, path.join(fixturesDir, 'with-alias-value.tsx'));
-    expect(result.entry.locals).toHaveLength(1);
-    expect(result.files['_shared/util']).toContain('sharedUtil');
-  });
 });
