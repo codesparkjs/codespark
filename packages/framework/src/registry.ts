@@ -1,7 +1,6 @@
-import type { ExternalDep } from '_shared/types';
 import MagicString from 'magic-string';
 
-import { OutputType } from './loaders/types';
+import { type LoaderOutput, LoaderType } from './loaders/types';
 
 class RuntimeBuilder {
   private s: MagicString;
@@ -49,29 +48,40 @@ class RuntimeBuilder {
   }
 
   async(code: string) {
-    this.s.append(`\n;(async () => {\ntry {\n${code}\nwindow.__render_complete__?.();\n} finally {\nwindow.__next__?.();\n}\n})();`);
+    this.s.append(`
+;(async () => {
+  try {
+    ${code}
+    window.__render_complete__?.();
+  } finally {
+    window.__next__?.();
+  }
+})();`);
+
     return this;
   }
 }
 
-export interface OutputItem {
+export type Output<T extends LoaderType = LoaderType> = Omit<LoaderOutput<T>, 'type'> & {
   path: string;
-  content: string;
-  externals: ExternalDep[];
-  imports: Map<string, string>; // source -> resolved path
-}
+};
+
+export type Outputs = Map<LoaderType, Output[]>;
 
 export abstract class Framework {
   abstract readonly name: string;
   abstract readonly imports: Record<string, string>;
+  abstract outputs: Outputs;
 
-  abstract analyze(entry: string, files: Record<string, string>): Map<OutputType, OutputItem[]>;
-  abstract compile(outputs: Map<OutputType, OutputItem[]>): string;
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  revoke(): void {}
+  abstract analyze(entry: string, files: Record<string, string>): void;
+  abstract compile(): string;
 
   protected createBuilder(init?: string) {
     return new RuntimeBuilder(init);
+  }
+
+  getOutput<T extends LoaderType>(type: T) {
+    return (this.outputs.get(type) ?? []) as Output<T>[];
   }
 }
 

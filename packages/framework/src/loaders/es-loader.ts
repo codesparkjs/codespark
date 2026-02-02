@@ -1,10 +1,8 @@
-import type { ExternalDep } from '_shared/types';
 import { parse } from '@babel/parser';
 import { availablePresets, transform } from '@babel/standalone';
 import type { Identifier, ImportDeclaration, ImportSpecifier, Statement } from '@babel/types';
 
-import type { Loader, LoaderContext, LoaderOutput } from './types';
-import { OutputType } from './types';
+import { type ESModuleLoaderOutput, type Loader, type LoaderContext, LoaderType } from './types';
 
 const parseCode = (code: string) => parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
@@ -47,8 +45,8 @@ const analyzeImports = (ast: Statement[]) => {
   return { imports, usedSources };
 };
 
-const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set<string>): ExternalDep[] => {
-  const externals = new Map<string, { name: string; version: string; imported: Set<string> }>();
+const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set<string>) => {
+  const externals = new Map<string, { name: string; imported: Set<string> }>();
   imports.forEach(imp => {
     if (imp.importKind === 'type') return;
     const source = imp.source.value;
@@ -58,7 +56,7 @@ const buildExternalDeps = (imports: ImportDeclaration[], usedSources: Set<string
 
     const existing = externals.get(source);
     if (existing) namedImports.forEach(name => existing.imported.add(name));
-    else externals.set(source, { name: source, version: '', imported: new Set(namedImports) });
+    else externals.set(source, { name: source, imported: new Set(namedImports) });
   });
   return [...externals.values()].map(dep => ({ ...dep, imported: [...dep.imported] }));
 };
@@ -70,10 +68,9 @@ export interface ESLoaderOptions {
   isTSX?: boolean;
 }
 
-export class ESLoader implements Loader {
+export class ESLoader implements Loader<LoaderType.ESModule> {
   readonly name = 'es-loader';
   readonly test = /\.(tsx?|jsx?)$/;
-  readonly outputType = OutputType.ESModule;
 
   private jsxPreset: ESLoaderOptions['jsxPreset'];
   private isTSX: boolean;
@@ -83,11 +80,11 @@ export class ESLoader implements Loader {
     this.isTSX = options.isTSX ?? false;
   }
 
-  transform(source: string, ctx: LoaderContext): LoaderOutput {
+  transform(source: string, ctx: LoaderContext): ESModuleLoaderOutput {
     const ast = parseCode(source);
     const { imports, usedSources } = analyzeImports(ast);
-    const dependencies: string[] = [];
     const externals = buildExternalDeps(imports, usedSources);
+    const dependencies: Record<string, string> = {};
 
     for (const imp of imports) {
       if (imp.importKind === 'type') continue;
@@ -95,14 +92,14 @@ export class ESLoader implements Loader {
 
       if (imp.specifiers.length === 0) {
         const resolved = ctx.resolve(importPath);
-        if (resolved) dependencies.push(resolved);
+        if (resolved) dependencies[importPath] = resolved;
         continue;
       }
 
       if (!usedSources.has(importPath)) continue;
 
       const resolved = ctx.resolve(importPath);
-      if (resolved) dependencies.push(resolved);
+      if (resolved) dependencies[importPath] = resolved;
     }
 
     const { typescript } = availablePresets;
@@ -111,11 +108,6 @@ export class ESLoader implements Loader {
       presets: [this.jsxPreset, [typescript, { isTSX: this.isTSX, allExtensions: true }]]
     });
 
-    return {
-      type: OutputType.ESModule,
-      content: code || '',
-      dependencies,
-      externals
-    };
+    return { type: LoaderType.ESModule, content: code || '', dependencies, externals };
   }
 }

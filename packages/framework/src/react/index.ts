@@ -1,9 +1,9 @@
-import type { Dep } from '_shared/types';
 import { parse } from '@babel/parser';
-import { availablePresets, transform } from '@babel/standalone';
 import { Framework as Base } from '@codespark/framework';
 import MagicString from 'magic-string';
 
+import { LoaderType } from '../loaders/types';
+import type { Output, Outputs } from '../registry';
 import { analyze } from './analyze';
 
 export class Framework extends Base {
@@ -13,23 +13,19 @@ export class Framework extends Base {
     'react/jsx-runtime': 'https://esm.sh/react@18.2.0/jsx-runtime',
     'react-dom/client': 'https://esm.sh/react-dom@18.2.0/client'
   };
-
+  outputs: Outputs = new Map();
   private blobUrlMap = new Map<string, string>();
 
   analyze(entry: string, files: Record<string, string>) {
-    return analyze(entry, files);
+    this.outputs = analyze(entry, files);
   }
 
-  compile(entry: string, files: Record<string, string>) {
-    const deps = this.analyze(entry, files);
-    const { react, typescript } = availablePresets;
+  compile() {
+    const transformed = this.transformModulesToBlob([...this.getOutput(LoaderType.ESModule)].reverse());
+    const builder = this.createBuilder(transformed);
+    const ast = parse(transformed, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
-    if (deps.length > 0) this.transformDepsToBlob(deps);
-    const sourceWithBlobs = this.transformCodeWithBlobUrls(files[entry]);
-    const builder = this.createBuilder(sourceWithBlobs);
-    const ast = parse(builder.toString(), { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
-
-    let name;
+    let name: string | undefined;
     for (const node of ast) {
       if (node.type === 'ExportNamedDeclaration' && node.declaration?.type === 'FunctionDeclaration') {
         name = node.declaration?.id?.name;
@@ -63,73 +59,45 @@ export class Framework extends Base {
       }
     }
 
-    builder.async(`
-      const { createRoot } = await import('react-dom/client');
-      window.__root__ = window.__root__ || createRoot(${builder.root});
-      window.__root__.render(${name ? `<${name} />` : 'null'});
-    `);
-    const { code } = transform(builder.toString(), {
-      filename: `${name}.ts`,
-      presets: [
-        [react, { runtime: 'automatic' }],
-        [typescript, { isTSX: true, allExtensions: true }]
-      ]
+    builder.async(`const [{ createRoot }, { jsx }] = await Promise.all([import('react-dom/client'), import('react/jsx-runtime')]);
+    window.__root__ = window.__root__ || createRoot(${builder.root});
+    window.__root__.render(${name ? `jsx(${name}, {})` : 'null'});`);
+
+    return builder.toString();
+  }
+
+  private transformModulesToBlob(modules: Output<LoaderType.ESModule>[]) {
+    let entryCode = '';
+
+    modules.forEach((mod, index) => {
+      const code = this.transformCodeWithBlobUrls(mod);
+
+      if (index === modules.length - 1) {
+        entryCode = code;
+      } else {
+        const blob = new Blob([code], { type: 'application/javascript' });
+        this.blobUrlMap.set(mod.path, URL.createObjectURL(blob));
+      }
     });
 
-    return code || '';
+    return entryCode;
   }
 
-  revoke(): void {
-    for (const url of this.blobUrlMap.values()) {
-      URL.revokeObjectURL(url);
-    }
-
-    this.blobUrlMap.clear();
-  }
-
-  private transformDepsToBlob(deps: Dep[]) {
-    for (const dep of deps) {
-      if (!('code' in dep)) continue;
-      if (dep.alias?.endsWith('.css')) continue;
-
-      if (dep.deps?.length) {
-        this.transformDepsToBlob(dep.deps);
-      }
-
-      const transformedCode = this.transformCodeWithBlobUrls(dep.code);
-
-      const { react, typescript } = availablePresets;
-      const { code: compiledCode } = transform(transformedCode, {
-        filename: `${dep.name}.ts`,
-        presets: [
-          [react, { runtime: 'automatic' }],
-          [typescript, { isTSX: true, allExtensions: true }]
-        ]
-      });
-
-      const blob = new Blob([compiledCode || ''], { type: 'application/javascript' });
-      const blobUrl = URL.createObjectURL(blob);
-      if (dep.alias) {
-        this.blobUrlMap.set(dep.alias, blobUrl);
-      }
-    }
-  }
-
-  private transformCodeWithBlobUrls(code: string) {
-    const s = new MagicString(code);
-    const ast = parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
+  private transformCodeWithBlobUrls(mod: Output<LoaderType.ESModule>) {
+    const s = new MagicString(mod.content);
+    const ast = parse(mod.content, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
     for (const node of ast) {
-      if (node.type === 'ImportDeclaration') {
-        const importSource = node.source.value;
-        if (importSource.endsWith('.css')) {
-          s.remove(node.start!, node.end!);
-        } else {
-          const blobUrl = this.blobUrlMap.get(importSource);
-          if (blobUrl) {
-            s.update(node.source.start! + 1, node.source.end! - 1, blobUrl);
-          }
-        }
+      if (node.type !== 'ImportDeclaration') continue;
+
+      const resolved = mod.dependencies[node.source.value];
+      if (!resolved) continue;
+
+      const blobUrl = this.blobUrlMap.get(resolved);
+      if (blobUrl) {
+        s.update(node.source.start! + 1, node.source.end! - 1, blobUrl);
+      } else {
+        s.remove(node.start!, node.end!);
       }
     }
 

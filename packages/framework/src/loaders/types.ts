@@ -1,18 +1,29 @@
-import type { ExternalDep } from '_shared/types';
-
-export enum OutputType {
+export enum LoaderType {
   ESModule = 'esmodule',
   Style = 'style',
   Script = 'script',
   Asset = 'asset'
 }
 
-export interface LoaderOutput {
-  type: OutputType;
+interface BaseLoaderOutput<T extends LoaderType> {
+  type: T;
   content: string;
-  dependencies: string[];
-  externals: ExternalDep[];
 }
+
+export interface ESModuleLoaderOutput extends BaseLoaderOutput<LoaderType.ESModule> {
+  dependencies: Record<string, string>;
+  externals: { name: string; imported: string[] }[];
+}
+
+export interface StyleLoaderOutput extends BaseLoaderOutput<LoaderType.Style> {
+  imports: string[];
+}
+
+export type ScriptLoaderOutput = BaseLoaderOutput<LoaderType.Script>;
+
+export type AssetLoaderOutput = BaseLoaderOutput<LoaderType.Asset>;
+
+export type LoaderOutput<T extends LoaderType> = Extract<ESModuleLoaderOutput | StyleLoaderOutput | ScriptLoaderOutput | AssetLoaderOutput, { type: T }>;
 
 export interface LoaderContext {
   resourcePath: string;
@@ -20,9 +31,8 @@ export interface LoaderContext {
   resolve: (source: string) => string | null;
 }
 
-export interface Loader {
+export interface Loader<T extends LoaderType> {
   readonly name: string;
   readonly test: RegExp;
-  readonly outputType: OutputType;
-  transform(source: string, ctx: LoaderContext): LoaderOutput;
+  transform(source: string, ctx?: LoaderContext): LoaderOutput<T>;
 }

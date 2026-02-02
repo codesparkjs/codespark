@@ -1,22 +1,16 @@
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
-import type { Loader, LoaderContext, LoaderOutput } from './types';
-import { OutputType } from './types';
+import type { AssetLoaderOutput, Loader } from './types';
+import { LoaderType } from './types';
 
-export class MarkdownLoader implements Loader {
+export class MarkdownLoader implements Loader<LoaderType.Asset> {
   readonly name = 'markdown-loader';
   readonly test = /\.md$/;
-  readonly outputType = OutputType.Asset;
 
-  transform(source: string, _ctx: LoaderContext): LoaderOutput {
+  transform(source: string): AssetLoaderOutput {
     const html = DOMPurify.sanitize(marked.parse(source, { async: false }));
 
-    return {
-      type: OutputType.Asset,
-      content: html,
-      dependencies: [],
-      externals: []
-    };
+    return { type: LoaderType.Asset, content: html };
   }
 }
