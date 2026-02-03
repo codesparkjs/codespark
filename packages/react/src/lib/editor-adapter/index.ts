@@ -16,7 +16,7 @@ export interface EditorAdapter<E extends EditorEngine = any> {
   kind: E;
   instance: EditorInstance[E];
   getValue(): string;
-  setValue(value: string): void;
+  setValue(value: string, addToHistory?: boolean): void;
   format(): Promise<void>;
 }
 

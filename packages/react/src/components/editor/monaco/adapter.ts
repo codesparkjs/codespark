@@ -12,7 +12,7 @@ export class MonacoEditorAdapter implements EditorAdapter<EditorEngine.Monaco> {
     return this.instance.getModel()?.getValue() ?? '';
   }
 
-  setValue(value: string): void {
+  setValue(value: string, _addToHistory?: boolean): void {
     this.instance.getModel()?.setValue(value);
   }
 

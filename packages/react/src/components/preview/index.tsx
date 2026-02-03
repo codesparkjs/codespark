@@ -4,7 +4,7 @@ import { useInjections } from '@/components/inject';
 import { type ConfigContextValue, useCodespark, useConfig } from '@/context';
 import { usePreview } from '@/lib/preview-proxy';
 import { useTailwindCSS } from '@/lib/tailwindcss';
-import { cn } from '@/lib/utils';
+import { cn, serializeAttributes } from '@/lib/utils';
 import { useWorkspace, Workspace, type WorkspaceInit } from '@/lib/workspace';
 
 export interface CodesparkPreviewProps extends ConfigContextValue, Pick<WorkspaceInit, 'framework'> {
@@ -29,7 +29,11 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
     theme,
-    presets: [...injections, ...vendor.styles.map(({ path, content }) => (path.endsWith('.tw.css') ? `<style type="text/tailwindcss">${content}</style>` : `<style>${content}</style>`))],
+    presets: [
+      ...injections,
+      ...vendor.styles.map(({ content, attributes }) => `<style${serializeAttributes(attributes)}>${content}</style>`),
+      ...vendor.scripts.map(({ content, attributes }) => `<script${serializeAttributes(attributes)}>${content}</script>`)
+    ],
     imports: {
       ...vendor.imports,
       ...globalImports,

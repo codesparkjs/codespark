@@ -1,4 +1,5 @@
-import { type Framework, LoaderType, type Output, registry } from '@codespark/framework';
+import { type Framework, type Output, registry } from '@codespark/framework';
+import { LoaderType } from '@codespark/framework/loaders';
 import { type ComponentType, type ReactElement, useId, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
@@ -295,6 +296,7 @@ export interface WorkspaceDerivedState {
   vendor: {
     modules: Output<LoaderType.ESModule>[];
     styles: Output<LoaderType.Style>[];
+    scripts: Output<LoaderType.Script>[];
     imports: Record<string, string>;
   };
 }
@@ -391,6 +393,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
       workspace[INTERNAL_EMIT]('compiled', compiled);
       const modules = framework.getOutput(LoaderType.ESModule);
       const styles = framework.getOutput(LoaderType.Style);
+      const scripts = framework.getOutput(LoaderType.Script);
 
       return {
         fileTree,
@@ -399,6 +402,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
         vendor: {
           modules,
           styles,
+          scripts,
           imports: {
             ...modules
               .map(({ externals }) => externals)
@@ -425,7 +429,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
         fileTree,
         compiled: '',
         compileError: error as Error,
-        vendor: { modules: [], styles: [], imports: {} }
+        vendor: { modules: [], styles: [], scripts: [], imports: {} }
       };
     }
   }, [files]);

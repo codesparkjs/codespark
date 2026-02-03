@@ -70,3 +70,11 @@ export function getLanguageFromFile(name: string) {
 
   return ext ? langMap[ext] : void 0;
 }
+
+export function serializeAttributes<T extends object>(attrs?: T) {
+  if (!attrs || Object.keys(attrs).length === 0) return '';
+
+  return Object.entries(attrs)
+    .map(([key, value]) => (value === '' ? ` ${key}` : ` ${key}="${value}"`))
+    .join('');
+}

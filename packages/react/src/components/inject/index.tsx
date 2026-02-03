@@ -1,5 +1,7 @@
 import { Children, isValidElement, type ReactNode, useEffect, useState } from 'react';
 
+import { serializeAttributes } from '@/lib/utils';
+
 export interface StyleProps extends Omit<React.StyleHTMLAttributes<HTMLStyleElement>, 'children'> {
   children?: string;
 }
@@ -25,28 +27,19 @@ export function Link(_props: LinkProps) {
 export function useInjections(children: ReactNode) {
   const [injections, setInjections] = useState<string[]>([]);
 
-  const getAttrStr = <T extends object>(attrs: T) => {
-    return Object.entries(attrs)
-      .map(([k, v]) => `${k}="${v}"`)
-      .join(' ');
-  };
-
   useEffect(() => {
     const result: string[] = [];
     Children.forEach(children, child => {
       if (isValidElement(child)) {
         if (child.type === Style) {
           const { children, ...attrs } = child.props as StyleProps;
-          const attrStr = getAttrStr(attrs);
-          result.push(`<style${attrStr ? ` ${attrStr}` : ''}>${children?.trim() || ''}</style>`);
+          result.push(`<style${serializeAttributes(attrs)}>${children?.trim() || ''}</style>`);
         } else if (child.type === Script) {
           const { children, ...attrs } = child.props as ScriptProps;
-          const attrStr = getAttrStr(attrs);
-          result.push(`<script${attrStr ? ` ${attrStr}` : ''}>${children?.trim() || ''}</script>`);
+          result.push(`<script${serializeAttributes(attrs)}>${children?.trim() || ''}</script>`);
         } else if (child.type === Link) {
           const attrs = child.props as LinkProps;
-          const attrStr = getAttrStr(attrs);
-          result.push(`<link${attrStr ? ` ${attrStr}` : ''} />`);
+          result.push(`<link${serializeAttributes(attrs)} />`);
         }
       }
     });
