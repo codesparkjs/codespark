@@ -20,7 +20,20 @@ const LOADERS = [
 ];
 
 function matchLoader(path: string) {
-  return LOADERS.find(l => l.test.test(path)) ?? null;
+  return LOADERS.find(loader => loader.test.test(path)) ?? null;
+}
+
+function getOutputList<T extends LoaderType>(outputs: Outputs, type: T) {
+  return outputs.get(type) as Output<T>[];
+}
+
+function createOutputsMap() {
+  const outputs: Outputs = new Map();
+  outputs.set(LoaderType.ESModule, []);
+  outputs.set(LoaderType.Style, []);
+  outputs.set(LoaderType.Script, []);
+  outputs.set(LoaderType.Asset, []);
+  return outputs;
 }
 
 export function resolve(source: string, from: string, files: Record<string, string>) {
@@ -65,39 +78,40 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
     resolve: src => resolve(src, path, files)
   });
 
-  if (output.type === LoaderType.ESModule) {
-    const { content, dependencies, externals } = output;
-    (outputs.get(output.type) as Output<LoaderType.ESModule>[]).push({ path, content, dependencies, externals });
-    for (const depPath of Object.values(dependencies)) {
-      processFile(depPath, files, outputs, visited);
+  switch (output.type) {
+    case LoaderType.ESModule: {
+      const { content, dependencies, externals } = output;
+      getOutputList(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals });
+      for (const depPath of Object.values(dependencies)) {
+        processFile(depPath, files, outputs, visited);
+      }
+      break;
     }
-  } else if (output.type === LoaderType.Style) {
-    const { content, imports } = output;
-    (outputs.get(output.type) as Output<LoaderType.Style>[]).push({ path, content, imports });
-    for (const depPath of imports) {
-      processFile(depPath, files, outputs, visited);
+    case LoaderType.Style: {
+      const { content, imports, attributes } = output;
+      getOutputList(outputs, LoaderType.Style).push({ path, content, imports, attributes });
+      for (const depPath of imports) {
+        processFile(depPath, files, outputs, visited);
+      }
+      break;
     }
-  } else {
-    const { content } = output;
-    (outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[]).push({
-      path,
-      content: `import { jsx as _jsx } from 'react/jsx-runtime';
+    default: {
+      const { content } = output;
+      getOutputList(outputs, LoaderType.ESModule).push({
+        path,
+        content: `import { jsx as _jsx } from 'react/jsx-runtime';
 export default function MarkdownContent() {
   return _jsx('div', { dangerouslySetInnerHTML: { __html: ${JSON.stringify(content)} } });
 }`,
-      dependencies: {},
-      externals: []
-    });
+        dependencies: {},
+        externals: []
+      });
+    }
   }
 }
 
 export function analyze(entry: string, files: Record<string, string>) {
-  const outputs: Outputs = new Map();
-  outputs.set(LoaderType.ESModule, []);
-  outputs.set(LoaderType.Style, []);
-  outputs.set(LoaderType.Script, []);
-  outputs.set(LoaderType.Asset, []);
+  const outputs = createOutputsMap();
   processFile(entry, files, outputs, new Set());
-
   return outputs;
 }

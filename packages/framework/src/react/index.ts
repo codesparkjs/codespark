@@ -2,7 +2,7 @@ import { parse } from '@babel/parser';
 import { Framework as Base } from '@codespark/framework';
 import MagicString from 'magic-string';
 
-import { LoaderType } from '../loaders/types';
+import { type Loader, LoaderType } from '../loaders/types';
 import type { Output, Outputs } from '../registry';
 import { analyze } from './analyze';
 
@@ -15,6 +15,10 @@ export class Framework extends Base {
   };
   outputs: Outputs = new Map();
   private blobUrlMap = new Map<string, string>();
+
+  constructor(private config?: { loaders?: Loader<any>[] }) {
+    super();
+  }
 
   analyze(entry: string, files: Record<string, string>) {
     this.outputs = analyze(entry, files);

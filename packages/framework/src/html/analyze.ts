@@ -1,91 +1,11 @@
+import { render } from 'dom-serializer';
+import type { Element, Text } from 'domhandler';
+import { DomUtils, parseDocument } from 'htmlparser2';
+
 import { CSSLoader } from '../loaders/css-loader';
 import { ESLoader } from '../loaders/es-loader';
 import { LoaderType } from '../loaders/types';
 import type { Output, Outputs } from '../registry';
-
-const EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx'] as const;
-
-const LOADERS = {
-  es: new ESLoader(),
-  css: new CSSLoader()
-};
-
-export function resolve(source: string, from: string, files: Record<string, string>) {
-  if (!source.startsWith('.') && !source.startsWith('/')) {
-    return null;
-  }
-
-  const fromDir = from.split('/').slice(0, -1);
-  for (const part of source.split('/')) {
-    if (part === '..') fromDir.pop();
-    else if (part !== '.') fromDir.push(part);
-  }
-  const resolved = fromDir.join('/') || '.';
-
-  if (files[resolved] !== undefined) return resolved;
-
-  for (const ext of EXTENSIONS) {
-    if (files[resolved + ext] !== undefined) return resolved + ext;
-  }
-
-  for (const ext of EXTENSIONS) {
-    const indexPath = `${resolved}/index${ext}`;
-    if (files[indexPath] !== undefined) return indexPath;
-  }
-
-  return null;
-}
-
-function processESModule(path: string, files: Record<string, string>, outputs: Outputs, visited: Set<string>) {
-  if (visited.has(path)) return;
-  visited.add(path);
-
-  const source = files[path];
-  if (source === undefined) return;
-
-  const output = LOADERS.es.transform(source, {
-    resourcePath: path,
-    getSource: p => files[p],
-    resolve: src => resolve(src, path, files)
-  });
-
-  const { content, dependencies, externals } = output;
-  (outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[]).push({
-    path,
-    content,
-    dependencies,
-    externals
-  });
-
-  for (const depPath of Object.values(dependencies)) {
-    processESModule(depPath, files, outputs, visited);
-  }
-}
-
-function processStylesheet(path: string, files: Record<string, string>, outputs: Outputs, visited: Set<string>) {
-  if (visited.has(path)) return;
-  visited.add(path);
-
-  const source = files[path];
-  if (source === undefined) return;
-
-  const output = LOADERS.css.transform(source, {
-    resourcePath: path,
-    getSource: p => files[p],
-    resolve: src => resolve(src, path, files)
-  });
-
-  const { content, imports } = output;
-  (outputs.get(LoaderType.Style) as Output<LoaderType.Style>[]).push({
-    path,
-    content,
-    imports
-  });
-
-  for (const depPath of imports) {
-    processStylesheet(depPath, files, outputs, visited);
-  }
-}
 
 interface ParsedElement {
   type: 'script' | 'style' | 'link';
@@ -93,165 +13,262 @@ interface ParsedElement {
   src?: string;
   href?: string;
   content?: string;
+  attributes?: Record<string, string>;
+}
+
+const LOADERS = {
+  es: new ESLoader(),
+  css: new CSSLoader()
+};
+
+function isExternalUrl(url: string) {
+  return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
+}
+
+function getTextContent(element: Element) {
+  return element.children
+    .filter((child): child is Text => child.type === 'text')
+    .map(child => child.data)
+    .join('')
+    .trim();
+}
+
+function extractAttributes(attribs: Record<string, string>, excludeKeys: string[]) {
+  const filtered = Object.fromEntries(Object.entries(attribs).filter(([key]) => !excludeKeys.includes(key)));
+  return Object.keys(filtered).length > 0 ? filtered : undefined;
+}
+
+function createLoaderContext(files: Record<string, string>) {
+  return {
+    getSource: (path: string) => files[path],
+    resolve: (src: string) => (files[src] !== undefined ? src : null)
+  };
 }
 
 function parseHTML(html: string): { elements: ParsedElement[]; bodyContent: string } {
+  const doc = parseDocument(html);
   const elements: ParsedElement[] = [];
 
-  // Extract <script> tags
-  const scriptRegex = /<script([^>]*)>([\s\S]*?)<\/script>/gi;
-  let match;
-
-  while ((match = scriptRegex.exec(html)) !== null) {
-    const attrs = match[1];
-    const content = match[2].trim();
-
-    const isModule = /type\s*=\s*["']module["']/i.test(attrs);
-    const srcMatch = attrs.match(/src\s*=\s*["']([^"']+)["']/i);
-
+  const scripts = DomUtils.getElementsByTagName('script', doc) as Element[];
+  for (const script of scripts) {
+    const src = script.attribs.src;
     elements.push({
       type: 'script',
-      isModule,
-      src: srcMatch?.[1],
-      content: srcMatch ? undefined : content
+      isModule: script.attribs.type === 'module',
+      src,
+      content: src ? undefined : getTextContent(script),
+      attributes: extractAttributes(script.attribs, ['src', 'type'])
     });
   }
 
-  // Extract <style> tags
-  const styleRegex = /<style([^>]*)>([\s\S]*?)<\/style>/gi;
-
-  while ((match = styleRegex.exec(html)) !== null) {
-    const content = match[2].trim();
+  const styles = DomUtils.getElementsByTagName('style', doc) as Element[];
+  for (const style of styles) {
     elements.push({
       type: 'style',
-      content
+      content: getTextContent(style),
+      attributes: extractAttributes(style.attribs, [])
     });
   }
 
-  // Extract <link rel="stylesheet"> tags
-  const linkRegex = /<link([^>]*)>/gi;
-
-  while ((match = linkRegex.exec(html)) !== null) {
-    const attrs = match[1];
-    if (!/rel\s*=\s*["']stylesheet["']/i.test(attrs)) continue;
-
-    const hrefMatch = attrs.match(/href\s*=\s*["']([^"']+)["']/i);
-    if (hrefMatch) {
-      elements.push({
-        type: 'link',
-        href: hrefMatch[1]
-      });
-    }
+  const links = DomUtils.getElementsByTagName('link', doc) as Element[];
+  for (const link of links) {
+    if (link.attribs.rel !== 'stylesheet' || !link.attribs.href) continue;
+    elements.push({
+      type: 'link',
+      href: link.attribs.href,
+      attributes: extractAttributes(link.attribs, ['href', 'rel'])
+    });
   }
 
-  // Extract body content (remove script, style, link tags)
-  let bodyContent = html;
+  const bodies = DomUtils.getElementsByTagName('body', doc) as Element[];
+  const container = bodies.length > 0 ? bodies[0] : doc;
 
-  // Try to extract just the body content
-  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-  if (bodyMatch) {
-    bodyContent = bodyMatch[1];
+  const tagsToRemove = [...DomUtils.getElementsByTagName('script', container), ...DomUtils.getElementsByTagName('style', container), ...DomUtils.getElementsByTagName('link', container)];
+  for (const tag of tagsToRemove) {
+    DomUtils.removeElement(tag);
   }
 
-  // Remove script tags
-  bodyContent = bodyContent.replace(/<script[\s\S]*?<\/script>/gi, '');
-  // Remove style tags
-  bodyContent = bodyContent.replace(/<style[\s\S]*?<\/style>/gi, '');
-  // Remove link tags
-  bodyContent = bodyContent.replace(/<link[^>]*>/gi, '');
-  // Clean up whitespace
-  bodyContent = bodyContent.trim();
+  const bodyContent = render(DomUtils.getChildren(container)).trim();
 
   return { elements, bodyContent };
 }
 
-export function analyze(entry: string, files: Record<string, string>) {
+function processESModule(path: string, files: Record<string, string>, outputs: Outputs, visited = new Set<string>()) {
+  if (visited.has(path)) return;
+  visited.add(path);
+
+  const source = files[path];
+  if (source === undefined) return;
+
+  const ctx = createLoaderContext(files);
+  const output = LOADERS.es.transform(source, { resourcePath: path, ...ctx });
+
+  getOutputArray(outputs, LoaderType.ESModule).push({
+    path,
+    content: output.content,
+    dependencies: output.dependencies,
+    externals: output.externals
+  });
+
+  for (const depPath of Object.values(output.dependencies)) {
+    processESModule(depPath, files, outputs, visited);
+  }
+}
+
+function processStylesheet(path: string, files: Record<string, string>, outputs: Outputs, visited = new Set<string>()) {
+  if (visited.has(path)) return;
+  visited.add(path);
+
+  const source = files[path];
+  if (source === undefined) return;
+
+  const ctx = createLoaderContext(files);
+  const output = LOADERS.css.transform(source, { resourcePath: path, ...ctx });
+
+  getOutputArray(outputs, LoaderType.Style).push({
+    path,
+    content: output.content,
+    imports: output.imports,
+    attributes: output.attributes
+  });
+
+  for (const depPath of output.imports) {
+    processStylesheet(depPath, files, outputs, visited);
+  }
+}
+
+function getOutputArray<T extends LoaderType>(outputs: Outputs, type: T) {
+  return outputs.get(type) as Output<T>[];
+}
+
+function createOutputs() {
   const outputs: Outputs = new Map();
   outputs.set(LoaderType.ESModule, []);
   outputs.set(LoaderType.Style, []);
   outputs.set(LoaderType.Script, []);
   outputs.set(LoaderType.Asset, []);
 
+  return outputs;
+}
+
+function processScriptElement(el: ParsedElement, entry: string, files: Record<string, string>, outputs: Outputs, visited = new Set<string>()) {
+  if (el.isModule) {
+    processModuleScript(el, entry, files, outputs, visited);
+  } else {
+    processRegularScript(el, entry, files, outputs);
+  }
+}
+
+function processModuleScript(el: ParsedElement, entry: string, files: Record<string, string>, outputs: Outputs, visited = new Set<string>()) {
+  if (el.src) {
+    if (isExternalUrl(el.src)) {
+      getOutputArray(outputs, LoaderType.Script).push({
+        path: el.src,
+        content: '',
+        src: el.src,
+        attributes: { ...el.attributes, type: 'module' }
+      });
+    } else if (files[el.src] !== undefined) {
+      processESModule(el.src, files, outputs, visited);
+    }
+    return;
+  }
+
+  if (!el.content) return;
+
+  const virtualPath = `${entry}#inline-module-${getOutputArray(outputs, LoaderType.ESModule).length}`;
+  const ctx = createLoaderContext(files);
+  const output = LOADERS.es.transform(el.content, { resourcePath: virtualPath, ...ctx });
+
+  getOutputArray(outputs, LoaderType.ESModule).push({
+    path: virtualPath,
+    content: output.content,
+    dependencies: output.dependencies,
+    externals: output.externals
+  });
+
+  for (const depPath of Object.values(output.dependencies)) {
+    processESModule(depPath, files, outputs, visited);
+  }
+}
+
+function processRegularScript(el: ParsedElement, entry: string, files: Record<string, string>, outputs: Outputs) {
+  if (el.src) {
+    if (isExternalUrl(el.src)) {
+      getOutputArray(outputs, LoaderType.Script).push({
+        path: el.src,
+        content: '',
+        src: el.src,
+        attributes: el.attributes
+      });
+    } else if (files[el.src] !== undefined) {
+      getOutputArray(outputs, LoaderType.Script).push({
+        path: el.src,
+        content: files[el.src],
+        attributes: el.attributes
+      });
+    }
+    return;
+  }
+
+  if (!el.content) return;
+
+  const virtualPath = `${entry}#inline-script-${getOutputArray(outputs, LoaderType.Script).length}`;
+  getOutputArray(outputs, LoaderType.Script).push({
+    path: virtualPath,
+    content: el.content,
+    attributes: el.attributes
+  });
+}
+
+function processStyleElement(el: ParsedElement, entry: string, outputs: Outputs) {
+  if (!el.content) return;
+
+  const virtualPath = `${entry}#inline-style-${getOutputArray(outputs, LoaderType.Style).length}`;
+  getOutputArray(outputs, LoaderType.Style).push({
+    path: virtualPath,
+    content: el.content,
+    imports: [],
+    attributes: el.attributes
+  });
+}
+
+function processLinkElement(el: ParsedElement, files: Record<string, string>, outputs: Outputs, visited = new Set<string>()) {
+  if (!el.href) return;
+
+  if (isExternalUrl(el.href)) {
+    getOutputArray(outputs, LoaderType.Style).push({
+      path: el.href,
+      content: '',
+      imports: [],
+      href: el.href,
+      attributes: el.attributes
+    });
+  } else if (files[el.href] !== undefined) {
+    processStylesheet(el.href, files, outputs, visited);
+  }
+}
+
+export function analyze(entry: string, files: Record<string, string>) {
+  const outputs = createOutputs();
+
   const html = files[entry];
   if (!html) return outputs;
 
   const { elements, bodyContent } = parseHTML(html);
-  const visitedES = new Set<string>();
-  const visitedCSS = new Set<string>();
 
   for (const el of elements) {
     if (el.type === 'script') {
-      if (el.isModule) {
-        // ES Module script
-        if (el.src) {
-          const resolved = resolve(el.src, entry, files);
-          if (resolved) {
-            processESModule(resolved, files, outputs, visitedES);
-          }
-        } else if (el.content) {
-          // Inline module - treat as entry module
-          const virtualPath = `${entry}#inline-module-${outputs.get(LoaderType.ESModule)!.length}`;
-          const output = LOADERS.es.transform(el.content, {
-            resourcePath: virtualPath,
-            getSource: p => files[p],
-            resolve: src => resolve(src, entry, files)
-          });
-          (outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[]).push({
-            path: virtualPath,
-            content: output.content,
-            dependencies: output.dependencies,
-            externals: output.externals
-          });
-          // Process dependencies
-          for (const depPath of Object.values(output.dependencies)) {
-            processESModule(depPath, files, outputs, visitedES);
-          }
-        }
-      } else {
-        // Regular script
-        if (el.src) {
-          const resolved = resolve(el.src, entry, files);
-          if (resolved && files[resolved]) {
-            (outputs.get(LoaderType.Script) as Output<LoaderType.Script>[]).push({
-              path: resolved,
-              content: files[resolved]
-            });
-          }
-        } else if (el.content) {
-          const virtualPath = `${entry}#inline-script-${outputs.get(LoaderType.Script)!.length}`;
-          (outputs.get(LoaderType.Script) as Output<LoaderType.Script>[]).push({
-            path: virtualPath,
-            content: el.content
-          });
-        }
-      }
+      processScriptElement(el, entry, files, outputs);
     } else if (el.type === 'style') {
-      // Inline style
-      if (el.content) {
-        const virtualPath = `${entry}#inline-style-${outputs.get(LoaderType.Style)!.length}`;
-        (outputs.get(LoaderType.Style) as Output<LoaderType.Style>[]).push({
-          path: virtualPath,
-          content: el.content,
-          imports: []
-        });
-      }
+      processStyleElement(el, entry, outputs);
     } else if (el.type === 'link') {
-      // External stylesheet
-      if (el.href) {
-        const resolved = resolve(el.href, entry, files);
-        if (resolved) {
-          processStylesheet(resolved, files, outputs, visitedCSS);
-        }
-      }
+      processLinkElement(el, files, outputs);
     }
   }
 
-  // Add body content as asset
   if (bodyContent) {
-    (outputs.get(LoaderType.Asset) as Output<LoaderType.Asset>[]).push({
-      path: entry,
-      content: bodyContent
-    });
+    getOutputArray(outputs, LoaderType.Asset).push({ path: entry, content: bodyContent });
   }
 
   return outputs;

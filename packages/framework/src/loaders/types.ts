@@ -17,9 +17,14 @@ export interface ESModuleLoaderOutput extends BaseLoaderOutput<LoaderType.ESModu
 
 export interface StyleLoaderOutput extends BaseLoaderOutput<LoaderType.Style> {
   imports: string[];
+  href?: string;
+  attributes?: Record<string, string>;
 }
 
-export type ScriptLoaderOutput = BaseLoaderOutput<LoaderType.Script>;
+export interface ScriptLoaderOutput extends BaseLoaderOutput<LoaderType.Script> {
+  src?: string;
+  attributes?: Record<string, string>;
+}
 
 export type AssetLoaderOutput = BaseLoaderOutput<LoaderType.Asset>;
 
