@@ -174,7 +174,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                       }}>
                       <Link rel="preconnect" href="https://fonts.googleapis.com" />
                       <Link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                      <Link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet" />
+                      <Link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" />
                       <Style>{isMobile ? CUSTOM_MOBILE_STYLES : CUSTOM_STYLES}</Style>
                       <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
                     </CodesparkPreview>

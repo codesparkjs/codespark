@@ -3,7 +3,7 @@ title: Framework
 description: Extend Codespark with runtime plugins.
 ---
 
-To extend Codespark's capabilities, a framework plugin system was designed to support various language frameworks. Once a framework is configured, Codespark gains the ability to compile the corresponding language, allowing you to write code in that framework in the editor and preview it.
+Codespark uses a framework plugin system to support various language frameworks. Once configured, Codespark can compile and preview code written in that framework directly in the editor.
 
 ## Installation
 
@@ -12,9 +12,17 @@ npm install @codespark/framework
 ```
 
 ```ts
+import { html } from '@codespark/framework/html';
 import { markdown } from '@codespark/framework/markdown';
-import { mdx } from '@codespark/framework/mdx';
 import { react } from '@codespark/framework/react';
+```
+
+`@codespark/framework/*` also provides the Framework class, which allows you to create your own framework instance with custom configuration options:
+
+```ts twoslash
+import { Framework } from '@codespark/framework/html';
+
+const html = new Framework({ liteMode: { enabled: true } })
 ```
 
 <Callout>Codespark already integrates `@codespark/framework/react` internally, so you don't need to install it again.</Callout>
@@ -45,7 +53,7 @@ import { CodesparkProvider } from '@codespark/react';
 
 ### Workspace
 
-You can also specify the framework through Workspace. All Codespark instances using this Workspace will support the corresponding language.
+You can also specify the framework when creating a Workspace instance. All Codespark components using this Workspace will use the specified framework.
 
 ```ts twoslash
 // @noErrors
@@ -56,27 +64,35 @@ new Workspace({ framework: markdown, ... })
 
 ### Global
 
-Codespark also provides a way to register frameworks globally. Use `registerFramework` in your project's entry file:
+Codespark provides a way to register frameworks globally. Use `registerFramework` in your project's entry file:
 
 ```ts title="App.tsx" twoslash
 import { registerFramework } from '@codespark/framework';
 import { markdown } from '@codespark/framework/markdown';
 
 registerFramework(markdown);
-registerFramework(markdown, 'md'); // customize framework's name
 ```
 
-Once you've registered a framework globally, you can configure it by its name.
+You can also register a framework with a custom name:
+
+```ts
+registerFramework(markdown, 'md');
+```
+
+Once registered globally, you can reference the framework by its name:
 
 ```tsx
-<Codespark framework="markdown">
-<Codespark framework="md">
-
-<CodesparkProvider framework="markdown">
-new Workspace({ framework: 'md', ... })
+<Codespark framework="markdown" />
+<CodesparkProvider framework="md" />
 ```
 
 ## Frameworks
+
+| Framework | Import Path | Name | Description |
+| --------- | ----------- | ---- | ----------- |
+| React | `@codespark/framework/react` | react | React/JSX components with TypeScript support |
+| HTML | `@codespark/framework/html` | html | HTML with CSS and JavaScript |
+| Markdown | `@codespark/framework/markdown` | markdown | Markdown rendering |      
 
 ### React
 
@@ -93,66 +109,149 @@ React framework provides full support for React components rendering with the fo
 - Extension auto-resolution (e.g., `import './Button'` resolves to `./Button.tsx`)
 - External npm package support via ESM CDN
 
-### Vue
-
-WIP...
-
 ### Markdown
 
 ```ts
 import { markdown } from '@codespark/framework/markdown';
 ```
 
+Markdown framework provides a simple markdown rendering solution:
+- Standard markdown syntax support
+- HTML rendering in preview
+- No external dependencies required
+
 ```tsx codespark-preview
 import { markdown } from '@codespark/framework/markdown';
 import { Codespark } from '@codespark/react';
 
+const code = `# Heading 1
+## Heading 2
+### Heading 3
+
+**Bold text** and *italic text* and ~~strikethrough~~.
+
+- Unordered list item 1
+- Unordered list item 2
+
+1. Ordered list item 1
+2. Ordered list item 2
+
+> Blockquote text
+
+\`inline code\` and code block:
+
+\`\`\`js
+console.log('Hello');
+\`\`\`
+
+[Link](https://example.com) and ![Image](https://via.placeholder.com/50)
+`;
+
 export default function App() {
-  return <Codespark framework={markdown} name="index.md" code="# Hello World" tailwindcss={false} />;
+  return <Codespark framework={markdown} name="index.md" code={code} tailwindcss={false} />;
 }
 ```
 
 ### HTML
 
-```ts
-import { html } from '@codespark/framework/html';
+```ts preview=""
+import { Framework, html } from '@codespark/framework/html';
+
+// or use lite mode
+const htmlLite = new Framework({ liteMode: { enabled: true } })
 ```
 
-```tsx codespark-preview
-import { html } from '@codespark/framework/html';
-import { Codespark } from '@codespark/react';
+HTML framework provides full support for HTML/CSS/JavaScript development with the following features:
+- Multi-file support (HTML, CSS, JavaScript)
+- Lite mode for simplified HTML snippets (without `<!DOCTYPE>`, `<html>`, `<head>`, `<body>` tags)
+- CSS imports via `<link>` tags and `@import` statements
+- JavaScript modules via `<script type="module">`
+- External resource loading from CDN
 
-const files = {
-  './index.html': `<!DOCTYPE html>
-<html>
-<head>
-  <link rel="stylesheel" href="./style.css" >
-</head>
-<body>
-  <div id="app"></div>
-  <script src="./utils.js"></script>
-  <script type="module" src="./main.js"></script>
-</body>
-</html>  
-`,
-  './style.css': 'body { margin: 0 }',
-  './utils.js': 'window.utils = { log: console.log }',
-  './main.js': `import { helper } from './helper.js'
-helper()`,
-  './helper.js': 'export function helper() { console.log("hello"); }'
+```tsx codespark-preview
+import { Framework } from '@codespark/framework/html';
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider, useWorkspace, Workspace } from '@codespark/react';
+import { Braces, Code, Palette } from 'lucide-react';
+import { useMemo, useState } from 'react';
+
+const files = [
+  { name: './index.html', label: 'HTML', icon: Code, content: `<div class="counter">
+  <h1>Counter</h1>
+  <p id="count">0</p>
+  <button id="btn">Click me</button>
+</div>` },
+  { name: './index.js', label: 'JS', icon: Braces, content: `let count = 0;
+const countEl = document.getElementById('count');
+const btn = document.getElementById('btn');
+
+btn.addEventListener('click', () => {
+  count++;
+  countEl.textContent = count;
+});` },
+  { name: './index.css', label: 'CSS', icon: Palette, content: `.counter {
+  text-align: center;
+  font-family: system-ui;
+  width: 100%;
+}
+#count {
+  font-size: 48px;
+  color: #3b82f6;
+}
+button {
+  padding: 8px 16px;
+  cursor: pointer;
+}` }
+];
+
+function Toolbar() {
+  const { workspace } = useWorkspace();
+  const [active, setActive] = useState('./index.html');
+
+  return (
+    <div className="border-border flex items-center gap-2 border-b p-2">
+      {files.map(file => (
+        <button
+          key={file.name}
+          onClick={() => {
+            setActive(file.name);
+            workspace.setCurrentFile(file.name);
+          }}
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${active === file.name ? 'shadow' : 'bg-muted'}`}>
+          <file.icon className="size-3" />
+          {file.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function App() {
-  return <Codespark framework={html} name="./index.html" files={files} />;
+  const workspace = useMemo(
+    () =>
+      new Workspace({
+        entry: './index.html',
+        files: files.reduce((pre, { name, content }) => ({ ...pre, [name]: content }), {}),
+        framework: new Framework({ liteMode: { enabled: true } })
+      }),
+    []
+  );
+
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <div className="border-border grid grid-cols-3 divide-x overflow-hidden rounded-lg border">
+        <div className="border-border col-span-2">
+          <Toolbar />
+          <CodesparkEditor height="403px" toolbox={false} />
+        </div>
+        <CodesparkPreview className="h-full" tailwindcss={false} />
+      </div>
+    </CodesparkProvider>
+  );
 }
 ```
 
-### MDX
+## Create Framework
 
-```ts
-import { mdx } from '@codespark/framework/mdx';
-```
-
-## Custom Framework
+Want to learn how to create a new Framework? Check out the [packages documentation](/packages).
 
 If you want to add support for other frameworks, pull requests are welcome!

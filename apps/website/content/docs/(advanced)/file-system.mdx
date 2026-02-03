@@ -172,7 +172,7 @@ const initialFiles = {
 
 function Console({ logs }: { logs: { type: string; message: string }[] }) {
   return (
-    <div className="bg-muted/30 h-[140px] space-y-1.5 overflow-auto p-3 font-mono text-xs">
+    <div className="h-[140px] space-y-1.5 overflow-auto p-3 font-mono text-xs">
       {logs.length === 0 ? (
         <p className="text-muted-foreground">Waiting for events...</p>
       ) : (
