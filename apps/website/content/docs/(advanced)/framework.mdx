@@ -1,6 +1,6 @@
 ---
 title: Framework
-description: Extend Codespark with runtime plugins.
+description: Extend Codespark with runtime plugins
 ---
 
 Codespark uses a framework plugin system to support various language frameworks. Once configured, Codespark can compile and preview code written in that framework directly in the editor.
@@ -22,7 +22,7 @@ import { react } from '@codespark/framework/react';
 ```ts twoslash
 import { Framework } from '@codespark/framework/html';
 
-const html = new Framework({ liteMode: { enabled: true } })
+const html = new Framework()
 ```
 
 <Callout>Codespark already integrates `@codespark/framework/react` internally, so you don't need to install it again.</Callout>
@@ -158,7 +158,7 @@ export default function App() {
 import { Framework, html } from '@codespark/framework/html';
 
 // or use lite mode
-const htmlLite = new Framework({ liteMode: { enabled: true } })
+const htmlLite = new Framework({ liteMode: { enabled: true } });
 ```
 
 HTML framework provides full support for HTML/CSS/JavaScript development with the following features:

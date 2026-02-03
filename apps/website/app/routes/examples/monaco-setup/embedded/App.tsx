@@ -10,6 +10,6 @@ const code = `export default function App() {
   );
 }`;
 
-export default function () {
+export default function App() {
   return <Codespark editor={Monaco} code={code} />;
 }

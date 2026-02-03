@@ -14,8 +14,6 @@ You can import a markdown file just like a regular React component.
 
 ```ts
 import Doc from './doc.md';
-
-<Doc />
 ```
 
 ```tsx codespark-preview
@@ -37,8 +35,6 @@ export default function App() {
 ```
 
 ## Use Markdown Framework
-
-If you choose to use the Markdown Framework, your `<Codespark />` component will only support Markdown syntax.
 
 First, you need to install an additional npm package, then pass the `framework` prop to the component.
 
@@ -63,6 +59,10 @@ export default function App() {
   return <Codespark framework={markdown} name="index.md" code="# Hello World" tailwindcss={false} />;
 }
 ```
+
+<Callout title="Note">
+If you choose to use the markdown framework, `Codespark` component with `framework={markdown}` will only support markdown syntax.
+</Callout>
 
 <Callout title="Note">
 By changing the name suffix to .md like `index.md` will enable markdown syntax highlighting in the editor.

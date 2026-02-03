@@ -1,6 +1,205 @@
 ---
 title: MDX
-description: MDX
+description: Integrate Codespark with MDX using the remark plugin for interactive code blocks
 ---
 
-WIP...
+One of Codespark's design goals is to build better documentation systems by adding interactive live preview components that enhance the reading experience.
+[MDX](https://mdxjs.com/docs/what-is-mdx/#what-is-mdx) is an essential tool for building documentation systems, allowing you to use JSX syntax to render components within Markdown files.
+
+Codespark provides a remark plugin to extend MDX capabilities, enabling you to render Codespark components through code block directives in Markdown files.
+
+## Installation
+
+```npm
+npm install @codespark/plugin-remark
+```
+
+### Vite
+
+For Vite users, first install the official MDX Rollup plugin:
+
+```npm
+npm install @mdx-js/rollup
+```
+
+```ts title="vite.config.ts"
+import remarkCodespark from '@codespark/plugin-remark';
+import mdx from '@mdx-js/rollup'
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    mdx({ 
+      providerImportSource: '@codespark/react', // [!code ++]
+      remarkPlugins: [remarkCodespark] // [!code ++]
+    })
+  ]
+});
+
+```
+
+### Next.js
+
+For Next.js users, first install the official MDX package:
+
+```npm
+npm install @next/mdx @mdx-js/loader @mdx-js/react
+```
+
+Then configure `next.config.mjs` to use the remark plugin:
+
+```ts title="next.config.mjs"
+import remarkCodespark from '@codespark/plugin-remark';
+import createMDX from '@next/mdx';
+
+const withMDX = createMDX({
+  options: {
+    providerImportSource: '@codespark/react', // [!code ++]
+    remarkPlugins: [remarkCodespark], // [!code ++]
+  },
+});
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+};
+
+export default withMDX(nextConfig);
+```
+
+### Fumadocs
+
+[Fumadocs](https://www.fumadocs.dev) is a React.js documentation framework built on MDX. To use Codespark with Fumadocs, add the following configuration:
+
+```ts title="source.config.ts"
+import { defineConfig } from 'fumadocs-mdx/config';
+
+export default defineConfig({
+  mdxOptions: {
+    providerImportSource: '@codespark/react', // [!code ++]
+    remarkPlugins: [remarkCodespark] // [!code ++]
+  }
+})
+```
+
+## Usage
+
+Once configured, you can add directives to code blocks in MDX files to render different Codespark components.
+
+| Directive | Example | Rendered Component |
+| --- | --- | --- |
+| codespark | ` ```tsx codespark ``` ` | `<Codespark code={...} />` |
+| codespark-editor | ` ```tsx codespark-editor ``` ` | `<CodesparkEditor value={...} />` |
+| codespark-preview | ` ```tsx codespark-preview ``` ` | `<CodesparkPreview code={...} />` |
+
+### codespark
+
+Renders the code within a `Codespark` component, providing both editing and preview capabilities.
+
+````markdown
+``` tsx codespark
+export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}
+```
+````
+
+``` tsx codespark
+export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}
+```
+
+### codespark-editor
+
+Renders the code within a `CodesparkEditor` component, providing editing functionality only.
+
+````markdown
+```tsx codespark-editor
+import { CodesparkEditor } from '@codespark/react';
+
+export default function App() {
+  return <CodesparkEditor />;
+}
+```
+````
+
+```tsx codespark-editor
+import { CodesparkEditor } from '@codespark/react';
+
+export default function App() {
+  return <CodesparkEditor />;
+}
+```
+
+### codespark-preview
+
+Renders the code within a `CodesparkPreview` component, providing preview functionality only.
+
+````markdown
+```tsx codespark-preview height=120
+import dayjs from 'https://esm.sh/dayjs@1.11.10';
+import { useEffect, useState } from 'react';
+
+export default function App() {
+  const [time, setTime] = useState(dayjs());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(dayjs()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center gap-6 p-4">
+      <div className="text-center">
+        <p className="text-3xl font-bold tabular-nums">{time.format('HH:mm:ss')}</p>
+        <p className="text-sm text-gray-500">{time.format('YYYY-MM-DD')}</p>
+      </div>
+    </div>
+  );
+}
+```
+````
+
+```tsx codespark-preview height=120
+import dayjs from 'https://esm.sh/dayjs@1.11.10';
+import { useEffect, useState } from 'react';
+
+export default function App() {
+  const [time, setTime] = useState(dayjs());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(dayjs()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center gap-6 p-4">
+      <div className="text-center">
+        <p className="text-3xl font-bold tabular-nums">{time.format('HH:mm:ss')}</p>
+        <p className="text-sm text-gray-500">{time.format('YYYY-MM-DD')}</p>
+      </div>
+    </div>
+  );
+}
+```
+
+## Props
+
+Code block directives support passing string-type props to the corresponding components, such as `height` and `width`. For more details, see the [API reference](/).
+
+````markdown
+```tsx codespark-preview height=120
+// ...
+```
+````

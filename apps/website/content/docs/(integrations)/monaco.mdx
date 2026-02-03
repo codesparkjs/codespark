@@ -1,6 +1,140 @@
 ---
 title: Monaco
-description: Monaco
+description: Integrate Monaco Editor with Codespark for advanced IntelliSense and TypeScript support
 ---
 
-WIP...
+The [Monaco Editor](https://microsoft.github.io/monaco-editor) is the code editor that powers VS Code. It is a feature-rich web editor with syntax highlighting, IntelliSense, and code completion.
+
+Due to bundle size considerations, Codespark uses CodeMirror as the default editor. However, we highly recommend trying Monaco for a more advanced editing experience.
+
+## Monaco vs CodeMirror
+
+| Feature | Monaco Editor | CodeMirror |
+| --- | --- | --- |
+| **Bundle Size** | ~2MB+ (Large) | ~100KB (Lightweight) |
+| **Syntax Highlighting** | ✅ Rich built-in language support | ✅ Via extensions |
+| **IntelliSense** | ✅ Powerful IntelliSense | ⚠️ Requires additional setup |
+| **Code Completion** | ✅ Out of the box | ⚠️ Requires extensions |
+| **Customizability** | ✅ Highly customizable | ✅ Highly customizable |
+| **TypeScript Support** | ✅ Native support | ⚠️ Requires configuration |
+| **Best For** | Complex IDE-like applications | Lightweight editing needs |
+
+## Setup
+
+Monaco in Codespark is loaded on demand:
+
+```ts twoslash
+import { Monaco } from '@codespark/react/monaco';
+```
+
+Pass `Monaco` to the `editor` prop of the `Codespark` or `CodesparkEditor` component to replace the default CodeMirror editor.
+
+``` tsx twoslash preview
+// @noErrors
+import { Codespark } from '@codespark/react';
+import { Monaco } from '@codespark/react/monaco';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark editor={Monaco} code={code} />;
+}
+```
+
+You can also configure Monaco globally so that all Codespark instances use it by default:
+
+```tsx
+import { ConfigProvider } from '@codespark/react';
+```
+
+```tsx
+<ConfigProvider editor={Monaco}>                  
+  {/* your app root */}
+</ConfigProvider>
+```
+
+## Features
+
+### TypeScript Type Inference
+
+Codespark Monaco provides excellent TypeScript support. It automatically fetches type definitions from imported npm packages and displays type information on hover.
+
+```tsx codespark-preview
+import { Codespark } from '@codespark/react';
+import { Monaco } from '@codespark/react/monaco';
+
+const code = `import { Heart, Sparkles, Star } from 'lucide-react';
+
+export default function App() {
+  const icons = [Heart, Star, Sparkles];
+
+  return (
+    <div className="flex items-center justify-center gap-6 p-6">
+      {icons.map((Icon, i) => (
+        <Icon key={i} className="h-8 w-8" />
+      ))}
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark editor={Monaco} code={code} />;
+}
+```
+
+<Callout>Ensure that the npm packages you import have type definitions available, otherwise this feature will not work.</Callout>
+
+### Path Auto-completion
+
+In multi-file mode, Codespark Monaco supports automatic path completion for imports, inferring paths from all modules defined in the `files` object.
+
+```tsx codespark-preview
+import { Codespark } from '@codespark/react';
+import { Monaco } from '@codespark/react/monaco';
+
+const files = {
+  './App.tsx': `import { Button } from './components/button';
+
+export default function App() {
+  return (
+    <div className="flex justify-center">
+      <Button />
+    </div>
+  );
+}`,
+  './components/button.tsx': `import confetti from 'https://esm.sh/canvas-confetti@1.6.0';
+
+export function Button() {
+  return (
+    <button className="mx-auto cursor-pointer rounded-lg bg-gray-100 px-3 py-2 dark:bg-gray-700" onClick={() => confetti()}>
+      Click Me
+    </button>
+  );
+}`
+};
+
+export default function App() {
+  return <Codespark editor={Monaco} files={files} />;
+}
+```
+
+### Syntax Error Diagnostics
+
+## Configurations
+
+Monaco has an extensive configuration system. Codespark supports passing through all Monaco configuration options to customize your editor. Check the [API reference](/) for more detail.
+
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/monaco';
+
+<CodesparkEditor editor={Monaco} options={{...}} />;
+```
