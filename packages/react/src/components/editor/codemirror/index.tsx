@@ -8,7 +8,42 @@ import { EditorEngine, EditorEngineComponent } from '@/lib/editor-adapter';
 import { Skeleton } from '@/ui/skeleton';
 
 import { CodeMirrorEditorAdapter } from './adapter';
-import { theme } from './theme';
+
+const THEME = EditorView.theme({
+  '&': {
+    fontSize: '14px'
+  },
+  '&.cm-focused': {
+    outline: 'none'
+  },
+  '&.cm-editor': {
+    backgroundColor: 'var(--background)'
+  },
+  '.cm-gutters.cm-gutters': {
+    backgroundColor: 'var(--background)',
+    border: 'none'
+  },
+  '.cm-gutter': {
+    padding: '1px 4px 0px 12px',
+    minWidth: '36px'
+  },
+  '.cm-scroller': {
+    paddingTop: '8px',
+    fontFamily: 'Fira Code'
+  },
+  '.cm-line': {
+    padding: '0 12px',
+    height: '24px',
+    lineHeight: '24px'
+  },
+  '.cm-gutterElement.cm-gutterElement': {
+    padding: '0px',
+    lineHeight: '24px'
+  },
+  '.cm-activeLine': {
+    borderRadius: '4px'
+  }
+});
 
 const LANGUAGE_EXTENSIONS: Record<string, Extension> = {
   javascript: javascript({ jsx: true }),
@@ -28,7 +63,7 @@ export const CodeMirror: EditorEngineComponent<EditorEngine.CodeMirror, CodeMirr
     const [mounted, setMounted] = useState(false);
     const editorRef = useRef<ReactCodeMirrorRef>(null);
     const allExtensions = useMemo(() => {
-      const exts = [theme, ...extensions];
+      const exts = [THEME, ...extensions];
 
       if (lang && LANGUAGE_EXTENSIONS[lang]) {
         exts.unshift(LANGUAGE_EXTENSIONS[lang]);

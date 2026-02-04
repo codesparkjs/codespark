@@ -33,23 +33,90 @@ export interface FolderNode {
 }
 
 export interface WorkspaceInit {
+  /**
+   * Unique identifier for the workspace instance
+   */
   id?: string;
+  /**
+   * Framework to use for code analysis and compilation.
+   * Can be a Framework instance, a Framework constructor, or a registered framework name
+   *
+   * @default 'react'
+   */
   framework?: Framework | (new () => Framework) | string;
+  /**
+   * Entry file path, the main file to compile and render
+   *
+   * @example './App.tsx'
+   */
   entry: string;
+  /**
+   * Initial files mapping, where keys are file paths and values are file contents
+   */
   files: Record<string, string>;
+  /**
+   * Whether to use Origin Private File System (OPFS) for file persistence
+   *
+   * @default false
+   */
   OPFS?: boolean;
 }
 
 export interface WorkspaceEvent {
+  /**
+   * Fired when code compilation succeeds
+   *
+   * @param code - The compiled code string
+   */
   compiled: (code: string) => void;
+  /**
+   * Fired when code compilation fails
+   *
+   * @param error - The compilation error
+   */
   compileError: (error: Error) => void;
+  /**
+   * Fired when a single file is changed
+   *
+   * @param path - The file path that was changed
+   * @param content - The new file content
+   */
   fileChange: (path: string, content: string) => void;
+  /**
+   * Fired when all files are replaced via setFiles()
+   *
+   * @param files - The new files mapping
+   */
   filesChange: (files: Record<string, string>) => void;
+  /**
+   * Fired when a file or folder is renamed
+   *
+   * @param oldPath - The original file path
+   * @param newPath - The new file path
+   */
   fileRename: (oldPath: string, newPath: string) => void;
+  /**
+   * Fired when a file or folder is deleted
+   *
+   * @param path - The deleted file path
+   */
   fileDelete: (path: string) => void;
+  /**
+   * Fired when the currently active file changes
+   *
+   * @param file - The new current file node
+   */
   currentFileChange: (file: FileNode) => void;
 }
 
+/**
+ * Workspace - Core class for managing files, compilation, and editor state.
+ *
+ * Manages a virtual file system for code editing and live preview.
+ * Handles file CRUD operations, tracks the currently active file,
+ * and emits events for file changes and compilation results.
+ * Supports optional Origin Private File System (OPFS) for persistence.
+ */
 export class Workspace extends OPFS {
   id: string;
   initialFiles: Record<string, string>;
@@ -290,18 +357,64 @@ export class Workspace extends OPFS {
 }
 
 export interface WorkspaceDerivedState {
+  /**
+   * Hierarchical file tree structure for rendering file explorer
+   */
   fileTree: FileTreeNode[];
+  /**
+   * Compiled code string ready for execution in the preview iframe
+   */
   compiled: string;
+  /**
+   * Compilation error if the code failed to compile, null otherwise
+   */
   compileError: Error | null;
+  /**
+   * Vendor resources extracted from the compilation process
+   */
   vendor: {
+    /**
+     * ES modules extracted from the code
+     */
     modules: Output<LoaderType.ESModule>[];
+    /**
+     * Style resources to inject into the preview
+     */
     styles: Output<LoaderType.Style>[];
+    /**
+     * Script resources to inject into the preview
+     */
     scripts: Output<LoaderType.Script>[];
+    /**
+     * Import map for external dependencies
+     */
     imports: Record<string, string>;
   };
 }
 
-export function useWorkspace(init?: WorkspaceInit | Workspace) {
+export interface UseWorkspaceReturn extends WorkspaceDerivedState {
+  /**
+   * Current files in the workspace, where keys are file paths and values are file contents
+   */
+  files: Record<string, string>;
+  /**
+   * Currently active file in the editor
+   */
+  currentFile: FileNode;
+  /**
+   * The Workspace instance for programmatic control
+   */
+  workspace: Workspace;
+}
+
+/**
+ * Hook to manage workspace state and compilation.
+ * Provides reactive access to files, compilation results, and workspace methods.
+ *
+ * @param init - WorkspaceInit config object or existing Workspace instance
+ * @returns Workspace state including files, compiled code, and the workspace instance
+ */
+export function useWorkspace(init?: WorkspaceInit | Workspace): UseWorkspaceReturn {
   const uid = useId();
   const context = useCodespark();
   const workspace = useMemo(() => {
@@ -442,11 +555,45 @@ export function useWorkspace(init?: WorkspaceInit | Workspace) {
   };
 }
 
+/**
+ * Configuration options for createWorkspace function
+ */
 export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'framework'> {
+  /**
+   * Entry file name/path
+   *
+   * @default './App.tsx'
+   */
   name?: string;
+  /**
+   * Code processing mode:
+   * - 'raw': Use the raw scanned code as-is
+   * - 'source': Use only the source file content
+   * - 'packed': Bundle imports, locals, and component into a single file
+   *
+   * @default 'packed'
+   */
   mode?: 'raw' | 'source' | 'packed';
 }
 
+/**
+ * Creates a Workspace instance from a React component or element.
+ * Typically used with the rollup plugin to create workspaces from components.
+ *
+ * @param this - Context containing scanned code information (injected by rollup plugin)
+ * @param source - React component or element to create workspace from
+ * @param config - Configuration options
+ * @returns A new Workspace instance
+ *
+ * @example
+ * ```tsx
+ * // Used with rollup plugin
+ * const workspace = createWorkspace(MyComponent, {
+ *   name: './App.tsx',
+ *   mode: 'packed'
+ * });
+ * ```
+ */
 export function createWorkspace(this: { __scanned?: CollectResult } | void, source: ComponentType | ReactElement, config?: CreateWorkspaceConfig) {
   const { id, framework, name = './App.tsx', mode = 'packed' } = config || {};
 

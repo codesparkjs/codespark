@@ -95,6 +95,9 @@ importers:
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.3)
+      monaco-editor:
+        specifier: ^0.55.1
+        version: 0.55.1
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -241,9 +244,6 @@ importers:
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.3)
-      monaco-editor:
-        specifier: ^0.55.1
-        version: 0.55.1
       prettier:
         specifier: ^3.7.4
         version: 3.7.4
@@ -284,6 +284,9 @@ importers:
       '@types/react-is':
         specifier: ^19.2.0
         version: 19.2.0
+      monaco-editor:
+        specifier: ^0.55.1
+        version: 0.55.1
       rollup-plugin-import-raw:
         specifier: ^1.0.2
         version: 1.0.2(rollup@4.54.0)

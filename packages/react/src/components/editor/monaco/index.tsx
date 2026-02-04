@@ -5,15 +5,19 @@ import parserEstree from 'prettier/plugins/estree';
 import parserTypescript from 'prettier/plugins/typescript';
 import prettier from 'prettier/standalone';
 import { memo, useEffect, useRef, useState } from 'react';
-import { createHighlighter } from 'shiki';
+import { createHighlighterCore } from 'shiki/core';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 
-import { EditorEngine, EditorEngineComponent } from '@/lib/editor-adapter';
+import { EditorEngine, type EditorEngineComponent } from '@/lib/editor-adapter';
 import { Skeleton } from '@/ui/skeleton';
 
 import { MonacoEditorAdapter } from './adapter';
-import { AVAILABLE_THEME } from './theme';
 
 let initialized = false;
+
+const addedLibs = new Set<string>();
+
+const dtsCacheMap = new Map<string, string>();
 
 const setup = async () => {
   if (typeof window === 'undefined' || initialized) return;
@@ -21,30 +25,13 @@ const setup = async () => {
 
   const [mod, highlighter] = await Promise.all([
     import('@monaco-editor/react'),
-    createHighlighter({
-      themes: [AVAILABLE_THEME.light, AVAILABLE_THEME.dark],
-      langs: ['typescript', 'tsx', 'javascript', 'jsx', 'json', 'css', 'html'],
-      langAlias: { typescript: 'tsx', javascript: 'jsx' }
+    createHighlighterCore({
+      themes: [import('shiki/themes/vitesse-light.mjs'), import('shiki/themes/vitesse-dark.mjs')],
+      langs: [import('shiki/langs/typescript.mjs'), import('shiki/langs/tsx.mjs'), import('shiki/langs/javascript.mjs'), import('shiki/langs/jsx.mjs'), import('shiki/langs/json.mjs'), import('shiki/langs/css.mjs'), import('shiki/langs/html.mjs')],
+      langAlias: { typescript: 'tsx', javascript: 'jsx' },
+      engine: createJavaScriptRegexEngine()
     })
   ]);
-
-  window.MonacoEnvironment = {
-    getWorker(_, label) {
-      if (label === 'json') {
-        return new Worker(new URL('monaco-editor/esm/vs/language/json/json.worker.js', import.meta.url), { type: 'module' });
-      }
-      if (label === 'css' || label === 'scss' || label === 'less') {
-        return new Worker(new URL('monaco-editor/esm/vs/language/css/css.worker.js', import.meta.url), { type: 'module' });
-      }
-      if (label === 'html' || label === 'handlebars' || label === 'razor') {
-        return new Worker(new URL('monaco-editor/esm/vs/language/html/html.worker.js', import.meta.url), { type: 'module' });
-      }
-      if (label === 'typescript' || label === 'javascript') {
-        return new Worker(new URL('monaco-editor/esm/vs/language/typescript/ts.worker.js', import.meta.url), { type: 'module' });
-      }
-      return new Worker(new URL('monaco-editor/esm/vs/editor/editor.worker.js', import.meta.url), { type: 'module' });
-    }
-  };
 
   return mod.loader
     .init()
@@ -137,10 +124,6 @@ export interface MonacoProps extends MonacoEditorProps {
   files?: Record<string, string>;
   imports?: Record<string, string>;
 }
-
-const addedLibs = new Set<string>();
-
-const dtsCacheMap = new Map<string, string>();
 
 export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, monaco.editor.IStandaloneCodeEditor> = {
   kind: EditorEngine.Monaco,
@@ -269,9 +252,11 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
     useEffect(() => {
       (async () => {
         const MonacoEditorReact = await setup();
-        if (MonacoEditorReact) {
-          setMonacoEditor(() => MonacoEditorReact);
-        }
+        setTimeout(() => {
+          if (MonacoEditorReact) {
+            setMonacoEditor(() => MonacoEditorReact);
+          }
+        }, 1000);
       })();
 
       return () => {

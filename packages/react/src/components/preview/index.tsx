@@ -7,19 +7,84 @@ import { useTailwindCSS } from '@/lib/tailwindcss';
 import { cn, serializeAttributes } from '@/lib/utils';
 import { useWorkspace, Workspace, type WorkspaceInit } from '@/lib/workspace';
 
-export interface CodesparkPreviewProps extends ConfigContextValue, Pick<WorkspaceInit, 'framework'> {
-  code?: string;
-  workspace?: Workspace;
-  className?: string;
-  tailwindcss?: boolean;
-  children?: ReactNode;
-  height?: number;
-  onError?: (error: unknown) => void;
-  onLoad?: (iframe: HTMLIFrameElement) => void;
-  onRendered?: () => void;
-  onConsole?: (data: { level: string; args: unknown[]; duplicate?: boolean }) => void;
+export interface OnConsoleData {
+  /**
+   * The console method level (e.g., 'log', 'warn', 'error', 'info', 'debug')
+   */
+  level: string;
+  /**
+   * The arguments passed to the console method
+   */
+  args: unknown[];
+  /**
+   * Whether this is a duplicate of a previous console call
+   */
+  duplicate?: boolean;
 }
 
+export interface CodesparkPreviewProps extends ConfigContextValue, Pick<WorkspaceInit, 'framework'> {
+  /**
+   * Source code to preview. Used when not providing a workspace instance
+   */
+  code?: string;
+  /**
+   * Workspace instance to use for compilation and file management
+   */
+  workspace?: Workspace;
+  /**
+   * CSS class name for the preview container
+   */
+  className?: string;
+  /**
+   * Whether to enable Tailwind CSS support in the preview
+   *
+   * @default true
+   */
+  tailwindcss?: boolean;
+  /**
+   * Child elements to inject into the preview iframe, such as Script, Style, Link components
+   *
+   * @example
+   * ```tsx
+   * <CodesparkPreview>
+   *   <Script src="https://example.com/script.js" />
+   *   <Style>{`.custom { color: red; }`}</Style>
+   * </CodesparkPreview>
+   * ```
+   */
+  children?: ReactNode;
+  /**
+   * Height of the preview area in pixels
+   *
+   * @default 200
+   */
+  height?: number;
+  /**
+   * Callback fired when a runtime error occurs in the preview
+   */
+  onError?: (error: unknown) => void;
+  /**
+   * Callback fired when the preview iframe is loaded and ready
+   */
+  onLoad?: (iframe: HTMLIFrameElement) => void;
+  /**
+   * Callback fired when the preview has finished rendering
+   */
+  onRendered?: () => void;
+  /**
+   * Callback fired when console methods are called in the preview.
+   * Useful for capturing and displaying console output
+   */
+  onConsole?: (data: OnConsoleData) => void;
+}
+
+/**
+ * CodesparkPreview - A sandboxed preview component that renders compiled code in an iframe.
+ *
+ * Executes compiled React code in an isolated iframe environment with ES module support.
+ * Supports Tailwind CSS, custom scripts/styles injection, and console output capture.
+ * Displays a loading indicator during code compilation and execution.
+ */
 export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
   const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark() || {};

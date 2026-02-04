@@ -22,21 +22,99 @@ export * from '@/lib/workspace';
 registerFramework(react);
 
 export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<CodesparkContextValue, 'framework' | 'imports'>, Pick<CodesparkEditorProps, 'toolbox'>, Pick<CodesparkPreviewProps, 'tailwindcss' | 'onConsole' | 'onError' | 'children'> {
+  /**
+   * Source code content for single-file mode
+   *
+   * @example
+   * ```tsx
+   * <Codespark code="export default () => <div>Hello</div>" />
+   * ```
+   */
   code?: string;
+  /**
+   * File mapping for multi-file mode, where keys are file paths and values are file contents
+   *
+   * @example
+   * ```tsx
+   * <Codespark files={{ './App.tsx': 'export default () => <div>Hello</div>', './utils.ts': 'export const foo = 1' }} />
+   * ```
+   */
   files?: Record<string, string>;
+  /**
+   * Entry file path
+   *
+   * @default './App.tsx'
+   */
   name?: string;
+  /**
+   * CSS class name for the container
+   */
   className?: string;
+  /**
+   * Whether to show the code editor
+   *
+   * @default true
+   */
   showEditor?: boolean;
+  /**
+   * Whether to show the preview area
+   *
+   * @default true
+   */
   showPreview?: boolean;
+  /**
+   * Whether to show the file explorer
+   *
+   * @default true
+   */
   showFileExplorer?: boolean;
+  /**
+   * Whether to set the editor to read-only mode
+   *
+   * @default false
+   */
   readonly?: boolean;
+  /**
+   * Whether the file explorer is expanded by default. When not set, it is automatically determined based on the number of files
+   */
   defaultExpanded?: boolean;
+  /**
+   * Ref to get the Workspace instance for external control
+   *
+   * @example
+   * ```tsx
+   * const workspaceRef = useRef<Workspace | null>(null);
+   * <Codespark getWorkspace={workspaceRef} />
+   * ```
+   */
   getWorkspace?: RefObject<Workspace | null>;
+  /**
+   * Editor engine component, supports Monaco or CodeMirror
+   *
+   * @default CodeMirror
+   */
   editor?: CodesparkEditorEngineComponents;
+  /**
+   * Editor height in pixels
+   *
+   * @default 200
+   */
   editorHeight?: number;
+  /**
+   * Preview area height in pixels
+   *
+   * @default 200
+   */
   previewHeight?: number;
 }
 
+/**
+ * Codespark - A browser-based React code playground with live preview.
+ *
+ * This component integrates a code editor, file explorer, and preview area
+ * to provide a complete interactive code demonstration experience.
+ * Supports both single-file mode (via `code` prop) and multi-file mode (via `files` prop).
+ */
 export function Codespark(props: CodesparkProps) {
   const {
     code,

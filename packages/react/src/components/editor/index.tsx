@@ -13,7 +13,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/ui/tooltip';
 
 import { CodeMirror, type CodeMirrorProps } from './codemirror';
 import type { Monaco, MonacoProps } from './monaco';
-import { AVAILABLE_THEME } from './monaco/theme';
 
 type ToolboxItemId = 'reset' | 'format' | 'copy';
 
@@ -26,12 +25,37 @@ export interface ToolboxItemConfig {
 }
 
 export interface CodesparkEditorBaseProps extends Pick<ConfigContextValue, 'theme'> {
+  /**
+   * Unique identifier for the editor instance
+   */
   readonly id?: string;
+  /**
+   * Initial code content for the editor
+   */
   value?: string;
+  /**
+   * CSS class name for the editor element
+   */
   className?: string;
+  /**
+   * Workspace instance to use for file management and compilation
+   */
   workspace?: Workspace;
+  /**
+   * Toolbar configuration. Set to false to hide, true to show default tools, or pass a custom array of tool items
+   *
+   * @default ['reset', 'format', 'copy']
+   */
   toolbox?: boolean | (ToolboxItemId | ToolboxItemConfig | ReactElement)[];
+  /**
+   * Props to pass to the container div element
+   */
   containerProps?: ComponentProps<'div'>;
+  /**
+   * Debounce wait time in milliseconds for triggering workspace updates on code changes
+   *
+   * @default 500
+   */
   debounceWait?: number;
 }
 
@@ -52,6 +76,13 @@ function propsTypeGuard(props: CodesparkEditorProps<EditorEngine>, editor: Codes
   return editor.kind === kind;
 }
 
+/**
+ * CodesparkEditor - A flexible code editor component supporting multiple editor engines.
+ *
+ * Supports both Monaco Editor and CodeMirror as the underlying editor engine.
+ * Integrates with Workspace for file management and automatic compilation.
+ * Includes a customizable toolbar with reset, format, and copy functionality.
+ */
 export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.CodeMirror> & { editor?: typeof CodeMirror }): JSX.Element;
 export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine.Monaco> & { editor: typeof Monaco }): JSX.Element;
 export function CodesparkEditor<E extends EditorEngine = never>(props: CodesparkEditorProps<E>): JSX.Element;
@@ -124,7 +155,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
           id={id}
           value={value || currentFile.code}
           path={`file:///${id}/${currentFile.path.replace(/^(\.\.?\/)+/, '')}`}
-          theme={AVAILABLE_THEME[theme] ?? AVAILABLE_THEME.light}
+          theme={theme === 'light' ? 'vitesse-light' : 'vitesse-dark'}
           files={files}
           imports={vendor.imports}
           className={className}
