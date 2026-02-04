@@ -12,7 +12,7 @@ export function meta() {
 
 export default function Home() {
   return (
-    <main className="bg-background relative min-h-screen overflow-hidden">
+    <main className="bg-background relative min-h-screen overflow-hidden pt-14">
       <div
         className="pointer-events-none fixed inset-0 z-10 bg-[linear-gradient(to_right,var(--color-border)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-border)_1px,transparent_1px)] bg-size-[4rem_4rem]"
         style={{ maskImage: 'radial-gradient(ellipse 80% 50% at 50% 0%, black 70%, transparent 100%)' }}

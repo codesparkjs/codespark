@@ -29,12 +29,9 @@ export default function App() {
 
 Use the `imports` prop to pin specific package versions. Each key represents the package name used in your import statements, and the value is a valid [esm.sh](https://esm.sh/) URL. The `imports` object is injected into the preview iframe's import map, allowing you to override default package resolutions.
 
-```tsx twoslash
-import { Codespark } from '@codespark/react';
-// ---cut---
+```tsx
 const code = `import * as _ from 'lodash-es';`
 
-// @noErrors
 <Codespark imports={{ 'lodash-es': 'https://esm.sh/lodash-es@4.17.21' }} />
 ```
 

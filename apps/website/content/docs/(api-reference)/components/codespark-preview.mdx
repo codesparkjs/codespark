@@ -1,6 +1,242 @@
 ---
 title: CodesparkPreview
-description: CodesparkPreview
+description: A sandboxed preview component that renders compiled code in an iframe.
 ---
 
-WIP...
+`CodesparkPreview` is a sandboxed preview component that executes compiled React code in an isolated iframe environment. It supports Tailwind CSS, custom scripts/styles injection, and console output capture.
+
+```tsx
+import { CodesparkPreview } from '@codespark/react';
+```
+
+## Basic Usage
+
+```tsx
+<CodesparkPreview code="anything you want to preview...">
+```
+
+```tsx codespark-preview height=120
+import { CodesparkPreview } from '@codespark/react';
+
+const code = `import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
+
+export default function App() {
+  const [time, setTime] = useState(dayjs());
+
+  useEffect(() => {
+    const timer = setInterval(() => setTime(dayjs()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="flex items-center justify-center gap-6 p-4">
+      <div className="text-center">
+        <p className="text-3xl font-bold tabular-nums">{time.format('HH:mm:ss')}</p>
+        <p className="text-sm text-gray-500">{time.format('YYYY-MM-DD')}</p>
+      </div>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <CodesparkPreview code={code} height={120} />;
+}
+```
+
+## Props
+
+### code
+
+Source code to preview. Used when not providing a workspace instance.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<CodesparkPreview code="export default () => <div>Hello</div>" />
+```
+
+### workspace
+
+Workspace instance to use for compilation and file management.
+
+| Type | Default |
+| ---- | ------- |
+| `Workspace` | Inherited from context |
+
+```tsx
+import { CodesparkPreview, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': 'export default () => <div>Hello</div>' }
+});
+
+<CodesparkPreview workspace={workspace} />
+```
+
+### theme
+
+Theme mode for the preview.
+
+| Type | Default |
+| ---- | ------- |
+| `'light' \| 'dark'` | Inherited from context |
+
+```tsx
+<CodesparkPreview theme="dark" />
+```
+
+### framework
+
+Framework to use for code analysis and compilation.
+
+| Type | Default |
+| ---- | ------- |
+| `Framework \| (new () => Framework) \| string` | Inherited from context |
+
+```tsx
+<CodesparkPreview framework="react" />
+```
+
+### tailwindcss
+
+Whether to enable Tailwind CSS support in the preview.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `true` |
+
+When enabled, you can use any Tailwind CSS class in your preview code.
+
+```tsx
+<CodesparkPreview tailwindcss={false} />
+```
+
+### imports
+
+Custom import map for external dependencies.
+
+| Type | Default |
+| ---- | ------- |
+| `Record<string, string>` | Inherited from context |
+
+```tsx
+<CodesparkPreview imports={{ 'lodash-es': 'https://esm.sh/lodash-es@4.17.21' }} />
+```
+
+### height
+
+Height of the preview area in pixels.
+
+| Type | Default |
+| ---- | ------- |
+| `number` | `200` |
+
+```tsx
+<CodesparkPreview height={300} />
+```
+
+### className
+
+CSS class name for the preview container.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<CodesparkPreview className="h-full" />
+```
+
+### children
+
+Child elements to inject into the preview iframe, such as `Script`, `Style`, or `Link` components.
+
+| Type | Default |
+| ---- | ------- |
+| `ReactNode` | - |
+
+```tsx
+import { CodesparkPreview, Style, Script, Link } from '@codespark/react';
+
+<CodesparkPreview>
+  <Style>{`.custom { color: red; }`}</Style>
+  <Script src="https://example.com/script.js" />
+  <Link rel="stylesheet" href="https://example.com/styles.css" />
+</CodesparkPreview>
+```
+
+### onError
+
+Callback fired when a runtime error occurs in the preview.
+
+| Type | Default |
+| ---- | ------- |
+| `(error: unknown) => void` | - |
+
+```tsx
+<CodesparkPreview
+  onError={(error) => {
+    console.error('Runtime error:', error);
+  }}
+/>
+```
+
+### onLoad
+
+Callback fired when the preview iframe is loaded and ready.
+
+| Type | Default |
+| ---- | ------- |
+| `(iframe: HTMLIFrameElement) => void` | - |
+
+```tsx
+<CodesparkPreview
+  onLoad={(iframe) => {
+    console.log('Preview loaded:', iframe);
+  }}
+/>
+```
+
+### onRendered
+
+Callback fired when the preview has finished rendering.
+
+| Type | Default |
+| ---- | ------- |
+| `() => void` | - |
+
+```tsx
+<CodesparkPreview
+  onRendered={() => {
+    console.log('Render complete');
+  }}
+/>
+```
+
+### onConsole
+
+Callback fired when console methods are called in the preview. Useful for capturing and displaying console output.
+
+| Type | Default |
+| ---- | ------- |
+| `(data: OnConsoleData) => void` | - |
+
+```tsx
+interface OnConsoleData {
+  level: string;    // 'log', 'warn', 'error', 'info', 'debug'
+  args: unknown[];  // Arguments passed to console method
+  duplicate?: boolean;
+}
+```
+
+```tsx
+<CodesparkPreview
+  onConsole={(data) => {
+    console.log(`[${data.level}]`, ...data.args);
+  }}
+/>
+```

@@ -1,6 +1,168 @@
 ---
 title: ConfigProvider
-description: ConfigProvider
+description: Global configuration provider for setting default values across all Codespark components.
 ---
 
-WIP...
+`ConfigProvider` is a global configuration provider that sets default values for theme, imports, font family, and editor engine across all Codespark components in your application.
+
+```tsx
+import { ConfigProvider } from '@codespark/react';
+```
+
+## When to Use
+
+Use `ConfigProvider` when you want to:
+
+- Set a global theme for all Codespark instances
+- Define shared import maps for external dependencies
+- Configure a default font family for all editors
+- Set a default editor engine (Monaco or CodeMirror)
+
+## Basic Usage
+
+Wrap your application (or a section of it) with `ConfigProvider`:
+
+```tsx
+import { ConfigProvider, Codespark } from '@codespark/react';
+
+function App() {
+  return (
+    <ConfigProvider theme="dark" fontFamily="JetBrains Mono">
+      <Codespark code={code1} />
+      <Codespark code={code2} />
+      {/* Both instances inherit dark theme and font */}
+    </ConfigProvider>
+  );
+}
+```
+
+## Props
+
+### theme
+
+Global theme mode for all editors and previews.
+
+| Type | Default |
+| ---- | ------- |
+| `'light' \| 'dark'` | `'light'` |
+
+```tsx
+<ConfigProvider theme="dark">
+  {/* All children use dark theme by default */}
+</ConfigProvider>
+```
+
+### imports
+
+Global import map for external dependencies. These imports are available to all Codespark instances.
+
+| Type | Default |
+| ---- | ------- |
+| `Record<string, string>` | - |
+
+```tsx
+<ConfigProvider
+  imports={{
+    'lodash-es': 'https://esm.sh/lodash-es@4.17.21',
+    'date-fns': 'https://esm.sh/date-fns@3.0.0'
+  }}
+>
+  {/* All children can use these imports */}
+</ConfigProvider>
+```
+
+### fontFamily
+
+Default font family for all code editors.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | `'Fira Code'` |
+
+```tsx
+<ConfigProvider fontFamily="JetBrains Mono">
+  {/* All editors use JetBrains Mono */}
+</ConfigProvider>
+```
+
+### editor
+
+Default editor engine component to use (Monaco or CodeMirror).
+
+| Type | Default |
+| ---- | ------- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+
+```tsx
+import { ConfigProvider } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+
+<ConfigProvider editor={Monaco}>
+  {/* All editors use Monaco by default */}
+</ConfigProvider>
+```
+
+### children
+
+Child components that will inherit the configuration.
+
+| Type | Default |
+| ---- | ------- |
+| `ReactNode` | - |
+
+## Configuration Hierarchy
+
+Configuration values are inherited in the following order (later values override earlier ones):
+
+1. **ConfigProvider** - Global defaults
+2. **CodesparkProvider** - Instance-level configuration
+3. **Component props** - Direct props on individual components
+
+```tsx
+<ConfigProvider theme="dark">
+  {/* Uses dark theme from ConfigProvider */}
+  <Codespark code={code1} />
+
+  <CodesparkProvider theme="light">
+    {/* Uses light theme from CodesparkProvider */}
+    <CodesparkEditor />
+  </CodesparkProvider>
+
+  {/* Uses light theme from direct prop */}
+  <Codespark code={code2} theme="light" />
+</ConfigProvider>
+```
+
+## Accessing Configuration
+
+Use the `useConfig` hook to access the current configuration:
+
+```tsx
+import { useConfig } from '@codespark/react';
+
+function MyComponent() {
+  const { theme, imports, fontFamily, editor } = useConfig();
+
+  return <div>Current theme: {theme}</div>;
+}
+```
+
+## Example: Dark Mode Toggle
+
+```tsx preview=""
+import { useState } from 'react';
+import { ConfigProvider, Codespark } from '@codespark/react';
+
+function App() {
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  return (
+    <ConfigProvider theme={theme}>
+      <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
+        Toggle Theme
+      </button>
+      <Codespark code={code} />
+    </ConfigProvider>
+  );
+}
+```

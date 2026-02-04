@@ -1,6 +1,152 @@
 ---
 title: CodesparkProvider
-description: CodesparkProvider
+description: Context provider that shares workspace state and configuration across child components.
 ---
 
-WIP...
+`CodesparkProvider` is a context provider that shares workspace state and configuration across child components. Use it when building custom layouts with `CodesparkEditor`, `CodesparkPreview`, and `CodesparkFileExplorer`.
+
+```tsx
+import { CodesparkProvider } from '@codespark/react';
+```
+
+## When to Use
+
+The all-in-one `Codespark` component already includes a provider internally. You only need `CodesparkProvider` when:
+
+- Building a custom layout with separate editor and preview components
+- Sharing workspace state across multiple components
+- Creating advanced integrations with custom UI
+
+## Basic Usage
+
+```tsx
+<CodesparkProvider>
+  <CodesparkEditor />
+  <CodesparkPreview />
+</CodesparkProvider>
+```
+
+```tsx codespark-preview
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return (
+    <CodesparkProvider>
+      <div className="border-border grid grid-cols-3 divide-x overflow-hidden rounded-lg border">
+        <div className="border-border col-span-2">
+          <div className="bg-muted/50 border-border flex items-center gap-2 border-b px-4 py-3">
+            <span className="h-3 w-3 rounded-full bg-red-500" />
+            <span className="h-3 w-3 rounded-full bg-yellow-500" />
+            <span className="h-3 w-3 rounded-full bg-green-500" />
+          </div>
+          <CodesparkEditor height="400px" value={code} toolbox={false} />
+        </div>
+        <CodesparkPreview className="h-full" />
+      </div>
+    </CodesparkProvider>
+  );
+}
+```
+
+## Props
+
+### workspace
+
+Workspace instance to use for file management and compilation.
+
+| Type | Default |
+| ---- | ------- |
+| `Workspace` | Auto-created |
+
+If not provided, a default workspace is created with an empty `./App.tsx` file.
+
+```tsx
+import { CodesparkProvider, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': 'export default () => <div>Hello</div>' }
+});
+
+<CodesparkProvider workspace={workspace}>
+  {/* children */}
+</CodesparkProvider>
+```
+
+### theme
+
+Theme mode for the editor and preview.
+
+| Type | Default |
+| ---- | ------- |
+| `'light' \| 'dark'` | `'light'` |
+
+```tsx
+<CodesparkProvider theme="dark">
+  {/* children */}
+</CodesparkProvider>
+```
+
+### framework
+
+Framework to use for code analysis and compilation.
+
+| Type | Default |
+| ---- | ------- |
+| `Framework \| (new () => Framework) \| string` | - |
+
+```tsx
+import { html } from '@codespark/framework/html';
+
+<CodesparkProvider framework={html}>
+  {/* children */}
+</CodesparkProvider>
+```
+
+### imports
+
+Custom import map for external dependencies.
+
+| Type | Default |
+| ---- | ------- |
+| `Record<string, string>` | - |
+
+```tsx
+<CodesparkProvider imports={{ 'lodash-es': 'https://esm.sh/lodash-es@4.17.21' }}>
+  {/* children */}
+</CodesparkProvider>
+```
+
+### editor
+
+Default editor engine component to use (Monaco or CodeMirror).
+
+| Type | Default |
+| ---- | ------- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+
+```tsx
+import { CodesparkProvider } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+
+<CodesparkProvider editor={Monaco}>
+  {/* children */}
+</CodesparkProvider>
+```
+
+### children
+
+Child components that will receive the workspace context.
+
+| Type | Default |
+| ---- | ------- |
+| `ReactNode` | - |

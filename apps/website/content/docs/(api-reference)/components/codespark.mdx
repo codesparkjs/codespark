@@ -1,6 +1,505 @@
 ---
 title: Codespark
-description: Codespark
+description: The main component that combines editor and preview into a complete interactive code playground.
 ---
 
-WIP...
+`Codespark` is the all-in-one component that provides a complete code playground experience. It combines a code editor, file explorer, and live preview into a single, easy-to-use component.
+
+```tsx
+import { Codespark } from '@codespark/react';
+```
+
+## Basic Usage
+
+The simplest way to use Codespark is to pass your code as a string:
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codespark!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} />;
+}
+```
+
+## Props
+
+### code
+
+Source code content for single-file mode.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Codespark code="export default () => <div>Hello</div>" />
+```
+
+### files
+
+File mapping for multi-file mode. Each key represents a file path, and the value contains the file content.
+
+| Type | Default |
+| ---- | ------- |
+| `Record<string, string>` | - |
+
+<Callout title="File Name Convention" type="warn">
+All file names **must start with './'** to distinguish between local file dependencies and external package references.
+</Callout>
+
+```tsx twoslash preview
+// @noErrors
+import { Codespark } from '@codespark/react';
+
+const files = {
+  './App.tsx': `import { Welcome } from './welcome';
+
+export default function App() {
+  return <Welcome />;
+}`,
+  './welcome.tsx': `export function Welcome() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`
+};
+
+export default function App() {
+  return <Codespark files={files} />;
+}
+```
+
+### name
+
+Entry file path. This is the main file that will be compiled and rendered.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | `'./App.tsx'` |
+
+```tsx
+<Codespark name="./index.tsx" files={{ './index.tsx': '...' }} />
+```
+
+### framework
+
+Framework to use for code analysis and compilation.
+
+| Type | Default |
+| ---- | ------- |
+| `'react' \| 'vue' \| 'mdx' \| 'markdown'` | `'react'` |
+
+Currently supported frameworks:
+- `react` - React/JSX components
+- `vue` - Vue single-file components (coming soon)
+- `mdx` - MDX documents
+- `markdown` - Markdown documents
+
+```tsx
+<Codespark framework="react" code={code} />
+```
+
+### theme
+
+Theme mode for the editor and preview.
+
+| Type | Default |
+| ---- | ------- |
+| `'light' \| 'dark'` | `'light'` |
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Dark Theme</h1>
+      <p>The editor uses a dark color scheme</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} theme="dark" />;
+}
+```
+
+### imports
+
+Custom import map for external dependencies. Each key represents the module name used in import statements, and the value is a valid [esm.sh](https://esm.sh/) URL.
+
+| Type | Default |
+| ---- | ------- |
+| `Record<string, string>` | - |
+
+Use this to pin specific package versions or override default package resolutions.
+
+```tsx
+<Codespark
+  code={`import * as _ from 'lodash-es';`}
+  imports={{ 'lodash-es': 'https://esm.sh/lodash-es@4.17.21' }}
+/>
+```
+
+### tailwindcss
+
+Whether to enable Tailwind CSS support in the preview.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `true` |
+
+When enabled, you can use any Tailwind CSS class in your preview code. Disable this if you want to use custom CSS only.
+
+```tsx
+<Codespark code={code} tailwindcss={false} />
+```
+
+### showEditor
+
+Whether to show the code editor.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `true` |
+
+Set to `false` to show only the preview area. Useful for documentation where you want to display the result without the editable code.
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="flex items-center justify-center">
+      <span className="text-lg font-medium">Preview Only Mode</span>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} showEditor={false} previewHeight={80} />;
+}
+```
+
+### showPreview
+
+Whether to show the preview area.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `true` |
+
+Set to `false` to show only the code editor. Useful when you want users to write code without seeing the live preview.
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return <div>Editor Only Mode</div>;
+}`;
+
+export default function App() {
+  return <Codespark code={code} showPreview={false} editorHeight={120} />;
+}
+```
+
+### showFileExplorer
+
+Whether to show the file explorer sidebar.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `true` |
+
+The file explorer appears when you have multiple files. Set to `false` to hide it even in multi-file mode.
+
+```tsx
+<Codespark files={files} showFileExplorer={false} />
+```
+
+### readonly
+
+Whether to set the editor to read-only mode.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `false` |
+
+When `true`, users can view but not edit the code. The preview still works normally.
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Read-Only Mode</h1>
+      <p className="text-gray-500">Try editing this code - you can't!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} readonly />;
+}
+```
+
+### defaultExpanded
+
+Whether the file explorer is expanded by default.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | Auto (based on file count) |
+
+When not set, the file explorer automatically expands if there are multiple files.
+
+```tsx
+<Codespark files={files} defaultExpanded={true} />
+```
+
+### editorHeight
+
+Height of the editor area in pixels.
+
+| Type | Default |
+| ---- | ------- |
+| `number` | `200` |
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Custom Height</h1>
+      <p>Editor height is set to 100px</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} editorHeight={100} />;
+}
+```
+
+### previewHeight
+
+Height of the preview area in pixels.
+
+| Type | Default |
+| ---- | ------- |
+| `number` | `200` |
+
+```tsx preview
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="flex h-full items-center justify-center">
+      <span className="text-lg font-medium">Preview height is 100px</span>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return <Codespark code={code} previewHeight={100} />;
+}
+```
+
+### className
+
+CSS class name for the container element.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Codespark code={code} className="my-custom-class" />
+```
+
+### editor
+
+Editor engine component to use. Supports Monaco Editor or CodeMirror.
+
+| Type | Default |
+| ---- | ------- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+
+CodeMirror is the default editor and is lighter weight. Monaco provides a more feature-rich experience similar to VS Code.
+
+```tsx
+import { Codespark } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+
+<Codespark code={code} editor={Monaco} />
+```
+
+<Callout title="Monaco Editor">
+Monaco Editor requires additional setup. See the [Monaco Integration](/docs/monaco) guide for details.
+</Callout>
+
+### toolbox
+
+Toolbar configuration for the editor. Set to `false` to hide, `true` to show default tools, or pass a custom array of tool items.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` |
+
+Built-in tool IDs:
+- `'reset'` - Reset code to initial state
+- `'format'` - Format the code
+- `'copy'` - Copy code to clipboard
+
+```tsx preview="toolbox"
+// Hide toolbar
+<Codespark code={code} toolbox={false} />
+
+// Custom toolbar
+<Codespark code={code} toolbox={['copy', 'format']} />
+
+// Custom tool item
+<Codespark
+  code={code}
+  toolbox={[
+    'copy',
+    {
+      tooltip: 'My Custom Action',
+      icon: <MyIcon />,
+      onClick: ({ instance }) => console.log(instance)
+    }
+  ]}
+/>
+```
+
+### getWorkspace
+
+Ref to get the Workspace instance for external control.
+
+| Type | Default |
+| ---- | ------- |
+| `RefObject<Workspace \| null>` | - |
+
+Use this to programmatically control the workspace, such as getting/setting files, listening to events, etc.
+
+```tsx
+import { useRef } from 'react';
+import { Codespark, type Workspace } from '@codespark/react';
+
+function App() {
+  const workspaceRef = useRef<Workspace | null>(null);
+
+  const handleGetCode = () => {
+    const workspace = workspaceRef.current;
+    if (workspace) {
+      console.log(workspace.files);
+    }
+  };
+
+  return (
+    <>
+      <Codespark code={code} getWorkspace={workspaceRef} />
+      <button onClick={handleGetCode}>Get Code</button>
+    </>
+  );
+}
+```
+
+See the [Workspace API](/docs/workspace-api) for more details on available methods and events.
+
+### children
+
+Child elements to inject into the preview iframe, such as `Script`, `Style`, or `Link` components.
+
+| Type | Default |
+| ---- | ------- |
+| `ReactNode` | - |
+
+```tsx preview
+import { Codespark, Style } from '@codespark/react';
+
+const CUSTOM_STYLE = `
+#my_button {
+  height: 24px;
+  padding: 6px 12px;
+  background: #000;
+  color: #fff;
+  border-radius: 6px;
+  box-sizing: content-box;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.65);
+  }
+}`;
+
+const code = `export default function App() {
+  return <button id="my_button">My Button</button>;
+}`;
+
+export default function App() {
+  return (
+    <Codespark code={code}>
+      <Style>{CUSTOM_STYLE}</Style>
+    </Codespark>
+  );
+}
+```
+
+See the [Style](/docs/style), [Script](/docs/script), and [Link](/docs/link) component documentation for more details.
+
+### onConsole
+
+Callback fired when console methods are called in the preview. Useful for capturing and displaying console output.
+
+| Type | Default |
+| ---- | ------- |
+| `(data: OnConsoleData) => void` | - |
+
+```tsx
+interface OnConsoleData {
+  level: string;    // 'log', 'warn', 'error', 'info', 'debug'
+  args: unknown[];  // Arguments passed to console method
+  duplicate?: boolean;
+}
+```
+
+```tsx
+<Codespark
+  code={code}
+  onConsole={(data) => {
+    console.log(`[${data.level}]`, ...data.args);
+  }}
+/>
+```
+
+### onError
+
+Callback fired when a runtime error occurs in the preview.
+
+| Type | Default |
+| ---- | ------- |
+| `(error: unknown) => void` | - |
+
+```tsx
+<Codespark
+  code={code}
+  onError={(error) => {
+    console.error('Runtime error:', error);
+  }}
+/>
+```

@@ -27,7 +27,7 @@ export default defineConfig({
       langs: ['js', 'jsx', 'ts', 'tsx'],
       parseMetaString(meta) {
         const regex = /(?<=^|\s)(?<name>\w+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;
-        const attributes: Record<string, string | boolean | number> = {};
+        const attributes: Record<string, string | boolean> = {};
         let rest = meta;
 
         rest = rest.replaceAll(regex, (match, name, value_1, value_2, value_3) => {
@@ -36,8 +36,6 @@ export default defineConfig({
             const value = value_1 ?? value_2 ?? value_3;
             if (value === undefined) {
               attributes[name] = true;
-            } else if (!isNaN(Number(value))) {
-              attributes[name] = Number(value);
             } else {
               attributes[name] = value;
             }

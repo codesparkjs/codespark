@@ -1,6 +1,166 @@
 ---
 title: CodesparkFileExplorer
-description: CodesparkFileExplorer
+description: A file tree explorer component for navigating multi-file workspaces.
 ---
 
-WIP...
+`CodesparkFileExplorer` displays a hierarchical view of files and folders in the workspace. It supports file selection to switch the active file in the editor.
+
+```tsx
+import { CodesparkFileExplorer } from '@codespark/react';
+```
+
+## Basic Usage
+
+```tsx
+<CodesparkProvider>
+  <CodesparkFileExplorer />
+</CodesparkProvider>
+```
+
+```tsx codespark-preview height=200
+import { CodesparkFileExplorer, CodesparkProvider, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: {
+    './App.tsx': '',
+    './src/index.ts': '',
+    './components/button.tsx': '',
+    './components/input.tsx': ''
+  }
+});
+
+export default function App() {
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <CodesparkFileExplorer />
+    </CodesparkProvider>
+  );
+}
+```
+
+<Callout title="Note" type="warn">
+`CodesparkFileExplorer` doesn't have its own workspace context. It must be used inside `CodesparkProvider` .
+</Callout>
+
+## Features
+
+- **Hierarchical display**: Files and folders are displayed in a tree structure
+- **Auto-sorting**: Folders appear first, then files, both sorted alphabetically
+- **File selection**: Click a file to switch the active file in the editor
+- **Collapsible folders**: Folders can be expanded or collapsed
+
+## Props
+
+### className
+
+CSS class name for the file explorer container.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<CodesparkFileExplorer className="w-64" />
+```
+
+### defaultOpen
+
+Open the folder by default.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `false` |
+
+```tsx
+<CodesparkFileExplorer defaultOpen />
+```
+
+### renderItem
+
+Custom render function for file tree items.
+
+| Type | Default |
+| ---- | ------- |
+| `(context: FileExplorerItemRenderContext) => ReactNode` | - |
+
+```tsx preview=""
+<CodesparkFileExplorer
+  renderItem={({ node, isSelected }) => {
+    return // custom file item node
+  }}
+/>
+```
+
+```tsx codespark-preview height=228
+import { CodesparkFileExplorer, CodesparkProvider, Workspace } from '@codespark/react';
+import { ChevronRight, FileCode, Folder, FolderOpen } from 'lucide-react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: {
+    './App.tsx': '',
+    './src/index.ts': '',
+    './components/button.tsx': '',
+    './components/input.tsx': ''
+  }
+});
+
+export default function App() {
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <CodesparkFileExplorer
+        defaultOpen
+        renderItem={({ node, isSelected, isOpen }) => {
+          if (node.type === 'file') {
+            return (
+              <>
+                <FileCode className={`size-4 ${isSelected ? 'text-blue-500' : ''}`} />
+                <span className={`truncate ${isSelected ? 'font-bold' : ''}`}>{node.name}</span>
+              </>
+            );
+          }
+
+          return (
+            <>
+              <ChevronRight className="size-4 transition-transform duration-200 [[data-state=open]>&]:rotate-90" />
+              {isOpen ? <FolderOpen className="size-4 text-yellow-500" /> : <Folder className="size-4 text-yellow-500" />}
+              <span className="truncate">{node.name}</span>
+            </>
+          );
+        }}
+      />
+    </CodesparkProvider>
+  );
+}
+```
+
+## FileTreeNode Type
+
+The file tree is composed of `FileTreeNode` objects:
+
+```tsx
+interface FileExplorerItemRenderContext {
+  node: FileTreeNode;
+  depth: number;
+  isSelected: boolean;
+  isOpen?: boolean;
+}
+
+type FileTreeNode = FileNode | FolderNode;
+
+interface FileNode {
+  type: 'file';
+  name: string;      // File name (e.g., 'App.tsx')
+  path: string;      // Full path (e.g., './App.tsx')
+  code: string;      // File content
+  language?: string; // Language for syntax highlighting
+}
+
+interface FolderNode {
+  type: 'folder';
+  name: string;              // Folder name
+  path: string;              // Full path
+  children?: FileTreeNode[]; // Child files and folders
+}
+```

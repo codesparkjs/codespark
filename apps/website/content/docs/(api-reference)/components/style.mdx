@@ -1,6 +1,254 @@
 ---
 title: Style
-description: Style
+description: Injects custom CSS styles into the preview iframe.
 ---
 
-WIP...
+`Style` is an injection component that adds CSS styles to the preview iframe. It renders nothing in the React tree but injects a `<style>` tag into the iframe's document.
+
+```tsx
+import { Style } from '@codespark/react';
+```
+
+## Basic Usage
+
+Pass the `Style` component as a child of `Codespark` or `CodesparkPreview`:
+
+```tsx preview
+import { Codespark, Style } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <button className="custom-button">
+      Styled Button
+    </button>
+  );
+}`;
+
+const customStyle = `
+.custom-button {
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.custom-button:hover {
+  transform: scale(1.05);
+}
+`;
+
+export default function App() {
+  return (
+    <Codespark code={code}>
+      <Style>{customStyle}</Style>
+    </Codespark>
+  );
+}
+```
+
+## Props
+
+`Style` accepts all standard HTML `<style>` attributes:
+
+### children
+
+CSS code to inject.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Style>{`.my-class { color: red; }`}</Style>
+```
+
+### type
+
+Style type attribute.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+For Tailwind CSS directives, use `type="text/tailwindcss"`:
+
+```tsx
+<Style type="text/tailwindcss">
+  {`
+    @theme inline {
+      --color-primary: oklch(0.7 0.15 200);
+    }
+  `}
+</Style>
+```
+
+### media
+
+Media query for the styles.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Style media="(prefers-color-scheme: dark)">
+  {`
+    body {
+      background: #1a1a1a;
+      color: white;
+    }
+  `}
+</Style>
+```
+
+### Other Attributes
+
+Any other valid `<style>` HTML attributes are also supported.
+
+## Use Cases
+
+### Custom Component Styles
+
+```tsx
+<Codespark code={code}>
+  <Style>
+    {`
+      .card {
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+    `}
+  </Style>
+</Codespark>
+```
+
+### CSS Variables
+
+```tsx
+<Codespark code={code}>
+  <Style>
+    {`
+      :root {
+        --primary-color: #3b82f6;
+        --secondary-color: #10b981;
+        --spacing-unit: 8px;
+      }
+
+      .themed-button {
+        background: var(--primary-color);
+        padding: calc(var(--spacing-unit) * 2);
+      }
+    `}
+  </Style>
+</Codespark>
+```
+
+### Animations
+
+```tsx
+<Codespark code={code}>
+  <Style>
+    {`
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .animated {
+        animation: fadeIn 0.3s ease-out;
+      }
+    `}
+  </Style>
+</Codespark>
+```
+
+### Dark Mode Styles
+
+```tsx
+<Codespark code={code}>
+  <Style>
+    {`
+      .container {
+        background: white;
+        color: black;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .container {
+          background: #1a1a1a;
+          color: white;
+        }
+      }
+    `}
+  </Style>
+</Codespark>
+```
+
+### Tailwind CSS Extensions
+
+Use `type="text/tailwindcss"` to add Tailwind directives:
+
+```tsx
+<Codespark code={code}>
+  <Style type="text/tailwindcss">
+    {`
+      @theme inline {
+        --color-brand: oklch(0.6 0.2 250);
+      }
+
+      @custom-variant dark (&:where(.dark, .dark *));
+    `}
+  </Style>
+</Codespark>
+```
+
+## Combining with Tailwind CSS
+
+Codespark has Tailwind CSS enabled by default. You can use `Style` to add custom CSS alongside Tailwind classes:
+
+```tsx preview
+import { Codespark, Style } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <div className="p-4 rounded-lg custom-gradient">
+      <h1 className="text-xl font-bold text-white">
+        Tailwind + Custom CSS
+      </h1>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return (
+    <Codespark code={code}>
+      <Style>
+        {`
+          .custom-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          }
+        `}
+      </Style>
+    </Codespark>
+  );
+}
+```
+
+## Injection Order
+
+Styles are injected into the iframe's `<head>` element. They are applied before the preview renders, ensuring your styles are available immediately.
+
+<Callout title="Specificity">
+Custom styles have the same specificity as regular CSS. Use more specific selectors or `!important` if you need to override Tailwind utilities.
+</Callout>

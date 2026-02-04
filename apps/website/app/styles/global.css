@@ -177,9 +177,47 @@ figure.shiki {
   pre {
     font-size: 14px;
 
-    code>*, .line::after {
+    code>*,
+    .line::after {
       padding-top: calc(var(--spacing) * .5);
       padding-bottom: calc(var(--spacing) * .5);
     }
   }
+}
+
+#nd-docs-layout {
+  --fd-header-height: 56px;
+
+  @media (width < 48rem) {
+    padding-top: var(--fd-header-height);
+  }
+}
+
+#nd-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+}
+
+#nd-sidebar {
+  padding-top: var(--fd-header-height);
+}
+
+#nd-page {
+  @media (width >=48rem) {
+    padding-top: calc(var(--spacing) * 8 + var(--fd-header-height));
+  }
+
+  @media (width >=80rem) {
+    padding-top: calc(var(--spacing) * 14 + var(--fd-header-height));
+  }
+}
+
+#nd-toc {
+  padding-top: calc(var(--spacing) * 12 + var(--fd-header-height));
+}
+
+.twoslash-popup-docs-tag {
+  flex-direction: column;
+  gap: 0;
 }

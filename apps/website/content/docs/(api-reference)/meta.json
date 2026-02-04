@@ -1,0 +1,8 @@
+{
+  "pages": [
+    "components",
+    "hooks",
+    "frameworks",
+    "plugins"
+  ]
+}

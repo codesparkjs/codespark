@@ -1,6 +1,327 @@
 ---
 title: CodesparkEditor
-description: CodesparkEditor
+description: A flexible code editor component supporting Monaco Editor and CodeMirror.
 ---
 
-WIP...
+`CodesparkEditor` is a standalone code editor component that supports both Monaco Editor and CodeMirror as the underlying editor engine. It integrates with the Workspace for file management and automatic compilation.
+
+```tsx
+import { CodesparkEditor } from '@codespark/react';
+```
+
+## Basic Usage
+
+```tsx
+<CodesparkEditor value="some code..." />
+```
+
+```tsx codespark-preview height=249
+import { CodesparkEditor } from '@codespark/react';
+
+const code = `import { CodesparkEditor } from '@codespark/react';
+
+export default function App() {
+  return <CodesparkEditor />;
+}`;
+
+export default function App() {
+  return <CodesparkEditor value={code} />;
+}
+```
+
+## Props
+
+### value
+
+Initial code content for the editor.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<CodesparkEditor value="export default () => <div>Hello</div>" />
+```
+
+### theme
+
+Theme mode for the editor.
+
+| Type | Default |
+| ---- | ------- |
+| `'light' \| 'dark'` | Inherited from context |
+
+```tsx
+<CodesparkEditor theme="dark" />
+```
+
+### editor
+
+Editor engine component to use.
+
+| Type | Default |
+| ---- | ------- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+
+```tsx
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+
+<CodesparkEditor editor={Monaco} />
+```
+
+### height
+
+Height of the editor. For CodeMirror, pass a CSS string. For Monaco, pass a number (pixels).
+
+| Type | Default |
+| ---- | ------- |
+| `string \| number` | `200` / `'200px'` |
+
+```tsx
+// CodeMirror (default)
+<CodesparkEditor height="300px" />
+
+// Monaco
+<CodesparkEditor editor={Monaco} height={300} />
+```
+
+### width
+
+Width of the editor.
+
+| Type | Default |
+| ---- | ------- |
+| `string \| number` | - |
+
+```tsx
+<CodesparkEditor width="100%" />
+```
+
+### toolbox
+
+Toolbar configuration. Set to `false` to hide, `true` to show default tools, or pass a custom array.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` |
+
+Built-in tool IDs:
+- `'reset'` - Reset code to initial state
+- `'format'` - Format the code
+- `'copy'` - Copy code to clipboard
+
+```tsx preview="toolbox"
+// Hide toolbar
+<Codespark code={code} toolbox={false} />
+
+// Custom toolbar
+<Codespark code={code} toolbox={['copy', 'format']} />
+
+// Custom tool item
+<Codespark
+  code={code}
+  toolbox={[
+    'copy',
+    {
+      tooltip: 'My Custom Action',
+      icon: <MyIcon />,
+      onClick: ({ instance }) => console.log(instance)
+    }
+  ]}
+/>
+```
+
+### workspace
+
+Workspace instance to use for file management.
+
+| Type | Default |
+| ---- | ------- |
+| `Workspace` | Inherited from context |
+
+```tsx
+import { CodesparkEditor, Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': 'export default () => <div>Hello</div>' }
+});
+
+<CodesparkEditor workspace={workspace} />
+```
+
+### className
+
+CSS class name for the editor element.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<CodesparkEditor className="my-editor" />
+```
+
+### containerProps
+
+Props to pass to the container div element.
+
+| Type | Default |
+| ---- | ------- |
+| `ComponentProps<'div'>` | - |
+
+```tsx
+<CodesparkEditor containerProps={{ className: 'h-full' }} />
+```
+
+### debounceWait
+
+Debounce wait time in milliseconds for triggering workspace updates on code changes.
+
+| Type | Default |
+| ---- | ------- |
+| `number` | `500` |
+
+```tsx
+<CodesparkEditor debounceWait={300} />
+```
+
+### id
+
+Unique identifier for the editor instance.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | Auto-generated |
+
+```tsx
+<CodesparkEditor id="main-editor" />
+```
+
+## CodeMirror-specific Props
+
+These props only apply when using the default CodeMirror editor:
+
+### readOnly
+
+Whether the editor is read-only.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `false` |
+
+```tsx
+<CodesparkEditor readOnly />
+```
+
+### fontFamily
+
+Font family for the editor.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | `'Fira Code'` |
+
+```tsx
+<CodesparkEditor fontFamily="JetBrains Mono" />
+```
+
+### extensions
+
+Additional CodeMirror extensions.
+
+| Type | Default |
+| ---- | ------- |
+| `Extension[]` | - |
+
+```tsx
+import { javascript } from '@codemirror/lang-javascript';
+
+<CodesparkEditor extensions={[javascript()]} />
+```
+
+### basicSetup
+
+CodeMirror basic setup configuration.
+
+| Type | Default |
+| ---- | ------- |
+| `BasicSetupOptions` | - |
+
+```tsx
+<CodesparkEditor basicSetup={{ lineNumbers: false }} />
+```
+
+### onChange
+
+Callback fired when the editor content changes.
+
+| Type | Default |
+| ---- | ------- |
+| `(value: string, viewUpdate: ViewUpdate) => void` | - |
+
+```tsx
+<CodesparkEditor onChange={(value) => console.log(value)} />
+```
+
+### onMount
+
+Callback fired when the editor is mounted.
+
+| Type | Default |
+| ---- | ------- |
+| `(editor: EditorView) => void` | - |
+
+```tsx
+<CodesparkEditor onMount={(editor) => editor.focus()} />
+```
+
+## Monaco-specific Props
+
+These props only apply when using Monaco Editor:
+
+### options
+
+Monaco editor options.
+
+| Type | Default |
+| ---- | ------- |
+| `IStandaloneEditorConstructionOptions` | - |
+
+```tsx
+import { Monaco } from '@codespark/react/Monaco';
+
+<CodesparkEditor
+  editor={Monaco}
+  options={{
+    readOnly: true,
+    minimap: { enabled: false },
+    fontSize: 14
+  }}
+/>
+```
+
+### wrapperProps
+
+Props for the Monaco editor wrapper element.
+
+| Type | Default |
+| ---- | ------- |
+| `HTMLAttributes<HTMLDivElement>` | - |
+
+### onChange (Monaco)
+
+Callback fired when the editor content changes.
+
+| Type | Default |
+| ---- | ------- |
+| `(value: string, event: IModelContentChangedEvent) => void` | - |
+
+### onMount (Monaco)
+
+Callback fired when the editor is mounted.
+
+| Type | Default |
+| ---- | ------- |
+| `(editor: IStandaloneCodeEditor, monaco: Monaco) => void` | - |

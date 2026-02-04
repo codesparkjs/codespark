@@ -3,6 +3,8 @@ title: Monaco
 description: Integrate Monaco Editor with Codespark for advanced IntelliSense and TypeScript support
 ---
 
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
 The [Monaco Editor](https://microsoft.github.io/monaco-editor) is the code editor that powers VS Code. It is a feature-rich web editor with syntax highlighting, IntelliSense, and code completion.
 
 Due to bundle size considerations, Codespark uses CodeMirror as the default editor. However, we highly recommend trying Monaco for a more advanced editing experience.
@@ -126,6 +128,86 @@ export default function App() {
 ```
 
 ### Syntax Error Diagnostics
+
+Codespark Monaco provides real-time syntax error diagnostics. When your code contains syntax errors, the editor will highlight the problematic areas and display error messages to help you identify and fix issues quickly.
+
+```tsx codespark-preview height=249
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/monaco';
+
+const code = `export default function App() {
+  const message = Hello World"
+  return (
+    <div>
+      <h1>{message</h1>
+    </div>
+  )
+}`;
+
+export default function App() {
+  return <CodesparkEditor editor={Monaco} value={code} toolbox={[]} />;
+}
+```
+
+## via NPM
+
+By default, Monaco is loaded from a CDN to minimize bundle size. If you prefer to bundle Monaco locally from npm, follow these steps:
+
+<Steps>
+  <Step>
+  **Install the `monaco-editor` package:**
+
+  ```npm
+  npm install monaco-editor
+  ```
+  </Step>
+  <Step>
+  **Initialize Monaco using the `load` function:**
+
+  ```ts
+  import * as monaco from 'monaco-editor';
+  import { Monaco } from '@codespark/react/monaco';
+
+  Monaco.load({ monaco });
+  ```
+  </Step>
+  <Step>
+  **Worker configuration (vite only).**
+
+  ```ts
+  import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker';
+  import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker';
+  import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker';
+  import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker';
+  import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker';
+
+  self.MonacoEnvironment = {
+    getWorker(_, label) {
+      if (label === 'json') {
+        return new jsonWorker();
+      }
+      if (label === 'css' || label === 'scss' || label === 'less') {
+        return new cssWorker();
+      }
+      if (label === 'html' || label === 'handlebars' || label === 'razor') {
+        return new htmlWorker();
+      }
+      if (label === 'typescript' || label === 'javascript') {
+        return new tsWorker();
+      }
+      return new editorWorker();
+    },
+  };
+  ```
+  </Step>
+</Steps>
+
+<Callout title="Note" type="warn">
+Loading monaco-editor from npm includes all language grammars by default, which significantly increases your bundle size. Consider using a bundler plugin to optimize this:
+
+- Vite: [vite-plugin-monaco-editor](https://github.com/vdesjs/vite-plugin-monaco-editor)
+- Webpack: [monaco-editor-webpack-plugin](https://www.npmjs.com/package/monaco-editor-webpack-plugin)
+</Callout>
 
 ## Configurations
 

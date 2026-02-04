@@ -53,7 +53,7 @@ function MdxPre({ preview, height, ...props }: PreProps) {
   const [link, setLink] = useState('');
 
   const isBoilerplatePreview = typeof preview === 'string';
-  const hasPreview = Boolean(preview);
+  const hasPreview = preview !== void 0;
   const parsedHeight = height ? Number(height) : undefined;
 
   useEffect(() => {

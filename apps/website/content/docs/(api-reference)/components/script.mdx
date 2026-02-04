@@ -1,6 +1,186 @@
 ---
 title: Script
-description: Script
+description: Injects custom JavaScript into the preview iframe.
 ---
 
-WIP...
+`Script` is an injection component that adds JavaScript to the preview iframe. It renders nothing in the React tree but injects a `<script>` tag into the iframe's document.
+
+```tsx
+import { Script } from '@codespark/react';
+```
+
+## Basic Usage
+
+Pass the `Script` component as a child of `Codespark` or `CodesparkPreview`:
+
+```tsx preview
+import { Codespark, Script } from '@codespark/react';
+
+const code = `export default function App() {
+  return (
+    <button
+      className="px-4 py-2 bg-blue-500 text-white rounded"
+      onClick={() => window.sayHello()}
+    >
+      Click me
+    </button>
+  );
+}`;
+
+export default function App() {
+  return (
+    <Codespark code={code}>
+      <Script>{`window.sayHello = () => alert('Hello from injected script!')`}</Script>
+    </Codespark>
+  );
+}
+```
+
+## Inline Scripts
+
+Pass JavaScript code as children:
+
+```tsx
+<Codespark code={code}>
+  <Script>
+    {`
+      window.myGlobalFunction = () => {
+        console.log('Hello from global function');
+      };
+    `}
+  </Script>
+</Codespark>
+```
+
+## External Scripts
+
+Load external scripts using the `src` attribute:
+
+```tsx
+<Codespark code={code}>
+  <Script src="https://cdn.example.com/library.js" />
+</Codespark>
+```
+
+## Props
+
+`Script` accepts all standard HTML `<script>` attributes:
+
+### children
+
+Inline JavaScript code to execute.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Script>{`console.log('Hello')`}</Script>
+```
+
+### src
+
+URL of an external script to load.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Script src="https://example.com/script.js" />
+```
+
+### type
+
+Script type (e.g., `'module'`, `'text/javascript'`).
+
+| Type | Default |
+| ---- | ------- |
+| `string` | - |
+
+```tsx
+<Script type="module">{`import { foo } from './bar.js'`}</Script>
+```
+
+### async
+
+Whether to load the script asynchronously.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | - |
+
+```tsx
+<Script src="https://example.com/script.js" async />
+```
+
+### defer
+
+Whether to defer script execution until the document is parsed.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | - |
+
+```tsx
+<Script src="https://example.com/script.js" defer />
+```
+
+### Other Attributes
+
+Any other valid `<script>` HTML attributes are also supported:
+
+```tsx
+<Script
+  src="https://example.com/script.js"
+  crossOrigin="anonymous"
+  integrity="sha384-..."
+/>
+```
+
+## Use Cases
+
+### Adding Global Functions
+
+```tsx
+<Codespark code={code}>
+  <Script>
+    {`
+      window.formatDate = (date) => {
+        return new Date(date).toLocaleDateString();
+      };
+    `}
+  </Script>
+</Codespark>
+```
+
+### Loading Third-Party Libraries
+
+```tsx
+<Codespark code={code}>
+  <Script src="https://cdn.jsdelivr.net/npm/chart.js" />
+</Codespark>
+```
+
+### Analytics or Tracking
+
+```tsx
+<Codespark code={code}>
+  <Script>
+    {`
+      // Track preview interactions
+      document.addEventListener('click', (e) => {
+        console.log('Click tracked:', e.target);
+      });
+    `}
+  </Script>
+</Codespark>
+```
+
+## Execution Order
+
+Scripts are injected into the iframe's `<head>` element before the preview code runs. This ensures that global functions and libraries are available when your preview code executes.
+
+<Callout title="Note">
+Inline scripts execute immediately. External scripts with `async` or `defer` may load after the preview renders.
+</Callout>
