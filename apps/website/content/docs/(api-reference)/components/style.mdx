@@ -13,7 +13,8 @@ import { Style } from '@codespark/react';
 
 Pass the `Style` component as a child of `Codespark` or `CodesparkPreview`:
 
-```tsx preview
+```tsx twoslash preview
+// @noErrors
 import { Codespark, Style } from '@codespark/react';
 
 const code = `export default function App() {
@@ -62,7 +63,10 @@ CSS code to inject.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Style } from '@codespark/react';
+// ---cut---
 <Style>{`.my-class { color: red; }`}</Style>
 ```
 
@@ -76,7 +80,10 @@ Style type attribute.
 
 For Tailwind CSS directives, use `type="text/tailwindcss"`:
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Style } from '@codespark/react';
+// ---cut---
 <Style type="text/tailwindcss">
   {`
     @theme inline {
@@ -94,7 +101,10 @@ Media query for the styles.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Style } from '@codespark/react';
+// ---cut---
 <Style media="(prefers-color-scheme: dark)">
   {`
     body {
@@ -113,8 +123,11 @@ Any other valid `<style>` HTML attributes are also supported.
 
 ### Custom Component Styles
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Style } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Style>
     {`
       .card {
@@ -135,8 +148,11 @@ Any other valid `<style>` HTML attributes are also supported.
 
 ### CSS Variables
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Style } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Style>
     {`
       :root {
@@ -156,8 +172,11 @@ Any other valid `<style>` HTML attributes are also supported.
 
 ### Animations
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Style } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Style>
     {`
       @keyframes fadeIn {
@@ -175,8 +194,11 @@ Any other valid `<style>` HTML attributes are also supported.
 
 ### Dark Mode Styles
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Style } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Style>
     {`
       .container {
@@ -199,8 +221,11 @@ Any other valid `<style>` HTML attributes are also supported.
 
 Use `type="text/tailwindcss"` to add Tailwind directives:
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Style } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Style type="text/tailwindcss">
     {`
       @theme inline {
@@ -217,7 +242,8 @@ Use `type="text/tailwindcss"` to add Tailwind directives:
 
 Codespark has Tailwind CSS enabled by default. You can use `Style` to add custom CSS alongside Tailwind classes:
 
-```tsx preview
+```tsx twoslash preview
+// @noErrors
 import { Codespark, Style } from '@codespark/react';
 
 const code = `export default function App() {

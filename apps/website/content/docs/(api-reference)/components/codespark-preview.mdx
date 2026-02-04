@@ -54,7 +54,10 @@ Source code to preview. Used when not providing a workspace instance.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview code="export default () => <div>Hello</div>" />
 ```
 
@@ -66,7 +69,8 @@ Workspace instance to use for compilation and file management.
 | ---- | ------- |
 | `Workspace` | Inherited from context |
 
-```tsx
+```tsx twoslash
+// @noErrors
 import { CodesparkPreview, Workspace } from '@codespark/react';
 
 const workspace = new Workspace({
@@ -85,7 +89,10 @@ Theme mode for the preview.
 | ---- | ------- |
 | `'light' \| 'dark'` | Inherited from context |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview theme="dark" />
 ```
 
@@ -97,8 +104,12 @@ Framework to use for code analysis and compilation.
 | ---- | ------- |
 | `Framework \| (new () => Framework) \| string` | Inherited from context |
 
-```tsx
-<CodesparkPreview framework="react" />
+```tsx twoslash
+// @noErrors
+import { html } from '@codespark/framework/html';
+import { CodesparkPreview } from '@codespark/react';
+
+<CodesparkPreview framework={html} />
 ```
 
 ### tailwindcss
@@ -111,8 +122,43 @@ Whether to enable Tailwind CSS support in the preview.
 
 When enabled, you can use any Tailwind CSS class in your preview code.
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview tailwindcss={false} />
+```
+
+```tsx codespark-preview height=200
+import { CodesparkPreview } from '@codespark/react';
+import { useState } from 'react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  const [tailwindcss, setTailwindCSS] = useState(true);
+
+  return (
+    <div className="relative">
+      <label className="absolute top-0 right-0 z-10 inline-flex cursor-pointer items-center gap-2">
+        <span className="text-sm font-medium">Tailwind CSS</span>
+        <div className="relative">
+          <input type="checkbox" checked={tailwindcss} onChange={e => setTailwindCSS(e.target.checked)} className="peer sr-only" />
+          <div className="peer h-5 w-9 rounded-full bg-gray-200 transition-colors peer-checked:bg-black" />
+          <div className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+        </div>
+      </label>
+      <CodesparkPreview code={code} tailwindcss={tailwindcss} />
+    </div>
+  );
+}
 ```
 
 ### imports
@@ -123,7 +169,10 @@ Custom import map for external dependencies.
 | ---- | ------- |
 | `Record<string, string>` | Inherited from context |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview imports={{ 'lodash-es': 'https://esm.sh/lodash-es@4.17.21' }} />
 ```
 
@@ -135,7 +184,10 @@ Height of the preview area in pixels.
 | ---- | ------- |
 | `number` | `200` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview height={300} />
 ```
 
@@ -147,7 +199,10 @@ CSS class name for the preview container.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview className="h-full" />
 ```
 
@@ -159,7 +214,8 @@ Child elements to inject into the preview iframe, such as `Script`, `Style`, or 
 | ---- | ------- |
 | `ReactNode` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
 import { CodesparkPreview, Style, Script, Link } from '@codespark/react';
 
 <CodesparkPreview>
@@ -169,6 +225,8 @@ import { CodesparkPreview, Style, Script, Link } from '@codespark/react';
 </CodesparkPreview>
 ```
 
+See the [Style](/docs/style), [Script](/docs/script), and [Link](/docs/link) component documentation for more details.
+
 ### onError
 
 Callback fired when a runtime error occurs in the preview.
@@ -177,9 +235,12 @@ Callback fired when a runtime error occurs in the preview.
 | ---- | ------- |
 | `(error: unknown) => void` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview
-  onError={(error) => {
+  onError={error => {
     console.error('Runtime error:', error);
   }}
 />
@@ -193,9 +254,12 @@ Callback fired when the preview iframe is loaded and ready.
 | ---- | ------- |
 | `(iframe: HTMLIFrameElement) => void` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview
-  onLoad={(iframe) => {
+  onLoad={iframe => {
     console.log('Preview loaded:', iframe);
   }}
 />
@@ -209,7 +273,10 @@ Callback fired when the preview has finished rendering.
 | ---- | ------- |
 | `() => void` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview
   onRendered={() => {
     console.log('Render complete');
@@ -233,9 +300,12 @@ interface OnConsoleData {
 }
 ```
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkPreview } from '@codespark/react';
+// ---cut---
 <CodesparkPreview
-  onConsole={(data) => {
+  onConsole={data => {
     console.log(`[${data.level}]`, ...data.args);
   }}
 />

@@ -13,7 +13,8 @@ import { Script } from '@codespark/react';
 
 Pass the `Script` component as a child of `Codespark` or `CodesparkPreview`:
 
-```tsx preview
+```tsx twoslash preview
+// @noErrors
 import { Codespark, Script } from '@codespark/react';
 
 const code = `export default function App() {
@@ -40,26 +41,28 @@ export default function App() {
 
 Pass JavaScript code as children:
 
-```tsx
-<Codespark code={code}>
-  <Script>
-    {`
-      window.myGlobalFunction = () => {
-        console.log('Hello from global function');
-      };
-    `}
-  </Script>
-</Codespark>
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
+<Script>
+  {`
+    window.myGlobalFunction = () => {
+      console.log('Hello from global function');
+    };
+  `}
+</Script>
 ```
 
 ## External Scripts
 
 Load external scripts using the `src` attribute:
 
-```tsx
-<Codespark code={code}>
-  <Script src="https://cdn.example.com/library.js" />
-</Codespark>
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
+<Script src="https://cdn.example.com/library.js" />
 ```
 
 ## Props
@@ -74,7 +77,10 @@ Inline JavaScript code to execute.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
 <Script>{`console.log('Hello')`}</Script>
 ```
 
@@ -86,7 +92,10 @@ URL of an external script to load.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
 <Script src="https://example.com/script.js" />
 ```
 
@@ -98,7 +107,10 @@ Script type (e.g., `'module'`, `'text/javascript'`).
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
 <Script type="module">{`import { foo } from './bar.js'`}</Script>
 ```
 
@@ -110,7 +122,10 @@ Whether to load the script asynchronously.
 | ---- | ------- |
 | `boolean` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
 <Script src="https://example.com/script.js" async />
 ```
 
@@ -122,7 +137,10 @@ Whether to defer script execution until the document is parsed.
 | ---- | ------- |
 | `boolean` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
 <Script src="https://example.com/script.js" defer />
 ```
 
@@ -130,7 +148,10 @@ Whether to defer script execution until the document is parsed.
 
 Any other valid `<script>` HTML attributes are also supported:
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Script } from '@codespark/react';
+// ---cut---
 <Script
   src="https://example.com/script.js"
   crossOrigin="anonymous"
@@ -142,8 +163,11 @@ Any other valid `<script>` HTML attributes are also supported:
 
 ### Adding Global Functions
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Script } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Script>
     {`
       window.formatDate = (date) => {
@@ -156,16 +180,22 @@ Any other valid `<script>` HTML attributes are also supported:
 
 ### Loading Third-Party Libraries
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Script } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Script src="https://cdn.jsdelivr.net/npm/chart.js" />
 </Codespark>
 ```
 
 ### Analytics or Tracking
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Script } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Script>
     {`
       // Track preview interactions

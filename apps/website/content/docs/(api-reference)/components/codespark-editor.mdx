@@ -39,7 +39,10 @@ Initial code content for the editor.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor value="export default () => <div>Hello</div>" />
 ```
 
@@ -51,7 +54,10 @@ Theme mode for the editor.
 | ---- | ------- |
 | `'light' \| 'dark'` | Inherited from context |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor theme="dark" />
 ```
 
@@ -63,7 +69,8 @@ Editor engine component to use.
 | ---- | ------- |
 | `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
 
-```tsx
+```tsx twoslash
+// @noErrors
 import { CodesparkEditor } from '@codespark/react';
 import { Monaco } from '@codespark/react/Monaco';
 
@@ -76,9 +83,12 @@ Height of the editor. For CodeMirror, pass a CSS string. For Monaco, pass a numb
 
 | Type | Default |
 | ---- | ------- |
-| `string \| number` | `200` / `'200px'` |
+| `string \| number` | `200` / `'100%'` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 // CodeMirror (default)
 <CodesparkEditor height="300px" />
 
@@ -94,7 +104,10 @@ Width of the editor.
 | ---- | ------- |
 | `string \| number` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor width="100%" />
 ```
 
@@ -111,22 +124,23 @@ Built-in tool IDs:
 - `'format'` - Format the code
 - `'copy'` - Copy code to clipboard
 
-```tsx preview="toolbox"
+```tsx twoslash preview=""
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
 // Hide toolbar
-<Codespark code={code} toolbox={false} />
+<CodesparkEditor toolbox={false} />
 
 // Custom toolbar
-<Codespark code={code} toolbox={['copy', 'format']} />
+<CodesparkEditor toolbox={['copy', 'format']} />
 
 // Custom tool item
-<Codespark
-  code={code}
+<CodesparkEditor
   toolbox={[
     'copy',
     {
       tooltip: 'My Custom Action',
       icon: <MyIcon />,
-      onClick: ({ instance }) => console.log(instance)
+      onClick: editor => console.log(editor?.instance)
     }
   ]}
 />
@@ -140,7 +154,8 @@ Workspace instance to use for file management.
 | ---- | ------- |
 | `Workspace` | Inherited from context |
 
-```tsx
+```tsx twoslash
+// @noErrors
 import { CodesparkEditor, Workspace } from '@codespark/react';
 
 const workspace = new Workspace({
@@ -159,7 +174,10 @@ CSS class name for the editor element.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor className="my-editor" />
 ```
 
@@ -183,7 +201,10 @@ Debounce wait time in milliseconds for triggering workspace updates on code chan
 | ---- | ------- |
 | `number` | `500` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor debounceWait={300} />
 ```
 
@@ -195,7 +216,10 @@ Unique identifier for the editor instance.
 | ---- | ------- |
 | `string` | Auto-generated |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor id="main-editor" />
 ```
 
@@ -211,7 +235,10 @@ Whether the editor is read-only.
 | ---- | ------- |
 | `boolean` | `false` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor readOnly />
 ```
 
@@ -223,7 +250,10 @@ Font family for the editor.
 | ---- | ------- |
 | `string` | `'Fira Code'` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor fontFamily="JetBrains Mono" />
 ```
 
@@ -249,8 +279,25 @@ CodeMirror basic setup configuration.
 | ---- | ------- |
 | `BasicSetupOptions` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
 <CodesparkEditor basicSetup={{ lineNumbers: false }} />
+```
+
+```tsx codespark-preview height=249
+import { CodesparkEditor } from '@codespark/react';
+
+const code = `import { CodesparkEditor } from '@codespark/react';
+
+export default function App() {
+  return <CodesparkEditor />;
+}`;
+
+export default function App() {
+  return <CodesparkEditor value={code} basicSetup={{ lineNumbers: false }} />;
+}
 ```
 
 ### onChange
@@ -261,8 +308,11 @@ Callback fired when the editor content changes.
 | ---- | ------- |
 | `(value: string, viewUpdate: ViewUpdate) => void` | - |
 
-```tsx
-<CodesparkEditor onChange={(value) => console.log(value)} />
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
+<CodesparkEditor onChange={value => console.log(value)} />
 ```
 
 ### onMount
@@ -274,7 +324,10 @@ Callback fired when the editor is mounted.
 | `(editor: EditorView) => void` | - |
 
 ```tsx
-<CodesparkEditor onMount={(editor) => editor.focus()} />
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+// ---cut---
+<CodesparkEditor onMount={editor => editor.focus()} />
 ```
 
 ## Monaco-specific Props
@@ -289,17 +342,50 @@ Monaco editor options.
 | ---- | ------- |
 | `IStandaloneEditorConstructionOptions` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
 import { Monaco } from '@codespark/react/Monaco';
 
 <CodesparkEditor
   editor={Monaco}
   options={{
     readOnly: true,
-    minimap: { enabled: false },
-    fontSize: 14
+    minimap: { enabled: true },
+    folding: true,
+    lineNumbers: 'off'
   }}
 />
+```
+
+```tsx codespark-preview height=249
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/monaco';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  return (
+    <CodesparkEditor
+      editor={Monaco}
+      value={code}
+      toolbox={[]}
+      options={{
+        readOnly: true,
+        minimap: { enabled: true },
+        folding: true,
+        lineNumbers: 'off'
+      }}
+    />
+  );
+}
 ```
 
 ### wrapperProps
@@ -310,7 +396,7 @@ Props for the Monaco editor wrapper element.
 | ---- | ------- |
 | `HTMLAttributes<HTMLDivElement>` | - |
 
-### onChange (Monaco)
+### onChange
 
 Callback fired when the editor content changes.
 
@@ -318,7 +404,7 @@ Callback fired when the editor content changes.
 | ---- | ------- |
 | `(value: string, event: IModelContentChangedEvent) => void` | - |
 
-### onMount (Monaco)
+### onMount
 
 Callback fired when the editor is mounted.
 

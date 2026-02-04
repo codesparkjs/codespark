@@ -60,7 +60,10 @@ CSS class name for the file explorer container.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkFileExplorer } from '@codespark/react';
+// ---cut---
 <CodesparkFileExplorer className="w-64" />
 ```
 
@@ -72,7 +75,10 @@ Open the folder by default.
 | ---- | ------- |
 | `boolean` | `false` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { CodesparkFileExplorer } from '@codespark/react';
+// ---cut---
 <CodesparkFileExplorer defaultOpen />
 ```
 
@@ -84,7 +90,10 @@ Custom render function for file tree items.
 | ---- | ------- |
 | `(context: FileExplorerItemRenderContext) => ReactNode` | - |
 
-```tsx preview=""
+```tsx twoslash preview=""
+// @noErrors
+import { CodesparkFileExplorer } from '@codespark/react';
+// ---cut---
 <CodesparkFileExplorer
   renderItem={({ node, isSelected }) => {
     return // custom file item node

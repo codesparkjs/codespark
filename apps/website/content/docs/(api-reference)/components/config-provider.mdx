@@ -22,7 +22,8 @@ Use `ConfigProvider` when you want to:
 
 Wrap your application (or a section of it) with `ConfigProvider`:
 
-```tsx
+```tsx twoslash
+// @noErrors
 import { ConfigProvider, Codespark } from '@codespark/react';
 
 function App() {
@@ -46,7 +47,10 @@ Global theme mode for all editors and previews.
 | ---- | ------- |
 | `'light' \| 'dark'` | `'light'` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { ConfigProvider } from '@codespark/react';
+// ---cut---
 <ConfigProvider theme="dark">
   {/* All children use dark theme by default */}
 </ConfigProvider>
@@ -60,7 +64,10 @@ Global import map for external dependencies. These imports are available to all 
 | ---- | ------- |
 | `Record<string, string>` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { ConfigProvider } from '@codespark/react';
+// ---cut---
 <ConfigProvider
   imports={{
     'lodash-es': 'https://esm.sh/lodash-es@4.17.21',
@@ -79,7 +86,10 @@ Default font family for all code editors.
 | ---- | ------- |
 | `string` | `'Fira Code'` |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { ConfigProvider } from '@codespark/react';
+// ---cut---
 <ConfigProvider fontFamily="JetBrains Mono">
   {/* All editors use JetBrains Mono */}
 </ConfigProvider>
@@ -93,7 +103,8 @@ Default editor engine component to use (Monaco or CodeMirror).
 | ---- | ------- |
 | `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
 
-```tsx
+```tsx twoslash
+// @noErrors
 import { ConfigProvider } from '@codespark/react';
 import { Monaco } from '@codespark/react/Monaco';
 
@@ -118,7 +129,10 @@ Configuration values are inherited in the following order (later values override
 2. **CodesparkProvider** - Instance-level configuration
 3. **Component props** - Direct props on individual components
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Codespark, CodesparkEditor, CodesparkProvider, ConfigProvider } from '@codespark/react';
+// ---cut---
 <ConfigProvider theme="dark">
   {/* Uses dark theme from ConfigProvider */}
   <Codespark code={code1} />
@@ -133,25 +147,12 @@ Configuration values are inherited in the following order (later values override
 </ConfigProvider>
 ```
 
-## Accessing Configuration
-
-Use the `useConfig` hook to access the current configuration:
-
-```tsx
-import { useConfig } from '@codespark/react';
-
-function MyComponent() {
-  const { theme, imports, fontFamily, editor } = useConfig();
-
-  return <div>Current theme: {theme}</div>;
-}
-```
-
 ## Example: Dark Mode Toggle
 
-```tsx preview=""
+```tsx twoslash preview=""
+// @noErrors
+import { Codespark, ConfigProvider } from '@codespark/react';
 import { useState } from 'react';
-import { ConfigProvider, Codespark } from '@codespark/react';
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');

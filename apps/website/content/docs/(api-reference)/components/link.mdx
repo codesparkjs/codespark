@@ -13,8 +13,9 @@ import { Link } from '@codespark/react';
 
 Pass the `Link` component as a child of `Codespark` or `CodesparkPreview`:
 
-```tsx preview
-import { Codespark, Link } from '@codespark/react';
+```tsx twoslash preview
+// @noErrors
+import { Codespark, Link, Style } from '@codespark/react';
 
 const code = `export default function App() {
   return (
@@ -55,7 +56,10 @@ Common values:
 - `'prefetch'` - Prefetch a resource
 - `'icon'` - Favicon
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Link } from '@codespark/react';
+// ---cut---
 <Link rel="stylesheet" href="https://example.com/styles.css" />
 ```
 
@@ -67,7 +71,10 @@ URL of the linked resource.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Link } from '@codespark/react';
+// ---cut---
 <Link rel="stylesheet" href="https://example.com/styles.css" />
 ```
 
@@ -79,7 +86,10 @@ MIME type of the linked resource.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Link } from '@codespark/react';
+// ---cut---
 <Link rel="stylesheet" type="text/css" href="https://example.com/styles.css" />
 ```
 
@@ -91,7 +101,10 @@ Media query for the linked resource.
 | ---- | ------- |
 | `string` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Link } from '@codespark/react';
+// ---cut---
 <Link
   rel="stylesheet"
   href="https://example.com/print.css"
@@ -107,7 +120,10 @@ CORS setting for the request.
 | ---- | ------- |
 | `'anonymous' \| 'use-credentials'` | - |
 
-```tsx
+```tsx twoslash
+// @noErrors
+import { Link } from '@codespark/react';
+// ---cut---
 <Link
   rel="stylesheet"
   href="https://example.com/styles.css"
@@ -123,16 +139,22 @@ Any other valid `<link>` HTML attributes are also supported.
 
 ### External Stylesheets
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Link } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Link rel="stylesheet" href="https://cdn.example.com/library.css" />
 </Codespark>
 ```
 
 ### Google Fonts
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Link } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Link rel="preconnect" href="https://fonts.googleapis.com" />
   <Link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
   <Link
@@ -144,8 +166,11 @@ Any other valid `<link>` HTML attributes are also supported.
 
 ### Icon Libraries
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Link } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
@@ -155,8 +180,11 @@ Any other valid `<link>` HTML attributes are also supported.
 
 ### CSS Frameworks
 
-```tsx
-<Codespark code={code} tailwindcss={false}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Link } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Link
     rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -166,8 +194,11 @@ Any other valid `<link>` HTML attributes are also supported.
 
 ### Preconnect for Performance
 
-```tsx
-<Codespark code={code}>
+```tsx twoslash
+// @noErrors
+import { Codespark, Link } from '@codespark/react';
+// ---cut---
+<Codespark>
   <Link rel="preconnect" href="https://api.example.com" />
   <Link rel="dns-prefetch" href="https://cdn.example.com" />
 </Codespark>
@@ -177,7 +208,8 @@ Any other valid `<link>` HTML attributes are also supported.
 
 Here's a complete example loading a custom Google Font:
 
-```tsx preview
+```tsx twoslash preview
+// @noErrors
 import { Codespark, Link, Style } from '@codespark/react';
 
 const code = `export default function App() {
