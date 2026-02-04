@@ -40,8 +40,6 @@ export interface WorkspaceInit {
   /**
    * Framework to use for code analysis and compilation.
    * Can be a Framework instance, a Framework constructor, or a registered framework name
-   *
-   * @default 'react'
    */
   framework?: Framework | (new () => Framework) | string;
   /**

@@ -13,15 +13,12 @@ import { Skeleton } from '@/ui/skeleton';
 
 import { MonacoEditorAdapter } from './adapter';
 
-let initialized = false;
-
 const addedLibs = new Set<string>();
 
 const dtsCacheMap = new Map<string, string>();
 
 const setup = async () => {
-  if (typeof window === 'undefined' || initialized) return;
-  initialized = true;
+  if (typeof window === 'undefined') return;
 
   const [mod, highlighter] = await Promise.all([
     import('@monaco-editor/react'),
@@ -258,10 +255,6 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
           }
         }, 1000);
       })();
-
-      return () => {
-        initialized = false;
-      };
     }, []);
 
     useEffect(() => {

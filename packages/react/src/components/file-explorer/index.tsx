@@ -74,7 +74,15 @@ const FileTreeItem = ({ node, defaultOpen, depth = 0, currentPath, renderItem }:
 };
 
 export interface CodesparkFileExplorerProps extends React.ComponentPropsWithoutRef<typeof Tabs> {
+  /**
+   * Additional CSS class name(s) to apply to the file explorer container.
+   */
   className?: string;
+  /**
+   * Whether folders should be expanded by default.
+   *
+   * @default false
+   */
   defaultOpen?: boolean;
   /**
    * Custom render function for file tree items.

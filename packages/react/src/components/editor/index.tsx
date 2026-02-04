@@ -182,7 +182,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
     }
 
     if (editor.kind === EditorEngine.CodeMirror && propsTypeGuard(props, editor, EditorEngine.CodeMirror)) {
-      const { height, width, basicSetup, fontFamily, onChange, onMount } = props;
+      const { height, width, basicSetup, fontFamily, readOnly, onChange, onMount } = props;
 
       return (
         <editor.Component
@@ -193,6 +193,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
           width={width}
           theme={theme}
           basicSetup={basicSetup}
+          readOnly={readOnly}
           fontFamily={fontFamily ?? globalFontFamily}
           lang={currentFile.language}
           onChange={(newValue, viewUpdate) => {
