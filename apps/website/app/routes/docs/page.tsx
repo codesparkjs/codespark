@@ -49,6 +49,9 @@ const clientLoader = browserCollections.docs.createClientLoader<{ url: string; p
               ...mdxComponents,
               CodeBlockTabs: ({ className, ...props }) => {
                 return <defaultMdxComponents.CodeBlockTabs {...props} className={cn(className, 'bg-code rounded-lg border-none')} />;
+              },
+              CodeBlockTabsList: ({ className, ...props }) => {
+                return <defaultMdxComponents.CodeBlockTabsList {...props} className={cn(className, 'border-b pt-2')} />;
               }
             }}
           />

@@ -218,6 +218,11 @@ figure.shiki {
 }
 
 .twoslash-popup-docs-tag {
-  flex-direction: column;
-  gap: 0;
+  flex-wrap: wrap;
+  row-gap: 0;
+
+  .twoslash-popup-docs-tag-value {
+    max-width: 100%;
+    flex: 1;
+  }
 }
