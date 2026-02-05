@@ -22,19 +22,12 @@ Use `ConfigProvider` when you want to:
 
 Wrap your application (or a section of it) with `ConfigProvider`:
 
-```tsx twoslash
-// @noErrors
-import { ConfigProvider, Codespark } from '@codespark/react';
-
-function App() {
-  return (
-    <ConfigProvider theme="dark" fontFamily="JetBrains Mono">
-      <Codespark code={code1} />
-      <Codespark code={code2} />
-      {/* Both instances inherit dark theme and font */}
-    </ConfigProvider>
-  );
-}
+```tsx
+<ConfigProvider theme="dark" fontFamily="JetBrains Mono">
+  <Codespark code={code1} />
+  <Codespark code={code2} />
+  {/* Both instances inherit dark theme and font */}
+</ConfigProvider>
 ```
 
 ## Props
@@ -129,10 +122,7 @@ Configuration values are inherited in the following order (later values override
 2. **CodesparkProvider** - Instance-level configuration
 3. **Component props** - Direct props on individual components
 
-```tsx twoslash
-// @noErrors
-import { Codespark, CodesparkEditor, CodesparkProvider, ConfigProvider } from '@codespark/react';
-// ---cut---
+```tsx
 <ConfigProvider theme="dark">
   {/* Uses dark theme from ConfigProvider */}
   <Codespark code={code1} />
@@ -145,25 +135,4 @@ import { Codespark, CodesparkEditor, CodesparkProvider, ConfigProvider } from '@
   {/* Uses light theme from direct prop */}
   <Codespark code={code2} theme="light" />
 </ConfigProvider>
-```
-
-## Example: Dark Mode Toggle
-
-```tsx twoslash preview=""
-// @noErrors
-import { Codespark, ConfigProvider } from '@codespark/react';
-import { useState } from 'react';
-
-function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-
-  return (
-    <ConfigProvider theme={theme}>
-      <button onClick={() => setTheme(t => t === 'light' ? 'dark' : 'light')}>
-        Toggle Theme
-      </button>
-      <Codespark code={code} />
-    </ConfigProvider>
-  );
-}
 ```

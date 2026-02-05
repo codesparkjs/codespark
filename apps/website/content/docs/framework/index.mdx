@@ -1,4 +1,35 @@
 ---
 title: Overview
-description: Overview
+description: The core package that powers CodeSpark's code transformation and rendering capabilities.
 ---
+
+## What is Framework?
+
+`@codespark/framework` is the core package of CodeSpark that handles code parsing, transformation, and rendering. It provides a unified API for converting code blocks into interactive playgrounds across different output formats.
+
+## Key Capabilities
+
+- **Code Parsing** - Analyzes source code and extracts metadata, dependencies, and configuration
+- **Dependency Resolution** - Automatically resolves and bundles external dependencies via esm.sh
+- **Multi-format Output** - Generates output for React components, static HTML, or Markdown
+- **Extensible Architecture** - Supports custom plugins to extend parsing and transformation behavior
+
+## How it Works
+
+The framework processes code through a transformation pipeline:
+
+1. **Parse** - The source code is parsed to extract metadata, imports, and component definitions
+2. **Analyze** - Dependencies are identified and resolved from the import statements
+3. **Transform** - Code is transformed into an executable format with injected runtime helpers
+4. **Generate** - The final output is generated based on the target framework (React, HTML, Markdown)
+5. **Render** - The components from `@codespark/react` will consume what is generated from last step and render the code in preview sandbox
+
+Each step in the pipeline can be customized through plugins, allowing you to extend or modify the default behavior.
+
+## When to Use
+
+Use `@codespark/framework` when you want to integrate CodeSpark with a new language framework or output format. For example:
+
+- **Markdown** - Render interactive playgrounds in Markdown-based documentation
+- **HTML** - Generate standalone HTML pages with embedded playgrounds
+- **Other frameworks** - Extend support to Vue, Svelte, or any other UI framework

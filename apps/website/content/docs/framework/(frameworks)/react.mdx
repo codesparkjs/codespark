@@ -1,4 +1,84 @@
 ---
 title: React
-description: React
+description: The default framework for rendering interactive React component playgrounds.
 ---
+
+The React framework enables live editing and preview of React components directly in your documentation. It transforms JSX/TSX code into executable React components rendered in an isolated sandbox environment.
+
+## Usage
+
+<Callout>The React framework is built-in and enabled by default in `@codespark/react`. No additional installation or configuration is required.</Callout>
+
+Since the React framework is the default, you can use CodeSpark components without any framework configuration:
+
+```tsx
+import { Codespark } from '@codespark/react';
+
+<Codespark code={`export default function App() {
+  return <h1>Hello World</h1>;
+}`} />
+```
+
+To explicitly specify the React framework:
+
+```tsx
+import { Codespark } from '@codespark/react';
+import { react } from '@codespark/framework/react';
+
+<Codespark framework={react} code="..." />
+```
+
+## Features
+
+- **Auto dependency analysis** - Automatically detects and resolves dependencies between files, ensuring components are bundled in the correct order without manual configuration.
+
+- **Multi-file support** - Create complex examples with multiple files that can import from each other, simulating real-world project structures.
+
+- **TypeScript/TSX syntax support** - Full support for TypeScript and TSX syntax with type checking and IntelliSense in the editor.
+
+- **Import `.css`, `.json`, and `.md` files** - Seamlessly import stylesheets, JSON data, and Markdown content directly into your components.
+
+- **Automatic JSX runtime** - No need to manually `import React` in every file—the JSX runtime is automatically injected.
+
+- **Extension auto-resolution** - Import statements like `import './Button'` automatically resolve to `./Button.tsx`, `./Button.jsx`, or `./Button.js`.
+
+- **External npm package support** - Use any npm package in your examples via ESM CDN integration—no local installation required.
+
+## Supported Syntax
+
+To render something in the preview, the preview code must have an **export function** to tell Codespark which component to render. The function name is not restricted.
+
+Following export patterns are supported:
+
+### Named Default Exports
+
+```ts
+export default function App() {
+  return ...
+}
+```
+
+### Unnamed Default Exports
+
+```ts
+export default function() {
+  return ...
+}
+```
+
+### Named Exports
+
+```ts
+export function Button() {
+  return ...
+}
+```
+
+### Default Exports With Arrow Function
+
+```tsx
+export default () => {
+  return ...
+}
+```
+

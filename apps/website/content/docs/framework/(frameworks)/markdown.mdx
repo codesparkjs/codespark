@@ -1,4 +1,103 @@
 ---
 title: Markdown
-description: Markdown
+description: A framework for rendering Markdown content as sanitized HTML in the preview panel.
 ---
+
+The Markdown framework transforms Markdown source files into sanitized HTML output, enabling you to preview formatted documentation directly within CodeSpark.
+
+## Usage
+
+To use the Markdown framework, import it from `@codespark/framework/markdown` and pass it to the `framework` prop:
+
+```tsx
+import { Codespark } from '@codespark/react';
+import { markdown } from '@codespark/framework/markdown';
+
+<Codespark
+  framework={markdown}
+  code={`# Hello World
+
+This is a **Markdown** preview.`}
+/>
+```
+
+```tsx codespark-preview
+import { markdown } from '@codespark/framework/markdown';
+import { Codespark } from '@codespark/react';
+
+const code = `# Hello World
+
+This is a **Markdown** preview.`
+
+export default function App() {
+  return <Codespark framework={markdown} name="index.md" code={code} tailwindcss={false} />;
+}
+```
+
+## Features
+
+- **Markdown to HTML conversion** - Parses Markdown syntax and converts it to semantic HTML using the [marked](https://marked.js.org/) library.
+
+- **XSS protection** - All HTML output is sanitized using [DOMPurify](https://github.com/cure53/DOMPurify) to prevent cross-site scripting attacks.
+
+- **Standard Markdown support** - Full support for CommonMark-compliant Markdown syntax including headings, emphasis, lists, code blocks, links, and more.
+
+## Supported Syntax
+
+The Markdown framework supports standard Markdown syntax:
+
+### Headings
+
+```md
+# Heading 1
+## Heading 2
+### Heading 3
+```
+
+### Text Formatting
+
+```md
+**bold text**
+*italic text*
+~~strikethrough~~
+```
+
+### Lists
+
+```md
+- Unordered item 1
+- Unordered item 2
+
+1. Ordered item 1
+2. Ordered item 2
+```
+
+### Code Blocks
+
+````md
+Inline `code` and fenced code blocks:
+
+```js
+const greeting = 'Hello, World!';
+```
+````
+
+### Links and Images
+
+```md
+[Link text](https://example.com)
+![Alt text](image.png)
+```
+
+### Blockquotes
+
+```md
+> This is a blockquote.
+```
+
+## How It Works
+
+1. The framework accepts `.md` files as input
+2. Markdown content is parsed and converted to HTML using `marked`
+3. The resulting HTML is sanitized through `DOMPurify` to remove potentially malicious content
+4. The sanitized HTML is rendered in the preview panel

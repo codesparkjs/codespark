@@ -1,8 +1,80 @@
 ---
 title: Installation
-description: Installation
+description: Learn how to install and configure @codespark/framework for different output formats.
 ---
 
 ```npm
 npm install @codespark/framework
+```
+
+Import a framework from `@codespark/framework/*`:
+
+```ts
+import { html } from '@codespark/framework/html';
+import { markdown } from '@codespark/framework/markdown';
+import { react } from '@codespark/framework/react';
+```
+
+## Usage
+
+### As Props
+
+The following components from `@codespark/react` accept a `framework` prop:
+- `Codespark`
+- `CodesparkProvider`
+- `CodesparkPreview`
+
+```tsx twoslash
+// @noErrors
+import { markdown } from '@codespark/framework/markdown';
+import { Codespark, CodesparkProvider, CodesparkPreview } from '@codespark/react';
+// ---cut---
+<Codespark framework={markdown} />
+<CodesparkProvider framework={markdown} />
+<CodesparkPreview framework={markdown} />
+```
+
+In addition to the components above, the `Workspace` class and `useWorkspace` hook also accept a `framework` parameter:
+
+```ts twoslash
+// @noErrors
+import { Workspace, useWorkspace } from '@codespark/react';
+// ---cut---
+new Workspace({ framework: ... })
+useWorkspace({ framework: ... })
+```
+
+Besides passing a framework instance directly, you can also pass the framework constructor class or create a framework instance manually:
+
+```tsx
+import { Framework } from '@codespark/framework/html';
+
+// Passing the class directly is also valid
+<Codespark framework={Framework} />
+// Create a html framework instance manually with lite mode enabled
+<Codespark framework={new Framework({ liteMode: { enabled: true } })} />
+```
+
+## Register Globally
+
+In addition to using frameworks as component props or Workspace parameters, you can register a framework globally using `registerFramework`.
+
+```ts title="App.tsx" twoslash
+import { registerFramework } from '@codespark/framework';
+import { markdown } from '@codespark/framework/markdown';
+
+registerFramework(markdown);
+```
+
+You can also register a framework with a custom name:
+
+```ts
+registerFramework(markdown, 'md');
+```
+
+Once a framework is registered globally, you can reference it by name anywhere a framework is accepted.
+
+```tsx
+<Codespark framework="markdown" />
+<CodesparkProvider framework="md" />
 ```

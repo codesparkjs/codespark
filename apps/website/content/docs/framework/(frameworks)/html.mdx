@@ -1,4 +1,182 @@
 ---
 title: HTML
-description: HTML
+description: A framework for rendering complete HTML documents with script and stylesheet support.
 ---
+
+The HTML framework enables live preview of complete HTML documents, including inline and external scripts, stylesheets, and ES modules. It parses HTML structure and processes all associated assets for rendering in an isolated sandbox.
+
+## Usage
+
+Import the HTML framework from `@codespark/framework/html` and pass it to the `framework` prop:
+
+```tsx
+import { Codespark } from '@codespark/react';
+import { html } from '@codespark/framework/html';
+
+<Codespark
+  framework={html}
+  code={`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: sans-serif; }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+</body>
+</html>`}
+/>
+```
+
+## Features
+
+- **Full HTML document support** - Parse and render complete HTML documents with `<head>` and `<body>` sections.
+
+- **Inline and external scripts** - Support for both inline `<script>` tags and external scripts via `src` attribute.
+
+- **ES module support** - Full support for `<script type="module">` with automatic dependency resolution between local modules.
+
+- **Stylesheet processing** - Handle inline `<style>` tags and external stylesheets via `<link rel="stylesheet">`.
+
+- **CSS @import resolution** - Automatically resolve and bundle CSS `@import` statements from local files.
+
+- **External CDN support** - Load scripts and stylesheets from external URLs (CDNs) directly in the preview.
+
+- **Lite Mode** - Simplified mode for HTML fragments that auto-wires script and style entry points.
+
+## Configuration
+
+The HTML framework accepts an optional configuration object:
+
+```tsx
+import { Codespark } from '@codespark/react';
+import { Framework } from '@codespark/framework/html';
+
+const customHtml = new Framework({
+  liteMode: {
+    enabled: true,
+    scriptEntry: './main.ts',
+    styleEntry: './styles.css'
+  }
+});
+
+<Codespark framework={customHtml} code="..." />
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `liteMode.enabled` | `boolean` | `false` | Enable Lite Mode for HTML fragments |
+| `liteMode.htmlEntry` | `string` | Entry file | Custom HTML entry file path |
+| `liteMode.scriptEntry` | `string` | `./index.js` | Script entry point for Lite Mode |
+| `liteMode.styleEntry` | `string` | `./index.css` | Style entry point for Lite Mode |
+
+## Lite Mode
+
+Lite Mode simplifies the development experience by allowing you to write only the HTML body content while automatically wiring up script and style entry points.
+
+### Standard Mode vs Lite Mode
+
+**Standard Mode** requires a complete HTML document:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="./index.css">
+  <script type="module" src="./index.js"></script>
+</head>
+<body>
+  <div id="app">Hello</div>
+</body>
+</html>
+```
+
+**Lite Mode** only requires the body content:
+
+```html
+<div id="app">Hello</div>
+```
+
+The framework automatically wraps it with the full document structure and includes the configured entry points.
+
+### Lite Mode Example
+
+```tsx
+import { Codespark } from '@codespark/react';
+import { Framework } from '@codespark/framework/html';
+
+const liteHtml = new Framework({
+  liteMode: { enabled: true }
+});
+
+<Codespark
+  framework={liteHtml}
+  files={{
+    './index.html': '<div id="app"></div>',
+    './index.js': 'document.getElementById("app").textContent = "Hello!";',
+    './index.css': '#app { color: blue; font-size: 24px; }'
+  }}
+/>
+```
+
+### Custom Entry Points
+
+Specify custom script and style entry points:
+
+```tsx
+const customLiteHtml = new Framework({
+  liteMode: {
+    enabled: true,
+    scriptEntry: './src/main.ts',
+    styleEntry: './src/styles.css'
+  }
+});
+```
+
+## Supported Syntax
+
+### Inline Scripts
+
+```html
+<script>
+  console.log('Hello from inline script');
+</script>
+```
+
+### External Scripts
+
+```html
+<script src="./app.js"></script>
+<script src="https://cdn.example.com/library.js"></script>
+```
+
+### ES Modules
+
+```html
+<script type="module" src="./main.js"></script>
+<script type="module">
+  import { helper } from './utils.js';
+  helper();
+</script>
+```
+
+### Inline Styles
+
+```html
+<style>
+  body {
+    margin: 0;
+    font-family: system-ui;
+  }
+</style>
+```
+
+### External Stylesheets
+
+```html
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="https://cdn.example.com/theme.css">
+```
