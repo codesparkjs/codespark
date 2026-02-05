@@ -3,7 +3,7 @@ title: Getting Started
 description: Create your first interactive code playground in minutes.
 ---
 
-import { Icons } from '../../app/components/icons';
+import { Icons } from '../../../app/components/icons';
 import { Codepen, Clipboard } from 'lucide-react';
 
 ## Requirements
@@ -26,7 +26,7 @@ Codespark uses Tailwind CSS and shadcn/ui for styling. Ensure [Tailwind CSS is i
 
 Import the styles in your app:
 
-```css title="global.css"
+```css title="globals.css"
 @import "@codespark/react/index.css";
 @source "../../node_modules/@codespark/react";
 ```
@@ -114,7 +114,7 @@ export default function RootLayout({
 
 Then add the CSS variable to your global styles:
 
-```css title="global.css"
+```css title="globals.css"
 :root {
   --font-mono: var(--font-fira-code), ui-monospace, monospace;
 }

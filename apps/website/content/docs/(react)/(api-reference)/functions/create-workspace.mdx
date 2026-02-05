@@ -1,0 +1,566 @@
+---
+title: createWorkspace
+description: Factory function for creating Workspace instances from React components or elements.
+---
+
+`createWorkspace` is a factory function that creates a [Workspace](/docs/functions/workspace) instance from a React component or element. It's typically used with the rollup plugin to automatically extract and bundle component code for live preview.
+
+<Callout title="Plugin Required" type="warn">The `createWorkspace` function performs static code analysis to extract dependencies. You need to install the [required plugin](/docs/plugins) before using it.</Callout>
+
+```tsx
+import { createWorkspace } from '@codespark/react';
+```
+
+## How It Works
+
+When used with the `@codespark/plugin-rollup` plugin, `createWorkspace` receives scanned code information through its `this` context:
+
+1. The plugin scans your component file and extracts:
+   - The component's source code
+   - Import statements
+   - Local variable definitions
+   - Referenced files
+
+2. `createWorkspace` processes this information based on the `mode` option:
+   - **packed**: Combines imports, locals, and the component into a single file
+   - **source**: Uses only the original source file
+   - **raw**: Uses the raw scanned code
+
+3. A new Workspace instance is created with the processed code
+
+<Callout type="info">
+Without plugin, `createWorkspace` falls back to using `source.toString()` as the file content, which may not produce the expected results for complex components.
+</Callout>
+
+## Usage
+
+The plugin supports three types of source arguments: **React Component**, **React Element**, and **Inline Function**. Each type is transformed differently to extract the necessary code information.
+
+### React Component
+
+Pass a component reference directly. The plugin extracts the component name and its local dependencies.
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+// ---cut---
+const MyButton = () => <button>Click</button>;
+
+createWorkspace(MyButton);
+```
+
+<Tabs items={['Transform Result', 'packed', 'source', 'raw']} className="bg-background">
+  <Tab value="Transform Result">
+```ts
+createWorkspace.call(
+  {
+    __scanned: {
+      entry: {
+        code: 'MyButton',
+        locals: ['const MyButton = () => <button>Click</button>;'],
+        imports: []
+      },
+      files: {}
+    }
+  },
+  MyButton
+);
+```
+  </Tab>
+  <Tab value="packed">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `const MyButton = () => <button>Click</button>;
+
+export default MyButton;`
+  }
+});
+```
+  </Tab>
+  <Tab value="source">
+```ts
+new Workspace({
+  files: { './App.tsx': '' }
+})
+```
+  </Tab>
+  <Tab value="raw">
+```ts
+new Workspace({
+  files: { './App.tsx': 'MyButton' }
+})
+```
+  </Tab>
+</Tabs>
+
+### React Element
+
+Wrap a component in JSX syntax. The plugin extracts the element code and resolves its dependencies.
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+// ---cut---
+const MyButton = () => <button>Click</button>;
+
+createWorkspace(<MyButton />);
+```
+
+<Tabs items={['Transform Result', 'packed', 'source', 'raw']} className="bg-background">
+  <Tab value="Transform Result">
+```ts
+createWorkspace.call(
+  {
+    __scanned: {
+      entry: {
+        code: '<MyButton />',
+        locals: ['const MyButton = () => <button>Click</button>;'],
+        imports: []
+      },
+      files: {}
+    }
+  },
+  <MyButton />
+);
+```
+  </Tab>
+  <Tab value="packed">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `const MyButton = () => <button>Click</button>;
+
+export default function App() {
+  return <MyButton />
+};`
+  }
+});
+```
+  </Tab>
+  <Tab value="source">
+```ts
+new Workspace({
+  files: { './App.tsx': '' }
+});
+```
+  </Tab>
+  <Tab value="raw">
+```ts
+new Workspace({
+  files: { './App.tsx': '<MyButton />' }
+});
+```
+  </Tab>
+</Tabs>
+
+### Inline Function
+
+Pass an arrow function or function expression directly. Useful for simple demos without defining a separate component.
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+// ---cut---
+createWorkspace(() => <button>Click</button>);
+```
+
+<Tabs items={['Transform Result', 'packed', 'source', 'raw']} className="bg-background">
+  <Tab value="Transform Result">
+```ts
+createWorkspace.call(
+  {
+    __scanned: {
+      entry: {
+        code: '() => <button>Click</button>',
+        locals: [],
+        imports: []
+      },
+      files: {}
+    }
+  },
+  () => <button>Click</button>
+);
+```
+  </Tab>
+  <Tab value="packed">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `export default () => <button>Click</button>;`
+  }
+});
+```
+  </Tab>
+  <Tab value="source">
+```ts
+new Workspace({
+  files: { './App.tsx': '' }
+});
+```
+  </Tab>
+  <Tab value="raw">
+```ts
+new Workspace({
+  files: { './App.tsx': '() => <button>Click</button>' }
+});
+```
+  </Tab>
+</Tabs>
+
+### With External Imports
+
+When your component uses external libraries, the plugin extracts the import statements.
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+// ---cut---
+import { useState } from 'react';
+
+createWorkspace(function Counter() {
+  const [count] = useState(0);
+
+  return <button>{count}</button>;
+});
+```
+
+<Tabs items={['Transform Result', 'packed', 'source', 'raw']} className="bg-background">
+  <Tab value="Transform Result">
+```ts
+createWorkspace.call(
+  {
+    __scanned: {
+      entry: {
+        code: 'function Counter() {\n  const [count] = useState(0);\n\n  return <button>{count}</button>;\n}',
+        locals: [],
+        imports: ["import { useState } from 'react';"]
+      },
+      files: {}
+    }
+  },
+  function Counter() { /* ... */ }
+);
+```
+  </Tab>
+  <Tab value="packed">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `import { useState } from 'react';
+
+export default function Counter() {
+  const [count] = useState(0);
+
+  return <button>{count}</button>;
+};`
+  }
+});
+```
+  </Tab>
+  <Tab value="source">
+```ts
+new Workspace({
+  files: { './App.tsx': '' }
+});
+```
+  </Tab>
+  <Tab value="raw">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `function Counter() {
+  const [count] = useState(0);
+
+  return <button>{count}</button>;
+}`
+  }
+});
+```
+  </Tab>
+</Tabs>
+
+### With Local File Imports
+
+When your component imports from local files, the plugin resolves and includes those files.
+
+```tsx title="Button.tsx"
+export default function Button() {
+  return <button>Click</button>;
+}
+```
+
+```tsx title="Demo.tsx" twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+// @filename: Button.tsx
+function Button() {
+  return <button>Click</button>;
+}
+// ---cut---
+import Button from './Button';
+
+createWorkspace(<Button />);
+```
+
+<Tabs items={['Transform Result', 'packed', 'source', 'raw']} className="bg-background">
+  <Tab value="Transform Result">
+```ts
+createWorkspace.call(
+  {
+    __scanned: {
+      entry: {
+        code: '<Button />',
+        locals: [],
+        imports: []
+      },
+      files: {
+        './Button': 'export default function Button() {\n  return <button>Click</button>;\n}'
+      }
+    }
+  },
+  <Button />
+);
+```
+  </Tab>
+  <Tab value="packed">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `export default function App() {
+  return <Button />
+};`,
+    './Button': 'export default function Button() {\n  return <button>Click</button>;\n}'
+  }
+});
+```
+  </Tab>
+  <Tab value="source">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': 'export default function Button() {\n  return <button>Click</button>;\n}'
+  }
+});
+```
+  </Tab>
+  <Tab value="raw">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': '<Button />',
+    './Button': 'export default function Button() {\n  return <button>Click</button>;\n}'
+  }
+});
+```
+  </Tab>
+</Tabs>
+
+### With Nested Dependencies
+
+The plugin recursively resolves dependencies. If a local component uses another local component, both are included.
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+// ---cut---
+const Inner = () => <span>Inner</span>;
+const Outer = () => <Inner />;
+
+createWorkspace(<Outer />);
+```
+
+<Tabs items={['Transform Result', 'packed', 'source', 'raw']} className="bg-background">
+  <Tab value="Transform Result">
+```ts
+createWorkspace.call(
+  {
+    __scanned: {
+      entry: {
+        code: '<Outer />',
+        locals: [
+          'const Inner = () => <span>Inner</span>;',
+          'const Outer = () => <Inner />;'
+        ],
+        imports: []
+      },
+      files: {}
+    }
+  },
+  <Outer />
+);
+```
+  </Tab>
+  <Tab value="packed">
+```ts
+new Workspace({
+  files: {
+    './App.tsx': `const Inner = () => <span>Inner</span>;
+const Outer = () => <Inner />;
+
+export default function App() {
+  return <Outer />
+};`
+  }
+});
+```
+  </Tab>
+  <Tab value="source">
+```ts
+new Workspace({
+  files: { './App.tsx': '' }
+});
+```
+  </Tab>
+  <Tab value="raw">
+```ts
+new Workspace({
+  files: { './App.tsx': '<Outer />' }
+});
+```
+  </Tab>
+</Tabs>
+
+## Parameters
+
+### source
+
+The React component or element to create a workspace from.
+
+| Type | Required |
+| ---- | -------- |
+| `ComponentType \| ReactElement` | Yes |
+
+### config
+
+Configuration options for the workspace.
+
+| Type | Required |
+| ---- | -------- |
+| `CreateWorkspaceConfig` | No |
+
+## Config
+
+### id
+
+Unique identifier for the workspace instance.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | Auto-generated |
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+
+function MyComponent() {
+  return <div>Hello</div>;
+}
+// ---cut---
+createWorkspace(MyComponent, { id: 'my-demo-workspace' });
+```
+
+### name
+
+Entry file name/path for the workspace.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | `'./App.tsx'` |
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+
+function MyComponent() {
+  return <div>Hello</div>;
+}
+// ---cut---
+createWorkspace(MyComponent, { name: './Demo.tsx' });
+```
+
+### mode
+
+Code processing mode that determines how the source code is bundled.
+
+| Type | Default |
+| ---- | ------- |
+| `'raw' \| 'source' \| 'packed'` | `'packed'` |
+
+- **`'packed'`**: Bundle imports, local definitions, and the component into a single file (recommended for most use cases)
+- **`'source'`**: Use only the original source file content without bundling dependencies
+- **`'raw'`**: Use the raw scanned code as-is, including all transformations applied by the rollup plugin
+
+```tsx twoslash
+// @noErrors
+import { createWorkspace } from '@codespark/react';
+
+function MyComponent() {
+  return <div>Hello</div>;
+}
+// ---cut---
+// Use packed mode (default) - bundles everything together
+createWorkspace(MyComponent, { mode: 'packed' });
+
+// Use source mode - only the original source file
+createWorkspace(MyComponent, { mode: 'source' });
+
+// Use raw mode - raw scanned code
+createWorkspace(MyComponent, { mode: 'raw' });
+```
+
+### framework
+
+Framework to use for code analysis and compilation.
+
+| Type | Default |
+| ---- | ------- |
+| `Framework \| (new () => Framework) \| string` | - |
+
+```tsx twoslash
+// @noErrors
+import { markdown } from '@codespark/framework/markdown';
+import { createWorkspace } from '@codespark/react';
+
+function MyComponent() {
+  return <div>Hello</div>;
+}
+// ---cut---
+createWorkspace(MyComponent, { framework: markdown });
+```
+
+## Return Value
+
+Returns a new [Workspace](/docs/functions/workspace) instance configured with the extracted code.
+
+| Type |
+| ---- |
+| `Workspace` |
+
+## Types
+
+```ts
+interface CreateWorkspaceConfig {
+  /**
+   * Unique identifier for the workspace instance
+   */
+  id?: string;
+  /**
+   * Framework to use for code analysis and compilation
+   */
+  framework?: Framework | (new () => Framework) | string;
+  /**
+   * Entry file name/path
+   * @default './App.tsx'
+   */
+  name?: string;
+  /**
+   * Code processing mode:
+   * - 'raw': Use the raw scanned code as-is
+   * - 'source': Use only the source file content
+   * - 'packed': Bundle imports, locals, and component into a single file
+   * @default 'packed'
+   */
+  mode?: 'raw' | 'source' | 'packed';
+}
+```

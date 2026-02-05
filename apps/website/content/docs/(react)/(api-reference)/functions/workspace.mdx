@@ -1,0 +1,428 @@
+---
+title: Workspace
+description: Core class for managing files, compilation, and editor state in Codespark.
+---
+
+`Workspace` is the core class that manages a virtual file system for code editing and live preview. It handles file CRUD operations, tracks the currently active file, and emits events for file changes and compilation results.
+
+```tsx
+import { Workspace } from '@codespark/react';
+```
+
+## Basic Usage
+
+Create a new Workspace instance with an entry file and initial files:
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: {
+    './App.tsx': 'export default () => <div>Hello</div>'
+  }
+});
+```
+
+## Constructor
+
+### new Workspace(config)
+
+Creates a new Workspace instance.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `config` | `WorkspaceInit` | Configuration object for the workspace |
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+// ---cut---
+const workspace = new Workspace({
+  id: 'my-workspace',
+  entry: './App.tsx',
+  files: {
+    './App.tsx': 'export default () => <div>Hello</div>',
+    './Button.tsx': 'export const Button = () => <button>Click</button>'
+  },
+  framework: 'react',
+  OPFS: false
+});
+```
+
+## WorkspaceInit Options
+
+### entry
+
+Entry file path, the main file to compile and render.
+
+| Type | Required |
+| ---- | -------- |
+| `string` | Yes |
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+// ---cut---
+new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+```
+
+### files
+
+Initial files mapping, where keys are file paths and values are file contents.
+
+| Type | Required |
+| ---- | -------- |
+| `Record<string, string>` | Yes |
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+// ---cut---
+new Workspace({
+  entry: './App.tsx',
+  files: {
+    './App.tsx': 'import { Button } from "./Button";\nexport default () => <Button />',
+    './Button.tsx': 'export const Button = () => <button>Click</button>'
+  }
+});
+```
+
+### id
+
+Unique identifier for the workspace instance.
+
+| Type | Default |
+| ---- | ------- |
+| `string` | Auto-generated |
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+// ---cut---
+new Workspace({
+  id: 'my-workspace',
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+```
+
+### framework
+
+Framework to use for code analysis and compilation.
+
+| Type | Default |
+| ---- | ------- |
+| `Framework \| (new () => Framework) \| string` | - |
+
+```ts twoslash
+import { html } from '@codespark/framework/html';
+import { Workspace } from '@codespark/react';
+
+new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': '...' },
+  framework: html
+});
+```
+
+### OPFS
+
+Whether to use Origin Private File System (OPFS) for file persistence.
+
+| Type | Default |
+| ---- | ------- |
+| `boolean` | `false` |
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+// ---cut---
+new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': '...' },
+  OPFS: true
+});
+```
+
+## Properties
+
+<Callout>All the properties from workspace instance you can access are `getters`, it mean that they are **readonly**.</Callout>
+
+### workspace.id
+
+Unique identifier for the workspace instance.
+
+| Type |
+| ---- |
+| `string` |
+
+### workspace.entry
+
+Entry file path.
+
+| Type |
+| ---- |
+| `string` |
+
+### workspace.files
+
+Current files in the workspace.
+
+| Type |
+| ---- |
+| `Record<string, string>` |
+
+### workspace.framework
+
+Framework used for compilation.
+
+| Type |
+| ---- |
+| `Framework \| (new () => Framework) \| string` |
+
+### workspace.currentFile
+
+Currently active file in the editor.
+
+| Type |
+| ---- |
+| `FileNode` |
+
+```ts
+interface FileNode {
+  type: 'file';
+  name: string;      // File name (e.g., 'App.tsx')
+  path: string;      // Full path (e.g., './App.tsx')
+  code: string;      // File content
+  language?: string; // Language identifier
+}
+```
+
+### workspace.initialFiles
+
+The initial files mapping provided at construction time.
+
+| Type |
+| ---- |
+| `Record<string, string>` |
+
+## Methods
+
+### setFile(path, content)
+
+Update or create a single file. Automatically creates parent folders if needed.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `path` | `string` | File path |
+| `content` | `string` | File content |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+workspace.setFile('./App.tsx', 'export default () => <div>New content</div>');
+```
+
+### setFiles(files)
+
+Replace all files in the workspace. Also updates `initialFiles`.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `files` | `Record<string, string>` | New files mapping |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+workspace.setFiles({
+  './App.tsx': '...',
+  './Button.tsx': '...'
+});
+```
+
+### setCurrentFile(path)
+
+Set the currently active file.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `path` | `string` | File path to set as current |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+workspace.setCurrentFile('./Button.tsx');
+```
+
+### renameFile(oldPath, newName)
+
+Rename a file or folder. When renaming a folder, all files within it are also renamed.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `oldPath` | `string` | Current file/folder path |
+| `newName` | `string` | New name (not full path) |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+workspace.renameFile('./Button.tsx', 'MyButton.tsx');
+// Result: ./Button.tsx -> ./MyButton.tsx
+
+workspace.renameFile('components', 'ui');
+// Result: components/Button.tsx -> ui/Button.tsx
+```
+
+### deleteFile(path)
+
+Delete a file or folder. When deleting a folder, all files within it are also deleted.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `path` | `string` | File/folder path to delete |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+workspace.deleteFile('./Button.tsx');
+```
+
+### on(event, callback)
+
+Subscribe to workspace events. Returns an unsubscribe function.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `event` | `keyof WorkspaceEvent` | Event name |
+| `callback` | `WorkspaceEvent[E]` | Event handler |
+
+| Returns |
+| ------- |
+| `() => void` (unsubscribe function) |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+const unsubscribe = workspace.on('compiled', code => {
+  console.log('Compiled:', code);
+});
+
+// Later: unsubscribe();
+```
+
+### off(event, callback)
+
+Unsubscribe from workspace events.
+
+| Parameter | Type | Description |
+| --------- | ---- | ----------- |
+| `event` | `keyof WorkspaceEvent` | Event name |
+| `callback` | `WorkspaceEvent[E]` | Event handler to remove |
+
+```ts twoslash
+// @noErrors
+import { Workspace } from '@codespark/react';
+const workspace = new Workspace();
+// ---cut---
+const myCallback = () => {};
+workspace.on('compiled', myCallback);
+workspace.off('compiled', myCallback); // unsubscribe
+```
+
+## Events
+
+The Workspace class emits the following events:
+
+| Event | Callback Signature | Description |
+| ----- | ------------------ | ----------- |
+| `compiled` | `(code: string) => void` | Fired when code compilation succeeds |
+| `compileError` | `(error: Error) => void` | Fired when code compilation fails |
+| `fileChange` | `(path: string, content: string) => void` | Fired when a single file is changed |
+| `filesChange` | `(files: Record<string, string>) => void` | Fired when all files are replaced |
+| `fileRename` | `(oldPath: string, newPath: string) => void` | Fired when a file or folder is renamed |
+| `fileDelete` | `(path: string) => void` | Fired when a file or folder is deleted |
+| `currentFileChange` | `(file: FileNode) => void` | Fired when the currently active file changes |
+
+### Event Usage Example
+
+```ts twoslash
+import { Workspace } from '@codespark/react';
+
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+
+// Subscribe to compilation events
+workspace.on('compiled', code => {
+  console.log('Code compiled successfully');
+});
+
+workspace.on('compileError', error => {
+  console.error('Compilation failed:', error.message);
+});
+
+// Subscribe to file change events
+workspace.on('fileChange', (path, content) => {
+  console.log(`File ${path} changed`);
+});
+
+workspace.on('currentFileChange', file => {
+  console.log(`Now editing: ${file.name}`);
+});
+```
+
+## Types
+
+```ts
+interface WorkspaceInit {
+  id?: string;
+  framework?: Framework | (new () => Framework) | string;
+  entry: string;
+  files: Record<string, string>;
+  OPFS?: boolean;
+}
+
+interface WorkspaceEvent {
+  compiled: (code: string) => void;
+  compileError: (error: Error) => void;
+  fileChange: (path: string, content: string) => void;
+  filesChange: (files: Record<string, string>) => void;
+  fileRename: (oldPath: string, newPath: string) => void;
+  fileDelete: (path: string) => void;
+  currentFileChange: (file: FileNode) => void;
+}
+
+interface FileNode {
+  type: 'file';
+  name: string;
+  path: string;
+  code: string;
+  language?: string;
+}
+
+interface FolderNode {
+  type: 'folder';
+  name: string;
+  path: string;
+  children?: FileTreeNode[];
+}
+
+type FileTreeNode = FileNode | FolderNode;
+```
+
+## See Also
+
+- [useWorkspace](/docs/hooks/use-workspace) - React hook for reactive workspace state
+- [createWorkspace](/docs/functions/create-workspace) - Factory function for creating workspaces from components

@@ -1,0 +1,9 @@
+{
+  "pages": [
+    "components",
+    "functions",
+    "hooks",
+    "framework-list",
+    "plugin-list"
+  ]
+}

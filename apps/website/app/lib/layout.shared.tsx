@@ -28,7 +28,7 @@ export function baseOptions(): BaseLayoutProps {
           <NavbarMenu>
             <NavbarMenuTrigger>Packages</NavbarMenuTrigger>
             <NavbarMenuContent className="flex w-[1200px] gap-4 p-4">
-              <Link to="/docs" className="bg-muted/50 hover:bg-muted group relative flex flex-col justify-end overflow-hidden rounded-lg p-4 transition-colors">
+              <Link to="/docs/getting-started" className="bg-muted/50 hover:bg-muted group relative flex flex-col justify-end overflow-hidden rounded-lg p-4 transition-colors">
                 <div className="from-primary/20 to-primary/5 absolute inset-0 bg-linear-to-br" />
                 <Icons.logo className="text-primary mb-3 size-8" />
                 <div className="relative">
@@ -37,16 +37,16 @@ export function baseOptions(): BaseLayoutProps {
                 </div>
               </Link>
               <div className="grid flex-1 grid-cols-2 gap-4">
-                <NavbarMenuLink href="/docs/components/codespark" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
+                <NavbarMenuLink href="/docs" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
                   <div className="bg-primary/10 flex size-9 items-center justify-center rounded-md">
                     <Icons.react className="text-primary size-5" />
                   </div>
                   <div>
                     <span className="font-medium">@codespark/react</span>
-                    <p className="text-muted-foreground mt-1 text-xs">React components for code editors</p>
+                    <p className="text-muted-foreground mt-1 text-xs">React components for codes park</p>
                   </div>
                 </NavbarMenuLink>
-                <NavbarMenuLink href="/docs/frameworks" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
+                <NavbarMenuLink href="/docs/framework" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
                   <div className="bg-primary/10 flex size-9 items-center justify-center rounded-md">
                     <Layers className="text-primary size-5" />
                   </div>
@@ -55,16 +55,16 @@ export function baseOptions(): BaseLayoutProps {
                     <p className="text-muted-foreground mt-1 text-xs">Framework adapters for compilation</p>
                   </div>
                 </NavbarMenuLink>
-                <NavbarMenuLink href="/docs/plugins/rollup" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
+                <NavbarMenuLink href="/docs/plugin/rollup" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
                   <div className="bg-primary/10 flex size-9 items-center justify-center rounded-md">
                     <Boxes className="text-primary size-5" />
                   </div>
                   <div>
                     <span className="font-medium">@codespark/plugin-rollup</span>
-                    <p className="text-muted-foreground mt-1 text-xs">Rollup plugin for bundling</p>
+                    <p className="text-muted-foreground mt-1 text-xs">Rollup plugin for code transforming</p>
                   </div>
                 </NavbarMenuLink>
-                <NavbarMenuLink href="/docs/plugins/remark" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
+                <NavbarMenuLink href="/docs/plugin/remark" className="hover:bg-muted flex h-full flex-col gap-2 rounded-md p-3 transition-colors">
                   <div className="bg-primary/10 flex size-9 items-center justify-center rounded-md">
                     <FileCode className="text-primary size-5" />
                   </div>

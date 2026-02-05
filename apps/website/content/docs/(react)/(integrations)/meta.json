@@ -1,7 +1,6 @@
 {
   "pages": [
     "monaco",
-    "mdx",
-    "opfs"
+    "mdx"
   ]
 }

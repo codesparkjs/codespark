@@ -105,7 +105,7 @@ Framework to use for code analysis and compilation.
 
 | Type | Default |
 | ---- | ------- |
-| `Framework \| (new () => Framework) \| string` | - |
+| `Framework \| (new () => Framework) \| string` | `'react'` |
 
 Currently supported frameworks:
 - `react` - React/JSX components
@@ -161,7 +161,7 @@ import { Codespark } from '@codespark/react';
 | ---- | ------- |
 | `boolean` | `true` |
 
-该属性会直接透传给 `CodesparkPreview` 组件，具体用法请查看[CodesparkPreview > Props > tailwindcss](/docs/components/codespark-preview#tailwindcss)。
+This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > tailwindcss](/docs/components/codespark-preview#tailwindcss) for usage details.
 
 ### showEditor
 
@@ -369,7 +369,7 @@ Monaco Editor requires additional setup. See the [Monaco Integration](/docs/mona
 | ---- | ------- |
 | `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` |
 
-该属性会直接透传给 `CodesparkEditor` 组件，具体用法请查看[CodesparkEditor > Props > toolbox](/docs/components/codespark-editor#toolbox)。
+This prop is passed directly to the `CodesparkEditor` component. See [CodesparkEditor > Props > toolbox](/docs/components/codespark-editor#toolbox) for usage details.
 
 ### getWorkspace
 
@@ -413,7 +413,7 @@ See the [Workspace API](/docs/workspace-api) for more details on available metho
 | ---- | ------- |
 | `ReactNode` | - |
 
-该属性会直接透传给 `CodesparkPreview` 组件，具体用法请查看[CodesparkPreview > Props > children](/docs/components/codespark-preview#children)。
+This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > children](/docs/components/codespark-preview#children) for usage details.
 
 ### onConsole
 
@@ -421,7 +421,7 @@ See the [Workspace API](/docs/workspace-api) for more details on available metho
 | ---- | ------- |
 | `(data: OnConsoleData) => void` | - |
 
-该属性会直接透传给 `CodesparkPreview` 组件，具体用法请查看[CodesparkPreview > Props > onConsole](/docs/components/codespark-preview#onconsole)。
+This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > onConsole](/docs/components/codespark-preview#onconsole) for usage details.
 
 ### onError
 
@@ -429,4 +429,4 @@ See the [Workspace API](/docs/workspace-api) for more details on available metho
 | ---- | ------- |
 | `(error: unknown) => void` | - |
 
-该属性会直接透传给 `CodesparkPreview` 组件，具体用法请查看[CodesparkPreview > Props > onError](/docs/components/codespark-preview#onerror)。
+This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > onError](/docs/components/codespark-preview#onerror) for usage details.

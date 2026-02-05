@@ -6,7 +6,7 @@ description: Integrate Codespark with MDX using the remark plugin for interactiv
 One of Codespark's design goals is to build better documentation systems by adding interactive live preview components that enhance the reading experience.
 [MDX](https://mdxjs.com/docs/what-is-mdx/#what-is-mdx) is an essential tool for building documentation systems, allowing you to use JSX syntax to render components within Markdown files.
 
-Codespark provides a remark plugin to extend MDX capabilities, enabling you to render Codespark components through code block directives in Markdown files.
+Codespark provides a remark plugin to extend MDX capabilities, enabling you to render Codespark components through code block directives.
 
 ## Installation
 
@@ -86,7 +86,7 @@ export default defineConfig({
 
 Once configured, you can add directives to code blocks in MDX files to render different Codespark components.
 
-| Directive | Example | Rendered Component |
+| Directive | Example | Rendered |
 | --- | --- | --- |
 | codespark | ` ```tsx codespark ``` ` | `<Codespark code={...} />` |
 | codespark-editor | ` ```tsx codespark-editor ``` ` | `<CodesparkEditor value={...} />` |
@@ -196,7 +196,7 @@ export default function App() {
 
 ## Props
 
-Code block directives support passing string-type props to the corresponding components, such as `height` and `width`. For more details, see the [API reference](/).
+Code block directives support passing string-type and boolean-type props to the corresponding components, such as `height` and `width`. For more details, see the [API reference](/docs/components/codespark#props).
 
 ````markdown
 ```tsx codespark-preview height=120

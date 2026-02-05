@@ -1,0 +1,272 @@
+---
+title: useWorkspace
+description: A React hook for managing workspace state and code compilation.
+---
+
+`useWorkspace` is a React hook that provides reactive access to workspace state, including files, compilation results, and the workspace instance. It handles code analysis, compilation, and state synchronization automatically.
+
+```tsx
+import { useWorkspace } from '@codespark/react';
+```
+
+## Basic Usage
+
+When used inside a `CodesparkProvider`, simply call `useWorkspace()` to access the workspace from context. All returned properties (`files`, `compiled`, `currentFile`, etc.) are reactive - your component will automatically re-render when the workspace state changes.
+
+```tsx twoslash preview=""
+// @noErrors
+import { CodesparkEditor, CodesparkProvider, useWorkspace } from '@codespark/react';
+
+function Editor() {
+  // All returned values are reactive and will trigger re-renders on change
+  const { files, compiled, currentFile, compileError, workspace } = useWorkspace();
+
+  // Update a file - this will trigger recompilation and re-render
+  const handleUpdate = () => {
+    workspace.setFile('./App.tsx', 'export default () => <div>Updated!</div>');
+  };
+
+  if (compileError) {
+    return (
+      <div>
+        <p>Current file: {currentFile.name}</p>
+        <div>Error: {compileError.message}</div>;<button onClick={handleUpdate}>Update Code</button>
+      </div>
+    );
+  }
+
+  return <CodesparkEditor />;
+}
+
+export default function App() {
+  return (
+    <CodesparkProvider>
+      <Editor />
+    </CodesparkProvider>
+  );
+}
+```
+
+## Standalone Usage
+
+You can also use `useWorkspace` outside of `CodesparkProvider` by passing a `WorkspaceInit` config. This is useful when you need to create a workspace and pass it to `CodesparkProvider`. All the workspace methods still work in this way:
+
+```tsx twoslash preview=""
+// @noErrors
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider, useWorkspace } from '@codespark/react';
+
+function App() {
+  // Create workspace outside of Provider
+  const { workspace, compiled } = useWorkspace({
+    entry: './App.tsx',
+    files: {
+      './App.tsx': 'export default () => <div>Hello</div>'
+    }
+  });
+
+  const handleDeleteFile = () => {
+    // you can use workspace methods here
+    workspace.deleteFile('...');
+  };
+
+  useEffect(() => {
+    // trigger every time when compiled code updated
+    console.log('compiled code:', compiled);
+  }, [compiled])
+
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <CodesparkEditor />
+      <CodesparkPreview />
+    </CodesparkProvider>
+  );
+}
+```
+
+## Parameters
+
+### init
+
+[Workspace initialization config](/docs/functions/workspace#workspaceinit-options) or an existing Workspace instance. Optional when used inside `CodesparkProvider`.
+
+
+
+| Type | Default |
+| ---- | ------- |
+| `WorkspaceInit \| Workspace` | Context workspace |
+
+```tsx twoslash
+// @noErrors
+import { useWorkspace, Workspace } from '@codespark/react';
+
+// 1. No parameters - use workspace from CodesparkProvider context
+const state1 = useWorkspace();
+
+// 2. Using WorkspaceInit config - create new workspace
+const state2 = useWorkspace({
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+
+// 3. Using existing Workspace instance
+const workspace = new Workspace({
+  entry: './App.tsx',
+  files: { './App.tsx': '...' }
+});
+const state3 = useWorkspace(workspace);
+```
+
+## Return Value
+
+The hook returns an object with the following properties:
+
+### files
+
+Current files in the workspace.
+
+| Type |
+| ---- |
+| `Record<string, string>` |
+
+```tsx twoslash
+// @noErrors
+import { useWorkspace } from '@codespark/react';
+
+function App() {
+  const { files } = useWorkspace({ entry: './App.tsx', files: { './App.tsx': '...' } });
+
+  // Access file content
+  console.log(files['./App.tsx']);
+}
+```
+
+### currentFile
+
+Currently active file in the editor.
+
+| Type |
+| ---- |
+| `FileNode` |
+
+```ts
+interface FileNode {
+  type: 'file';
+  name: string;      // File name (e.g., 'App.tsx')
+  path: string;      // Full path (e.g., './App.tsx')
+  code: string;      // File content
+  language?: string; // Language identifier
+}
+```
+
+### compiled
+
+Compiled code string ready for execution in the preview iframe.
+
+| Type |
+| ---- |
+| `string` |
+
+### compileError
+
+Compilation error if the code failed to compile, `null` otherwise.
+
+| Type |
+| ---- |
+| `Error \| null` |
+
+```tsx twoslash
+// @noErrors
+import { useWorkspace } from '@codespark/react';
+
+function App() {
+  const { compiled, compileError } = useWorkspace({ entry: './App.tsx', files: { './App.tsx': '...' } });
+
+  if (compileError) {
+    return <div>Error: {compileError.message}</div>;
+  }
+
+  return <div>{compiled}</div>;
+}
+```
+
+### fileTree
+
+Hierarchical file tree structure for rendering file explorer.
+
+| Type |
+| ---- |
+| `FileTreeNode[]` |
+
+```ts
+type FileTreeNode = FileNode | FolderNode;
+
+interface FolderNode {
+  type: 'folder';
+  name: string;
+  path: string;
+  children?: FileTreeNode[];
+}
+```
+
+### vendor
+
+Vendor resources extracted from the compilation process.
+
+| Type |
+| ---- |
+| `{ modules, styles, scripts, imports }` |
+
+```ts
+interface Vendor {
+  modules: Output<LoaderType.ESModule>[];  // ES modules
+  styles: Output<LoaderType.Style>[];      // Style resources
+  scripts: Output<LoaderType.Script>[];    // Script resources
+  imports: Record<string, string>;         // Import map
+}
+```
+
+### workspace
+
+The Workspace instance for programmatic control.
+
+| Type |
+| ---- |
+| `Workspace` |
+
+```tsx twoslash
+// @noErrors
+import { useWorkspace } from '@codespark/react';
+
+function App() {
+  const { workspace } = useWorkspace({ entry: './App.tsx', files: { './App.tsx': '...' } });
+
+  // Programmatically update a file
+  const handleUpdate = () => {
+    workspace.setFile('./App.tsx', 'export default () => <div>Updated</div>');
+  };
+
+  // Listen to events
+  workspace.on('compiled', (code) => {
+    console.log('Compiled:', code);
+  });
+}
+```
+
+## Types
+
+```ts
+interface UseWorkspaceReturn {
+  files: Record<string, string>;
+  currentFile: FileNode;
+  fileTree: FileTreeNode[];
+  compiled: string;
+  compileError: Error | null;
+  vendor: {
+    modules: Output<LoaderType.ESModule>[];
+    styles: Output<LoaderType.Style>[];
+    scripts: Output<LoaderType.Script>[];
+    imports: Record<string, string>;
+  };
+  workspace: Workspace;
+}
+```

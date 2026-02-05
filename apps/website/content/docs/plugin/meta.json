@@ -1,0 +1,9 @@
+{
+  "root": true,
+  "pages": [
+    "---Introduction---",
+    "index",
+    "---Plugins---",
+    "...(plugins)"
+  ]
+}

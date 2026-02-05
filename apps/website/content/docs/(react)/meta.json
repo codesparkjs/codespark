@@ -1,0 +1,18 @@
+{
+  "root": true,
+  "pages": [
+    "---Introduction---",
+    "index",
+    "getting-started",
+    "usage",
+    "---Features---",
+    "...(features)",
+    "---Advanced---",
+    "...(advanced)",
+    "---Integrations---",
+    "...(integrations)",
+    "---API Reference---",
+    "...(api-reference)",
+    "---Examples---"
+  ]
+}

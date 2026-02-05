@@ -323,7 +323,7 @@ Callback fired when the editor is mounted.
 | ---- | ------- |
 | `(editor: EditorView) => void` | - |
 
-```tsx
+```tsx twoslash
 // @noErrors
 import { CodesparkEditor } from '@codespark/react';
 // ---cut---
@@ -396,6 +396,14 @@ Props for the Monaco editor wrapper element.
 | ---- | ------- |
 | `HTMLAttributes<HTMLDivElement>` | - |
 
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+// ---cut---
+<CodesparkEditor editor={Monaco} wrapperProps={{ className: '...' }} />
+```
+
 ### onChange
 
 Callback fired when the editor content changes.
@@ -404,6 +412,14 @@ Callback fired when the editor content changes.
 | ---- | ------- |
 | `(value: string, event: IModelContentChangedEvent) => void` | - |
 
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+// ---cut---
+<CodesparkEditor editor={Monaco} onChange={(value, event) => ...} />
+```
+
 ### onMount
 
 Callback fired when the editor is mounted.
@@ -411,3 +427,11 @@ Callback fired when the editor is mounted.
 | Type | Default |
 | ---- | ------- |
 | `(editor: IStandaloneCodeEditor, monaco: Monaco) => void` | - |
+
+```tsx twoslash
+// @noErrors
+import { CodesparkEditor } from '@codespark/react';
+import { Monaco } from '@codespark/react/Monaco';
+// ---cut---
+<CodesparkEditor editor={Monaco} onMount={(editor, monaco) => ...} />
+```

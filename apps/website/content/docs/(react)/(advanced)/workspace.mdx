@@ -81,9 +81,9 @@ import { useEffect } from 'react';
 export default function App() {
   const { workspace, files } = useWorkspace({ entry: './App.tsx', files: { './App.tsx': '' } });
 
-  useEffect(() => {
-    console.log('files:', files);
-  }, [files]);
+  useEffect(() => { // [!code highlight]
+    console.log('files:', files); // [!code highlight]
+  }, [files]); // [!code highlight]
 
   return (
     <CodesparkProvider workspace={workspace}>
@@ -102,7 +102,7 @@ The `createWorkspace` function provides a convenient way to create workspaces fr
 
 It's useful when you want to make a component work directly instead of writing code as strings. It automatically collects all required dependencies and generates a workspace that may contain multiple files.
 
-<Callout title="Plugin Required" type="warn">The `createWorkspace` function performs static code analysis to extract dependencies. You need to install the [required plugin](/docs/plugins) before using it.</Callout>
+See this [documentation](/docs/functions/create-workspace) to know more details.
 
 ```tsx
 import { createWorkspace } from '@codespark/react';
@@ -136,7 +136,7 @@ The Workspace provides several APIs to help you manage files.
 | `deleteFile` | `(path: string)` | Delete a file or folder (nested files are automatically deleted) |
 | `setCurrentFile` | `(path: string)` | Set the currently active file in the editor |
 
-For more details, visit the [File System](/docs/file-system) documentation.
+For more details, visit the [File System](/docs/file-system) and [Workspace API reference](/docs/functions/workspace#methods) documentation.
 
 ## Event System
 
