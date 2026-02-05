@@ -65,7 +65,7 @@ const FileTreeItem = ({ node, defaultOpen, depth = 0, currentPath, renderItem }:
       {node.children?.length ? (
         <CollapsibleContent className="flex flex-col gap-1">
           {sortNodes(node.children).map(child => (
-            <FileTreeItem key={child.path} node={child} depth={depth + 1} currentPath={currentPath} renderItem={renderItem} />
+            <FileTreeItem key={child.path} node={child} depth={depth + 1} currentPath={currentPath} defaultOpen={defaultOpen} renderItem={renderItem} />
           ))}
         </CollapsibleContent>
       ) : null}

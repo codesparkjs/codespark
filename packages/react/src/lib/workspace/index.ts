@@ -605,7 +605,7 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
   if (mode === 'raw') {
     packedCode = entry.code;
   } else if (mode === 'source') {
-    packedCode = Object.values(files)[0];
+    packedCode = Object.values(files)[0] || '';
 
     return new Workspace({ id, framework, entry: name, files: { [name]: packedCode } });
   } else {
