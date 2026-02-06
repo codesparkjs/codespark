@@ -54,11 +54,11 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
    */
   children?: ReactNode;
   /**
-   * Height of the preview area in pixels
+   * Height of the preview area. Accepts a number (pixels) or CSS string (e.g., '200px', '50%')
    *
    * @default 200
    */
-  height?: number;
+  height?: string | number;
   /**
    * Callback fired when a runtime error occurs in the preview
    */
@@ -88,7 +88,7 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
 export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
   const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark() || {};
-  const { code = '', framework = contextFramework, className, tailwindcss = true, imports, theme = contextTheme ?? globalTheme ?? 'light', children, height, onError, onLoad, onRendered, onConsole } = props;
+  const { code = '', framework = contextFramework, className, tailwindcss = true, imports, theme = contextTheme ?? globalTheme ?? 'light', children, height = 200, onError, onLoad, onRendered, onConsole } = props;
   const { compiled, vendor, workspace } = useWorkspace(props.workspace ?? contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }));
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCSS();
   const injections = useInjections(children);
@@ -138,7 +138,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   }, [compiled]);
 
   return (
-    <div className={cn('relative flex h-50 items-center justify-center', className)} style={{ height }}>
+    <div className={cn('relative flex items-center justify-center', className)} style={{ height }}>
       {running ? (
         <div className="absolute right-2 bottom-2 z-10 h-8 w-8 **:box-border">
           <div className="flex -translate-x-1 translate-y-[9px] scale-[0.13] **:absolute **:h-24 **:w-24">

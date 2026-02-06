@@ -95,17 +95,25 @@ export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<
    */
   editor?: CodesparkEditorEngineComponents;
   /**
-   * Editor height in pixels
+   * Editor height. Accepts a number (pixels) or CSS string (e.g., '200px', '50%')
    *
    * @default 200
    */
-  editorHeight?: number;
+  editorHeight?: string | number;
   /**
-   * Preview area height in pixels
+   * Preview area height. Accepts a number (pixels) or CSS string (e.g., '200px', '50%')
    *
    * @default 200
    */
-  previewHeight?: number;
+  previewHeight?: string | number;
+  /**
+   * Layout orientation of the editor and preview areas.
+   * - `vertical`: Preview on top, editor on bottom
+   * - `horizontal`: Editor on left (2/3 width), preview on right (1/3 width)
+   *
+   * @default 'vertical'
+   */
+  orientation?: 'vertical' | 'horizontal';
 }
 
 /**
@@ -136,7 +144,8 @@ export function Codespark(props: CodesparkProps) {
     defaultExpanded,
     getWorkspace,
     editorHeight,
-    previewHeight
+    previewHeight,
+    orientation = 'vertical'
   } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
@@ -164,7 +173,8 @@ export function Codespark(props: CodesparkProps) {
       return <CodesparkEditor editor={editor} {...sharedProps} height={editorHeight} options={{ readOnly }} />;
     }
 
-    return <CodesparkEditor editor={editor} {...sharedProps} height={editorHeight ? `${editorHeight}px` : void 0} readOnly={readOnly} />;
+    const height = editorHeight ? (typeof editorHeight === 'string' ? editorHeight : `${editorHeight}px`) : void 0;
+    return <CodesparkEditor editor={editor} {...sharedProps} height={height} readOnly={readOnly} />;
   };
 
   useEffect(() => {
@@ -179,8 +189,8 @@ export function Codespark(props: CodesparkProps) {
 
   return (
     <CodesparkProvider workspace={workspace} theme={theme}>
-      <div className={cn('border-border relative w-full overflow-hidden rounded-lg border', showPreview && showEditor ? 'divide-y' : '', className)}>
-        <div className="border-border relative">
+      <div className={cn('border-border relative grid w-full overflow-hidden rounded-lg border', orientation === 'horizontal' && 'grid-cols-[2fr_1fr]', className)}>
+        <div className={cn('border-border relative', showPreview && showEditor ? (orientation === 'vertical' ? 'border-b' : 'border-l') : '', orientation === 'horizontal' && 'order-2')}>
           {showPreview ? (
             <CodesparkPreview
               tailwindcss={tailwindcss}
@@ -201,7 +211,7 @@ export function Codespark(props: CodesparkProps) {
           ) : null}
         </div>
         {showEditor ? (
-          <div className="flex h-full w-full divide-x">
+          <div className={cn('flex h-full w-full divide-x', orientation === 'horizontal' && 'order-1')}>
             {expanded && showFileExplorer ? <CodesparkFileExplorer /> : null}
             {renderEditor()}
           </div>
