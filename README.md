@@ -4,6 +4,10 @@
 
 A lightweight React playground for live code editing and instant preview in your documentation.
 
+## Homepage
+
+[CodesparkJS.com](https://codesparkjs.com)
+
 ## Features
 
 - Modular architecture with highly customizable component styles
