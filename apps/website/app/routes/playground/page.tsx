@@ -14,7 +14,7 @@ import { Sidebar, SidebarContent, SidebarProvider } from '~/components/ui/sideba
 import { Switch } from '~/components/ui/switch';
 import { useIsMobile } from '~/hooks/use-mobile';
 import { useUpdateEffect } from '~/hooks/use-update-effect';
-import { decodeBase64URL, devModuleProxy, isDEV, isSSR } from '~/lib/utils';
+import { codesparkDevImports, decodeBase64URL } from '~/lib/utils';
 
 import type { Route } from './+types/page';
 import { ConsolePanel, type LogEntry, type LogLevel } from './components/console-panel';
@@ -81,7 +81,6 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
   const fileExplorerPanelRef = usePanelRef();
   const consolePanelRef = usePanelRef();
   const workspace = useMemo(() => new Workspace({ entry: './App.tsx', files }), []);
-  const imports = isDEV && !isSSR ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client']) : {};
   const hasRaw = examples.find(e => e.name === example)?.raw ?? !!boilerplate;
 
   useUpdateEffect(() => {
@@ -111,7 +110,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
 
   return (
     <SidebarProvider>
-      <CodesparkProvider workspace={workspace} imports={imports} theme={theme as 'light' | 'dark'}>
+      <CodesparkProvider workspace={workspace} imports={codesparkDevImports} theme={theme as 'light' | 'dark'}>
         <ResizablePanelGroup className="h-screen">
           <ResizablePanel panelRef={fileExplorerPanelRef} collapsible={isMobile} defaultSize="300px" minSize="200px">
             <Sidebar collapsible={isMobile ? 'offcanvas' : 'none'} className="w-full">
@@ -157,7 +156,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                 <ResizablePanelGroup orientation="vertical">
                   <ResizablePanel className="relative">
                     <CodesparkPreview
-                      className="h-full"
+                      height="100%"
                       onError={error => setRuntimeError(error as Error)}
                       onConsole={data => {
                         const { level, args = [], duplicate } = data;

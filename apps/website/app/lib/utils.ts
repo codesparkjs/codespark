@@ -9,6 +9,22 @@ export const isDEV = import.meta.env.DEV;
 
 export const isSSR = import.meta.env.SSR;
 
+export const codesparkDevImports =
+  isDEV && !isSSR
+    ? devModuleProxy([
+        '@codespark/react',
+        '@codespark/framework',
+        '@codespark/framework/markdown',
+        '@codespark/framework/html',
+        '@codespark/framework/react',
+        '@codespark/react/monaco',
+        '@codespark/react/codemirror',
+        'react',
+        'react/jsx-runtime',
+        'react-dom/client'
+      ])
+    : {};
+
 export function devModuleProxy(name: string[]): Record<string, string>;
 export function devModuleProxy(name: string[]): string;
 export function devModuleProxy(name: string | string[]) {

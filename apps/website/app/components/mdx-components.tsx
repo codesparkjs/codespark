@@ -3,18 +3,18 @@ import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { Codepen, SquareArrowOutUpRight, Wind } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { type HTMLAttributes, useEffect, useRef, useState } from 'react';
+import { type HTMLAttributes, type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { Icons } from '~/components/icons';
 import { Button, buttonVariants } from '~/components/ui/button';
 import { Toggle } from '~/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '~/components/ui/tooltip';
-import { cn, devModuleProxy, encodeBase64URL, isDEV, isSSR } from '~/lib/utils';
+import { cn, codesparkDevImports, encodeBase64URL } from '~/lib/utils';
 
 interface StandalonePreviewProps {
   code?: string;
-  height?: number;
+  height?: string | number;
   className?: string;
 }
 
@@ -22,16 +22,12 @@ const injectTheme = (code: string, theme: string) => {
   return code.replace(/<(Codespark(?:Preview|Provider|Editor)?)\b(?![^>]*\btheme\b)([^>]*)(\/?>)/g, `<$1 theme="${theme}"$2$3`);
 };
 
-const StandalonePreview = ({ code, height, className }: StandalonePreviewProps) => {
+const StandalonePreview = ({ code, height = 452, className }: StandalonePreviewProps) => {
   const { resolvedTheme } = useTheme();
-  const imports =
-    isDEV && !isSSR
-      ? devModuleProxy(['@codespark/react', '@codespark/framework', '@codespark/framework/markdown', '@codespark/framework/html', '@codespark/react/monaco', '@codespark/react/codemirror', 'react', 'react/jsx-runtime', 'react-dom/client'])
-      : {};
   const processedCode = code && resolvedTheme ? injectTheme(code, resolvedTheme) : code;
 
   return (
-    <CodesparkPreview code={processedCode} height={height} className={cn('h-[452px]', className)} imports={imports}>
+    <CodesparkPreview code={processedCode} height={height} className={className} imports={codesparkDevImports}>
       <InjectionLink rel="preconnect" href="https://fonts.googleapis.com" />
       <InjectionLink rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <InjectionLink href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet" />
@@ -66,7 +62,7 @@ function MdxPre({ preview, height, ...props }: PreProps) {
     }
   }, []);
 
-  const renderActions = ({ className, children }: { className?: string; children?: React.ReactNode }) => {
+  const renderActions = ({ className, children }: { className?: string; children?: ReactNode }) => {
     const containerClassName = cn(className, 'pr-1.5', hasPreview && 'flex items-center', !isBoilerplatePreview && 'gap-x-1', showPreview && 'bg-surface');
 
     return (
@@ -111,7 +107,7 @@ function MdxPre({ preview, height, ...props }: PreProps) {
   );
 }
 
-function MdxCodespark({ code, files, ...props }: CodesparkProps): React.ReactElement {
+function MdxCodespark({ code, files, ...props }: CodesparkProps): ReactElement {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const [tailwindcss, setTailwindcss] = useState(true);
