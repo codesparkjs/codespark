@@ -5,6 +5,10 @@ description: The default framework for rendering interactive React component pla
 
 The React framework enables live editing and preview of React components directly in your documentation. It transforms JSX/TSX code into executable React components rendered in an isolated sandbox environment.
 
+```ts
+import { Framework, react } from '@codespark/framework/react';
+```
+
 ## Usage
 
 <Callout>The React framework is built-in and enabled by default in `@codespark/react`. No additional installation or configuration is required.</Callout>
@@ -22,10 +26,23 @@ import { Codespark } from '@codespark/react';
 To explicitly specify the React framework:
 
 ```tsx
-import { Codespark } from '@codespark/react';
 import { react } from '@codespark/framework/react';
+import { Codespark } from '@codespark/react';
 
 <Codespark framework={react} code="..." />
+```
+
+```tsx codespark-preview
+import { react } from '@codespark/framework/react';
+import { Codespark } from '@codespark/react';
+
+const code = `export default function App() {
+  return <h1 className="text-2xl font-bold">Hello World</h1>;
+}`
+
+export default function App() {
+  return <Codespark framework={react} code={code} />;
+}
 ```
 
 ## Features

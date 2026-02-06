@@ -18,7 +18,7 @@ A workspace represents a complete code environment with:
 
 The `Codespark` component has an out-of-the-box internal workspace. You can use the `getWorkspace` prop to access it.
 
-```tsx preview
+```tsx preview="workspace"
 import { Codespark, type Workspace } from '@codespark/react';
 import { useEffect, useRef } from 'react';
 
@@ -45,7 +45,7 @@ export default function App() {
 
 To keep the workspace immutable during runtime, create it outside the component or wrap it with `useMemo`.
 
-```tsx preview
+```tsx
 import { CodesparkEditor, CodesparkPreview, CodesparkProvider, Workspace } from '@codespark/react';
 
 const workspace = new Workspace({
@@ -74,16 +74,16 @@ Another way to create a workspace is to use the `useWorkspace` hook.
 
 You can use this hook anywhere in your component tree. All properties returned from this hook are reactive and will trigger re-renders when updated.
 
-```tsx preview
+```tsx preview="workspace-hook"
 import { CodesparkEditor, CodesparkPreview, CodesparkProvider, useWorkspace } from '@codespark/react';
 import { useEffect } from 'react';
 
 export default function App() {
   const { workspace, files } = useWorkspace({ entry: './App.tsx', files: { './App.tsx': '' } });
 
-  useEffect(() => { // [!code highlight]
-    console.log('files:', files); // [!code highlight]
-  }, [files]); // [!code highlight]
+  useEffect(() => {
+    console.log('files:', files);
+  }, [files]);
 
   return (
     <CodesparkProvider workspace={workspace}>
@@ -152,7 +152,7 @@ The Workspace emits events that you can subscribe to for reacting to changes in 
 | `fileDelete` | `(path: string)` | Emitted when a file is deleted |
 | `currentFileChange` | `(file: FileNode)` | Emitted when the current file changes |
 
-```tsx preview
+```tsx preview="workspace-event"
 import { Codespark, type Workspace } from '@codespark/react';
 import { useEffect, useRef } from 'react';
 

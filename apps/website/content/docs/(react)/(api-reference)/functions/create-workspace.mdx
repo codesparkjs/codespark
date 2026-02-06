@@ -3,13 +3,53 @@ title: createWorkspace
 description: Factory function for creating Workspace instances from React components or elements.
 ---
 
-`createWorkspace` is a factory function that creates a [Workspace](/docs/functions/workspace) instance from a React component or element. It's typically used with the rollup plugin to automatically extract and bundle component code for live preview.
+`createWorkspace` is a factory function that creates a [Workspace](/docs/functions/workspace) instance from a React component or element.
 
-<Callout title="Plugin Required" type="warn">The `createWorkspace` function performs static code analysis to extract dependencies. You need to install the [required plugin](/docs/plugins) before using it.</Callout>
+<Callout title="Plugin Required" type="warn">The `createWorkspace` function performs static code analysis to extract dependencies. You need to install the [required plugin](/docs/plugin-list) before using it.</Callout>
 
 ```tsx
 import { createWorkspace } from '@codespark/react';
 ```
+
+## When to Use
+
+By default, Codespark accepts code as strings or a files object with string-based content. While this approach works, it can become cumbersome and less maintainable—especially when dealing with complex components or multi-file demos.
+
+`createWorkspace` solves this by allowing you to pass actual React components or elements as the preview source, rather than string literals. This provides better IDE support (syntax highlighting, type checking, auto-completion) and keeps your demo code co-located with your documentation.
+
+**Before** — using string literals:
+
+```tsx
+const files = {
+  './App.tsx': `import Button from './button';
+
+export default function App() {
+  return <Button />
+}`,
+  './button.tsx': '// ...component code as a string'
+};
+
+<Codespark files={files} />
+```
+
+**After** — using `createWorkspace`:
+
+```tsx title="button.tsx"
+export default function Button() {
+  return <button className="btn">Click me</button>;
+}
+```
+
+```tsx
+import Button from './button';
+
+const workspace = createWorkspace(<Button />);
+
+<CodesparkProvider workspace={workspace} />
+```
+
+With this approach, you import and use components just like you would in any React application.
+
 
 ## How It Works
 
@@ -27,10 +67,6 @@ When used with the `@codespark/plugin-rollup` plugin, `createWorkspace` receives
    - **raw**: Uses the raw scanned code
 
 3. A new Workspace instance is created with the processed code
-
-<Callout type="info">
-Without plugin, `createWorkspace` falls back to using `source.toString()` as the file content, which may not produce the expected results for complex components.
-</Callout>
 
 ## Usage
 

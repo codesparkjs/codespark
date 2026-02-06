@@ -5,13 +5,17 @@ description: A framework for rendering complete HTML documents with script and s
 
 The HTML framework enables live preview of complete HTML documents, including inline and external scripts, stylesheets, and ES modules. It parses HTML structure and processes all associated assets for rendering in an isolated sandbox.
 
+```ts
+import { Framework, html } from '@codespark/framework/html';
+```
+
 ## Usage
 
 Import the HTML framework from `@codespark/framework/html` and pass it to the `framework` prop:
 
-```tsx
-import { Codespark } from '@codespark/react';
+```tsx preview="html"
 import { html } from '@codespark/framework/html';
+import { Codespark } from '@codespark/react';
 
 <Codespark
   framework={html}
@@ -19,7 +23,7 @@ import { html } from '@codespark/framework/html';
 <html>
 <head>
   <style>
-    body { font-family: sans-serif; }
+    body h1 { font-weight: bold; }
   </style>
 </head>
 <body>
@@ -27,6 +31,32 @@ import { html } from '@codespark/framework/html';
 </body>
 </html>`}
 />
+```
+
+```tsx codespark-preview
+import { html } from '@codespark/framework/html';
+import { Codespark } from '@codespark/react';
+
+export default function App() {
+  return (
+    <Codespark
+      framework={html}
+      editorHeight={400}
+      orientation="horizontal"
+      code={`<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    h1 { font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+</body>
+</html>`}
+    />
+  );
+}
 ```
 
 ## Features
@@ -45,26 +75,19 @@ import { html } from '@codespark/framework/html';
 
 - **Lite Mode** - Simplified mode for HTML fragments that auto-wires script and style entry points.
 
-## Configuration
+## Lite Mode
 
-The HTML framework accepts an optional configuration object:
+Lite Mode simplifies the development experience by allowing you to write only the HTML body content while automatically wiring up script and style entry points.
 
-```tsx
-import { Codespark } from '@codespark/react';
-import { Framework } from '@codespark/framework/html';
+Set `liteMode.enabled = true` to enable Lite Mode.
 
-const customHtml = new Framework({
-  liteMode: {
-    enabled: true,
-    scriptEntry: './main.ts',
-    styleEntry: './styles.css'
-  }
+```ts
+const htmlLite = new Framework({
+  liteMode: { enabled: true }
 });
-
-<Codespark framework={customHtml} code="..." />
 ```
 
-### Configuration Options
+### Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -72,10 +95,6 @@ const customHtml = new Framework({
 | `liteMode.htmlEntry` | `string` | Entry file | Custom HTML entry file path |
 | `liteMode.scriptEntry` | `string` | `./index.js` | Script entry point for Lite Mode |
 | `liteMode.styleEntry` | `string` | `./index.css` | Style entry point for Lite Mode |
-
-## Lite Mode
-
-Lite Mode simplifies the development experience by allowing you to write only the HTML body content while automatically wiring up script and style entry points.
 
 ### Standard Mode vs Lite Mode
 
@@ -100,7 +119,7 @@ Lite Mode simplifies the development experience by allowing you to write only th
 <div id="app">Hello</div>
 ```
 
-The framework automatically wraps it with the full document structure and includes the configured entry points.
+By default, Lite Mode uses `./index.js` and `./index.css` from files as the main script and style files. You can also specify the entry point through configuration options.
 
 ### Lite Mode Example
 
@@ -108,12 +127,12 @@ The framework automatically wraps it with the full document structure and includ
 import { Codespark } from '@codespark/react';
 import { Framework } from '@codespark/framework/html';
 
-const liteHtml = new Framework({
+const htmlLite = new Framework({
   liteMode: { enabled: true }
 });
 
 <Codespark
-  framework={liteHtml}
+  framework={htmlLite}
   files={{
     './index.html': '<div id="app"></div>',
     './index.js': 'document.getElementById("app").textContent = "Hello!";',
@@ -122,18 +141,63 @@ const liteHtml = new Framework({
 />
 ```
 
-### Custom Entry Points
+```tsx codespark-preview
+import { Framework } from '@codespark/framework/html';
+import { CodesparkEditor, CodesparkPreview, CodesparkProvider, useWorkspace, Workspace } from '@codespark/react';
+import { Braces, Code, Palette } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
-Specify custom script and style entry points:
+const files = [
+  { name: './index.html', label: 'HTML', icon: Code, content: '<div id="app"></div>' },
+  { name: './index.js', label: 'JS', icon: Braces, content: 'document.getElementById("app").textContent = "Hello!";' },
+  { name: './index.css', label: 'CSS', icon: Palette, content: '#app { color: blue; font-size: 24px; }' }
+];
 
-```tsx
-const customLiteHtml = new Framework({
-  liteMode: {
-    enabled: true,
-    scriptEntry: './src/main.ts',
-    styleEntry: './src/styles.css'
-  }
-});
+function Toolbar() {
+  const { workspace } = useWorkspace();
+  const [active, setActive] = useState('./index.html');
+
+  return (
+    <div className="border-border flex items-center gap-2 border-b p-2">
+      {files.map(file => (
+        <button
+          key={file.name}
+          onClick={() => {
+            setActive(file.name);
+            workspace.setCurrentFile(file.name);
+          }}
+          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium ${active === file.name ? 'shadow' : 'bg-muted'}`}>
+          <file.icon className="size-3" />
+          {file.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export default function App() {
+  const workspace = useMemo(
+    () =>
+      new Workspace({
+        entry: './index.html',
+        files: files.reduce((pre, { name, content }) => ({ ...pre, [name]: content }), {}),
+        framework: new Framework({ liteMode: { enabled: true } })
+      }),
+    []
+  );
+
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <div className="border-border grid grid-cols-3 divide-x overflow-hidden rounded-lg border">
+        <div className="border-border col-span-2">
+          <Toolbar />
+          <CodesparkEditor height="403px" toolbox={false} />
+        </div>
+        <CodesparkPreview className="h-full" tailwindcss={false} />
+      </div>
+    </CodesparkProvider>
+  );
+}
 ```
 
 ## Supported Syntax

@@ -1,4 +1,250 @@
 ---
 title: Remark
-description: Remark
+description: A Remark plugin that transforms code blocks into interactive Codespark components in MDX documents.
 ---
+
+`@codespark/plugin-remark` is a [unified](https://unifiedjs.com/) remark plugin that transforms fenced code blocks into Codespark React components. It enables you to create interactive code playgrounds directly in your MDX documentation with minimal syntax.
+
+## Installation
+
+```npm
+npm install @codespark/plugin-remark
+```
+
+### Vite
+
+For Vite users, first install the official MDX Rollup plugin:
+
+```npm
+npm install @mdx-js/rollup
+```
+
+```ts title="vite.config.ts"
+import remarkCodespark from '@codespark/plugin-remark';
+import mdx from '@mdx-js/rollup'
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    mdx({ 
+      providerImportSource: '@codespark/react', // [!code ++]
+      remarkPlugins: [remarkCodespark] // [!code ++]
+    })
+  ]
+});
+
+```
+
+### Next.js
+
+For Next.js users, first install the official MDX package:
+
+```npm
+npm install @next/mdx @mdx-js/loader @mdx-js/react
+```
+
+Then configure `next.config.mjs` to use the remark plugin:
+
+```ts title="next.config.mjs"
+import remarkCodespark from '@codespark/plugin-remark';
+import createMDX from '@next/mdx';
+
+const withMDX = createMDX({
+  options: {
+    providerImportSource: '@codespark/react', // [!code ++]
+    remarkPlugins: [remarkCodespark], // [!code ++]
+  },
+});
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
+};
+
+export default withMDX(nextConfig);
+```
+
+### Fumadocs
+
+[Fumadocs](https://www.fumadocs.dev) is a React.js documentation framework built on MDX. To use Codespark with Fumadocs, add the following configuration:
+
+```ts title="source.config.ts"
+import { defineConfig } from 'fumadocs-mdx/config';
+
+export default defineConfig({
+  mdxOptions: {
+    providerImportSource: '@codespark/react', // [!code ++]
+    remarkPlugins: [remarkCodespark] // [!code ++]
+  }
+})
+```
+
+## Usage
+
+### Directives
+
+The plugin recognizes three directives that can be added to code block meta strings:
+
+| Directive | Component | Description |
+|-----------|-----------|-------------|
+| `codespark` | `<Codespark />` | Full playground with editor and preview |
+| `codespark-editor` | `<CodesparkEditor />` | Editor only |
+| `codespark-preview` | `<CodesparkPreview />` | Preview only |
+
+
+### Supported Languages
+
+The plugin only processes code blocks with the following languages:
+
+- `js`
+- `jsx`
+- `ts`
+- `tsx`
+
+### Basic Usage
+
+Add the `codespark` directive to any JavaScript/TypeScript code block:
+
+````mdx
+```tsx codespark
+export default function App() {
+  return <button>Click me</button>
+}
+```
+````
+
+This transforms into:
+
+```tsx
+<Codespark name="./App.tsx" code={"export default function App() {\n  return <button>Click me</button>\n}"} />
+```
+
+Code blocks with other languages (e.g., `python`, `bash`) are left unchanged.
+
+
+### Multi-file Usage
+
+Use the `file` attribute to define multiple files that will be merged into a single `Codespark` component:
+
+````mdx
+```tsx codespark file="./button.tsx"
+export function Button({ children }) {
+  return <button className="btn">{children}</button>
+}
+```
+
+```tsx codespark file="./App.tsx"
+import { Button } from './button'
+
+export default function App() {
+  return <Button>Click me</Button>
+}
+```
+````
+
+This transforms into a single component:
+
+```tsx
+<Codespark
+  name="./App.tsx"
+  files={{
+    "./button.tsx": "export function Button({ children }) {\n  return <button className=\"btn\">{children}</button>\n}",
+    "./App.tsx": "import { Button } from './button'\n\nexport default function App() {\n  return <Button>Click me</Button>\n}"
+  }}
+/>
+```
+
+<Callout>
+Multi-file rendering rules:
+
+- Consecutive code blocks with `file` attributes are automatically merged
+- The `name` prop is set to the last file's path
+- Additional attributes are taken from the last code block only
+- Non-code content between blocks breaks the merge
+</Callout>
+
+
+
+### Editor Only
+
+Use `codespark-editor` for a standalone code editor without preview:
+
+````mdx
+```tsx codespark-editor
+const greeting = "Hello, World!";
+console.log(greeting);
+```
+````
+
+Transforms to:
+
+````tsx
+<CodesparkEditor value={"const greeting = \"Hello, World!\";\nconsole.log(greeting);"} />
+````
+
+### Preview Only
+
+Use `codespark-preview` for a preview without the editor:
+
+````mdx
+```tsx codespark-preview
+export default () => (
+  <div className="p-4 bg-blue-500 text-white rounded">
+    Preview Only
+  </div>
+)
+```
+````
+
+Transforms to:
+
+```tsx
+<CodesparkPreview code={"export default () => (\n  <div className=\"p-4 bg-blue-500 text-white rounded\">\n    Preview Only\n  </div>\n)"} />
+```
+
+## Attributes
+
+You can pass additional attributes to the generated component through the code block meta string.
+
+### String Attributes
+
+````mdx
+```tsx codespark name="Demo.tsx" title="My Demo"
+export default () => <div>Hello</div>
+```
+````
+
+### Boolean Attributes
+
+Standalone attributes are treated as `true`:
+
+````mdx
+```tsx codespark readonly
+export default () => <div>Hello</div>
+```
+````
+
+Explicit boolean values:
+
+````mdx
+```tsx codespark readonly=true tailwind=false
+export default () => <div>Hello</div>
+```
+````
+
+### Numeric Attributes
+
+````mdx
+```tsx codespark height=400
+export default () => <div>Hello</div>
+```
+````
+
+## How It Works
+
+1. **AST Traversal**: The plugin traverses the MDX AST looking for `code` nodes
+2. **Meta Parsing**: Parses the code block's meta string for directives and attributes
+3. **Validation**: Checks if the language is supported and a valid directive is present
+4. **File Merging**: Detects consecutive `file` blocks and merges them into a single `files` object
+5. **JSX Generation**: Creates MDX JSX elements with appropriate props
+6. **Tree Modification**: Replaces the original code nodes with the generated JSX components

@@ -139,6 +139,24 @@ import { Codespark } from '@codespark/react';
 <Codespark theme="dark" />
 ```
 
+### orientation
+
+Layout orientation of the editor and preview areas.
+
+| Type | Default |
+| ---- | ------- |
+| `'vertical' \| 'horizontal'` | `'vertical'` |
+
+- `vertical`: Preview on top, editor on bottom
+- `horizontal`: Editor on left (2/3 width), preview on right (1/3 width)
+
+```tsx twoslash preview="codespark-api-orientation"
+// @noErrors
+import { Codespark } from '@codespark/react';
+// ---cut---
+<Codespark orientation="horizontal" />
+```
+
 ### imports
 
 Custom import map for external dependencies. Each key represents the module name used in import statements, and the value is a valid [esm.sh](https://esm.sh/) URL.
@@ -281,11 +299,11 @@ import { Codespark } from '@codespark/react';
 
 ### editorHeight
 
-Height of the editor area in pixels.
+Height of the editor area.
 
 | Type | Default |
 | ---- | ------- |
-| `number` | `200` |
+| `string \| number` | `200` |
 
 ```tsx twoslash preview
 // @noErrors
@@ -307,11 +325,11 @@ export default function App() {
 
 ### previewHeight
 
-Height of the preview area in pixels.
+Height of the preview area.
 
 | Type | Default |
 | ---- | ------- |
-| `number` | `200` |
+| `string \| number` | `200` |
 
 ```tsx twoslash preview
 // @noErrors

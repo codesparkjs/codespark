@@ -13,7 +13,7 @@ import { useWorkspace } from '@codespark/react';
 
 When used inside a `CodesparkProvider`, simply call `useWorkspace()` to access the workspace from context. All returned properties (`files`, `compiled`, `currentFile`, etc.) are reactive - your component will automatically re-render when the workspace state changes.
 
-```tsx twoslash preview=""
+```tsx twoslash preview
 // @noErrors
 import { CodesparkEditor, CodesparkProvider, useWorkspace } from '@codespark/react';
 
@@ -28,9 +28,12 @@ function Editor() {
 
   if (compileError) {
     return (
-      <div>
+      <div className="space-y-2 text-center">
         <p>Current file: {currentFile.name}</p>
-        <div>Error: {compileError.message}</div>;<button onClick={handleUpdate}>Update Code</button>
+        <div>Error: {compileError.message}</div>
+        <button onClick={handleUpdate} className="rounded-lg bg-black px-2 py-1 text-white">
+          Update Code
+        </button>
       </div>
     );
   }
@@ -51,11 +54,12 @@ export default function App() {
 
 You can also use `useWorkspace` outside of `CodesparkProvider` by passing a `WorkspaceInit` config. This is useful when you need to create a workspace and pass it to `CodesparkProvider`. All the workspace methods still work in this way:
 
-```tsx twoslash preview=""
+```tsx twoslash preview="use-workspace"
 // @noErrors
 import { CodesparkEditor, CodesparkPreview, CodesparkProvider, useWorkspace } from '@codespark/react';
+import { useEffect } from 'react';
 
-function App() {
+export default function App() {
   // Create workspace outside of Provider
   const { workspace, compiled } = useWorkspace({
     entry: './App.tsx',
@@ -72,7 +76,7 @@ function App() {
   useEffect(() => {
     // trigger every time when compiled code updated
     console.log('compiled code:', compiled);
-  }, [compiled])
+  }, [compiled]);
 
   return (
     <CodesparkProvider workspace={workspace}>

@@ -5,13 +5,17 @@ description: A framework for rendering Markdown content as sanitized HTML in the
 
 The Markdown framework transforms Markdown source files into sanitized HTML output, enabling you to preview formatted documentation directly within CodeSpark.
 
+```ts
+import { Framework, markdown } from '@codespark/framework/markdown';
+```
+
 ## Usage
 
 To use the Markdown framework, import it from `@codespark/framework/markdown` and pass it to the `framework` prop:
 
-```tsx
-import { Codespark } from '@codespark/react';
+```tsx preview="markdown"
 import { markdown } from '@codespark/framework/markdown';
+import { Codespark } from '@codespark/react';
 
 <Codespark
   framework={markdown}
@@ -94,10 +98,3 @@ const greeting = 'Hello, World!';
 ```md
 > This is a blockquote.
 ```
-
-## How It Works
-
-1. The framework accepts `.md` files as input
-2. Markdown content is parsed and converted to HTML using `marked`
-3. The resulting HTML is sanitized through `DOMPurify` to remove potentially malicious content
-4. The sanitized HTML is rendered in the preview panel

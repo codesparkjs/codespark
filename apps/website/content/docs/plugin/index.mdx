@@ -1,4 +1,56 @@
 ---
 title: Overview
-description: Overview
+description: Build-time plugins that enhance Codespark integration with your development workflow.
 ---
+
+Codespark provides official plugins that integrate with popular build tools and content processing pipelines. These plugins enable static analysis, dependency collection, and automatic component transformation at build time.
+
+## Available Plugins
+
+| Package | Description |
+|---------|-------------|
+| `@codespark/plugin-rollup` | Rollup/Vite plugin for static dependency analysis |
+| `@codespark/plugin-remark` | Remark plugin for MDX code block transformation |
+
+## Plugin Categories
+
+### Build Tool Plugins
+
+**[@codespark/plugin-rollup](/docs/plugin/rollup)** integrates with Rollup and Vite to perform static analysis during the build process. It automatically collects dependencies and local definitions used by `createWorkspace` calls, enabling seamless workspace creation from React components without runtime overhead.
+
+Key features:
+- Static dependency analysis at build time
+- Automatic collection of local definitions and imports
+- TypeScript path alias resolution
+- Zero runtime cost for dependency resolution
+
+### Content Plugins
+
+**[@codespark/plugin-remark](/docs/plugin/remark)** transforms fenced code blocks in MDX documents into interactive Codespark components. It enables documentation authors to create live code playgrounds using simple markdown syntax.
+
+Key features:
+- Transform code blocks with `codespark` directive into `<Codespark />` components
+- Support for multi-file workspaces via consecutive `file` blocks
+- Automatic attribute parsing (strings, booleans, numbers)
+- Separate directives for editor-only and preview-only modes
+
+## Combining Plugins
+
+For documentation sites that use both MDX content and programmatic workspace creation, you can use both plugins together:
+
+```ts title="vite.config.ts"
+import remarkCodespark from '@codespark/plugin-remark';
+import codespark from '@codespark/plugin-rollup';
+import mdx from '@mdx-js/rollup';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    codespark(),
+    mdx({
+      providerImportSource: '@codespark/react',
+      remarkPlugins: [remarkCodespark]
+    })
+  ]
+});
+```
