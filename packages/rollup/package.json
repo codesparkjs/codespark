@@ -3,14 +3,28 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Rollup plugin for codespark ecosystem",
+  "keywords": [
+    "rollup-plugin",
+    "vite-plugin",
+    "codespark"
+  ],
   "main": "dist/index.mjs",
   "types": "dist/index.d.mts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "test": "vitest run"
   },
   "author": "TonyL1u",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codesparkjs/codespark.git",
+    "directory": "packages/rollup"
+  },
+  "homepage": "https://codesparkjs.com",
   "dependencies": {
     "@babel/generator": "^7.28.5",
     "@babel/parser": "^7.28.5",

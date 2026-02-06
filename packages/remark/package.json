@@ -3,14 +3,29 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Remark plugin for codespark ecosystem",
+  "keywords": [
+    "remark",
+    "unified-plugin",
+    "markdown",
+    "codespark"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown --platform=browser",
     "test": "vitest run"
   },
   "author": "TonyL1u",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codesparkjs/codespark.git",
+    "directory": "packages/remark"
+  },
+  "homepage": "https://codesparkjs.com",
   "dependencies": {
     "estree-util-value-to-estree": "^3.3.2",
     "unist-util-visit": "^5.0.0"
