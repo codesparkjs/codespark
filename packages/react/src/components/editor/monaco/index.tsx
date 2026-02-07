@@ -57,7 +57,8 @@ const setup = async () => {
         moduleResolution: Monaco.typescript.ModuleResolutionKind.NodeJs,
         module: Monaco.typescript.ModuleKind.ESNext,
         noEmit: true,
-        jsx: Monaco.typescript.JsxEmit.Preserve,
+        jsx: Monaco.typescript.JsxEmit.ReactJSX,
+        jsxImportSource: 'react',
         esModuleInterop: true
       });
 
@@ -148,7 +149,12 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
         if (module.startsWith('http://') || module.startsWith('https://')) {
           monacoInstance!.typescript.typescriptDefaults.addExtraLib(`declare module '${module}' { ${content} }`, module);
         } else {
-          monacoInstance!.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, `file:///node_modules/${module}/index.d.ts`);
+          const parts = module.split('/');
+          const isScoped = module.startsWith('@');
+          const packageName = isScoped ? parts.slice(0, 2).join('/') : parts[0];
+          const subpath = isScoped ? parts.slice(2).join('/') : parts.slice(1).join('/');
+          const filePath = subpath ? `file:///node_modules/${packageName}/${subpath}.d.ts` : `file:///node_modules/${module}/index.d.ts`;
+          monacoInstance!.typescript.typescriptDefaults.addExtraLib(content || `declare module '${module}'`, filePath);
         }
         addedLibs.add(module);
       });
