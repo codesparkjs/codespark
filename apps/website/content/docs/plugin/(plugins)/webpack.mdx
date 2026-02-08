@@ -47,9 +47,11 @@ export default nextConfig;
 
 ### With Next.js (Turbopack)
 
-If you are using [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack), normal webpack plugin configuration is not compatible. You should configure it in `turbopack.rules`:
+If you are using [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack), the standard Webpack plugin configuration is not supported. Instead, configure it via `turbopack.rules`:
 
 ```ts title="next.config.ts"
+import type { NextConfig } from 'next';
+
 const nextConfig: NextConfig = {
   /* config options here */
   turbopack: {
@@ -57,7 +59,7 @@ const nextConfig: NextConfig = {
       '*.tsx': {
         loaders: [
           {
-            loader: '@codespark/plugin-webpack/loader'
+            loader: '@codespark/plugin-webpack/loader' // [!code ++]
           }
         ]
       }
@@ -86,15 +88,15 @@ new CodesparkWebpackPlugin({
 
 ## How It Works
 
-The plugin registers a custom loader that runs during Webpack's module processing phase and performs the following steps:
+The plugin registers a custom loader that executes during Webpack's module processing phase and performs the following steps:
 
 ### 1. AST Parsing
 
-The loader parses JavaScript/TypeScript files (`.js`, `.jsx`, `.ts`, `.tsx`) using Babel parser with JSX and TypeScript support.
+The loader parses JavaScript/TypeScript files (`.js`, `.jsx`, `.ts`, `.tsx`) using the Babel parser with JSX and TypeScript support.
 
 ### 2. Import Detection
 
-It identifies imports from `@codespark/react` that match the configured method names (default: `createWorkspace`).
+The plugin identifies imports from `@codespark/react` that match the configured method names (default: `createWorkspace`).
 
 ### 3. Call Expression Transformation
 
@@ -133,7 +135,7 @@ The `__scanned` context contains all collected dependency information, which `cr
 
 ## Example
 
-Consider a documentation page with an interactive component demo:
+Consider a documentation page with an interactive component preview:
 
 ```tsx title="components/button.tsx"
 export default function Button() {
@@ -158,15 +160,15 @@ export default function ButtonDocs() {
 At build time, the plugin will:
 
 1. Detect the `createWorkspace(ButtonDemo, ...)` call
-2. Analyze `ButtonDemo` and find it uses `Button` from `./components/button`
+2. Analyze `ButtonDemo` and discover its dependency on `Button` from `./components/button`
 3. Collect the `Button` component source code
 4. Inject the collected information into the `createWorkspace` call
 
-The resulting workspace will contain both the demo code and the `Button` component source, enabling the live preview to render correctly.
+The resulting workspace will contain both the entry code and the `Button` component source, enabling the live preview to render correctly.
 
 ## Alias Resolution
 
-The plugin supports TypeScript path aliases defined in `tsconfig.json`. For example:
+The plugin supports TypeScript path aliases defined in `tsconfig.json`:
 
 ```json title="tsconfig.json"
 {
@@ -178,7 +180,7 @@ The plugin supports TypeScript path aliases defined in `tsconfig.json`. For exam
 }
 ```
 
-Imports using these aliases will be correctly resolved:
+Imports using path aliases will be correctly resolved:
 
 ```tsx
 import Button from '@components/button'; // Resolved to ./src/components/button
@@ -188,4 +190,4 @@ import Button from '@components/button'; // Resolved to ./src/components/button
 
 - Only processes files with `.js`, `.jsx`, `.ts`, or `.tsx` extensions
 - Type-only imports are excluded from dependency collection
-- Circular dependencies are handled but may result in incomplete collection
+- Circular dependencies are handled but may result in incomplete dependency collection

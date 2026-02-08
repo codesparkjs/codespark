@@ -31,17 +31,18 @@ const projects: Project[] = [
     demoUrl: 'https://codesparkjs.com/playground',
     sourceUrl: 'https://github.com/codesparkjs/codespark',
     featured: true
+  },
+  {
+    id: 'shadcx-ui',
+    title: 'shadcx/ui',
+    description: 'shadcn/ui docs with interactive components, powered by Codespark',
+    image: '/showcase/mdx-playground.png',
+    tags: ['shadcn/ui', 'Components', 'Design System', 'Documentation', 'React', 'Codespark'],
+    category: 'component',
+    demoUrl: 'https://shadcx-ui.vercel.app',
+    sourceUrl: 'https://github.com/codesparkjs/shadcx-ui',
+    featured: true
   }
-  // {
-  //   id: 'shadcx-ui',
-  //   title: 'shadcx/ui',
-  //   description: 'Interactive MDX documentation with embedded live code examples.',
-  //   image: '/showcase/mdx-playground.png',
-  //   tags: ['MDX', 'Documentation', 'React'],
-  //   category: 'integration',
-  //   demoUrl: '/docs',
-  //   featured: true
-  // },
   // {
   //   id: 'vscodespark',
   //   title: 'VSCodespark',
@@ -49,7 +50,7 @@ const projects: Project[] = [
   //   image: '/showcase/component-library.png',
   //   tags: ['Components', 'Storybook', 'Design System'],
   //   category: 'template'
-  // },
+  // }
   // {
   //   id: 'itypora',
   //   title: 'iTypora',
@@ -143,6 +144,7 @@ export default function Showcase() {
         <div className="flex flex-wrap items-center justify-center gap-2">
           {categories.map(category => {
             const Icon = category.icon;
+
             return (
               <button
                 key={category.id}
