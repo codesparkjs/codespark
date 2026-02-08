@@ -36,7 +36,7 @@ const clientLoader = browserCollections.docs.createClientLoader<{ url: string; p
 
     return (
       <DocsPage toc={toc} tableOfContent={{ style: 'clerk' }}>
-        <title>{frontmatter.title}</title>
+        <title>{`${frontmatter.title} - codespark`}</title>
         <meta name="description" content={frontmatter.description} />
         <DocsTitle>{frontmatter.title}</DocsTitle>
         <DocsDescription>{frontmatter.description}</DocsDescription>

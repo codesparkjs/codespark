@@ -4,6 +4,10 @@ import { Link } from 'react-router';
 
 import { cn } from '~/lib/utils';
 
+export function meta() {
+  return [{ title: 'Showcase - codespark' }, { name: 'description', content: 'Edit and preview code in real-time.' }];
+}
+
 interface Project {
   id: string;
   title: string;
@@ -18,58 +22,58 @@ interface Project {
 
 const projects: Project[] = [
   {
-    id: 'codespark',
-    title: 'Codespark',
-    description: 'Real-time React component editing with instant preview and hot reload support.',
+    id: 'codespark-playground',
+    title: 'Codespark Playground',
+    description: 'A full-featured code playground built with Codespark',
     image: '/showcase/live-editor.png',
-    tags: ['React', 'Monaco', 'TypeScript'],
-    category: 'component',
-    demoUrl: '/playground',
+    tags: ['React', 'Monaco', 'TypeScript', 'Playground', 'Codespark'],
+    category: 'integration',
+    demoUrl: 'https://codesparkjs.com/playground',
     sourceUrl: 'https://github.com/codesparkjs/codespark',
     featured: true
-  },
-  {
-    id: 'shadcx-ui',
-    title: 'shadcx/ui',
-    description: 'Interactive MDX documentation with embedded live code examples.',
-    image: '/showcase/mdx-playground.png',
-    tags: ['MDX', 'Documentation', 'React'],
-    category: 'integration',
-    demoUrl: '/docs',
-    featured: true
-  },
-  {
-    id: 'vscodespark',
-    title: 'VSCodespark',
-    description: 'Build and preview your component library with live documentation.',
-    image: '/showcase/component-library.png',
-    tags: ['Components', 'Storybook', 'Design System'],
-    category: 'template'
-  },
-  {
-    id: 'itypora',
-    title: 'iTypora',
-    description: 'Instant Tailwind CSS preview with automatic class detection.',
-    image: '/showcase/tailwind-preview.png',
-    tags: ['Tailwind', 'CSS', 'Styling'],
-    category: 'integration'
-  },
-  {
-    id: 'api-explorer',
-    title: 'API Explorer',
-    description: 'Interactive API documentation with live request/response preview.',
-    image: '/showcase/api-explorer.png',
-    tags: ['API', 'REST', 'GraphQL'],
-    category: 'template'
-  },
-  {
-    id: 'theme-builder',
-    title: 'Theme Builder',
-    description: 'Visual theme customization with real-time component preview.',
-    image: '/showcase/theme-builder.png',
-    tags: ['Theming', 'CSS Variables', 'Design'],
-    category: 'component'
   }
+  // {
+  //   id: 'shadcx-ui',
+  //   title: 'shadcx/ui',
+  //   description: 'Interactive MDX documentation with embedded live code examples.',
+  //   image: '/showcase/mdx-playground.png',
+  //   tags: ['MDX', 'Documentation', 'React'],
+  //   category: 'integration',
+  //   demoUrl: '/docs',
+  //   featured: true
+  // },
+  // {
+  //   id: 'vscodespark',
+  //   title: 'VSCodespark',
+  //   description: 'Build and preview your component library with live documentation.',
+  //   image: '/showcase/component-library.png',
+  //   tags: ['Components', 'Storybook', 'Design System'],
+  //   category: 'template'
+  // },
+  // {
+  //   id: 'itypora',
+  //   title: 'iTypora',
+  //   description: 'Instant Tailwind CSS preview with automatic class detection.',
+  //   image: '/showcase/tailwind-preview.png',
+  //   tags: ['Tailwind', 'CSS', 'Styling'],
+  //   category: 'integration'
+  // },
+  // {
+  //   id: 'api-explorer',
+  //   title: 'API Explorer',
+  //   description: 'Interactive API documentation with live request/response preview.',
+  //   image: '/showcase/api-explorer.png',
+  //   tags: ['API', 'REST', 'GraphQL'],
+  //   category: 'template'
+  // },
+  // {
+  //   id: 'theme-builder',
+  //   title: 'Theme Builder',
+  //   description: 'Visual theme customization with real-time component preview.',
+  //   image: '/showcase/theme-builder.png',
+  //   tags: ['Theming', 'CSS Variables', 'Design'],
+  //   category: 'component'
+  // }
 ];
 
 const categories = [

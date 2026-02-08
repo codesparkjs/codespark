@@ -78,10 +78,10 @@ export function baseOptions(): BaseLayoutProps {
           </NavbarMenu>
         )
       },
-      // {
-      //   text: 'Showcase',
-      //   url: '/showcase'
-      // },
+      {
+        text: 'Showcase',
+        url: '/showcase'
+      },
       {
         text: 'Playground',
         url: '/playground',
