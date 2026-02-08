@@ -1,6 +1,191 @@
 ---
 title: Webpack
-description: Webpack
+description: A Webpack plugin that enables static analysis and dependency collection for Codespark workspaces at build time.
 ---
 
-WIP...
+`@codespark/plugin-webpack` is a Webpack plugin that performs static analysis on your source code during the build process. It automatically collects dependencies and local definitions used by `createWorkspace` calls, enabling seamless workspace creation from React components without runtime overhead.
+
+## Installation
+
+```npm
+npm install @codespark/plugin-webpack
+```
+
+## Usage
+
+Add the plugin to your Webpack configuration:
+
+```js title="webpack.config.js"
+import CodesparkWebpackPlugin from '@codespark/plugin-webpack';
+
+export default {
+  plugins: [
+    new CodesparkWebpackPlugin()
+  ]
+};
+```
+
+### With Next.js (Webpack)
+
+You can use this plugin in your Next.js configuration:
+
+```ts title="next.config.ts"
+import type { NextConfig } from 'next';
+import CodesparkWebpackPlugin from '@codespark/plugin-webpack';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+  webpack(config) {
+    config.plugins.push(new CodesparkWebpackPlugin());
+
+    return config;
+  }
+};
+
+export default nextConfig;
+```
+
+### With Next.js (Turbopack)
+
+If you are using [Turbopack](https://nextjs.org/docs/app/api-reference/turbopack), normal webpack plugin configuration is not compatible. You should configure it in `turbopack.rules`:
+
+```ts title="next.config.ts"
+const nextConfig: NextConfig = {
+  /* config options here */
+  turbopack: {
+    rules: {
+      '*.tsx': {
+        loaders: [
+          {
+            loader: '@codespark/plugin-webpack/loader'
+          }
+        ]
+      }
+    }
+  }
+};
+
+export default nextConfig;
+```
+
+## Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `enabled` | `boolean` | `true` | Enable or disable the plugin |
+| `methods` | `string[]` | `['createWorkspace']` | Function names to transform |
+| `importSource` | `string[]` | `['@codespark/react']` | Package names to detect imports from |
+
+```js
+new CodesparkWebpackPlugin({
+  enabled: true,
+  methods: ['createWorkspace'],
+  importSource: ['@codespark/react']
+})
+```
+
+## How It Works
+
+The plugin registers a custom loader that runs during Webpack's module processing phase and performs the following steps:
+
+### 1. AST Parsing
+
+The loader parses JavaScript/TypeScript files (`.js`, `.jsx`, `.ts`, `.tsx`) using Babel parser with JSX and TypeScript support.
+
+### 2. Import Detection
+
+It identifies imports from `@codespark/react` that match the configured method names (default: `createWorkspace`).
+
+### 3. Call Expression Transformation
+
+When a `createWorkspace` call is detected, the plugin analyzes its argument:
+
+- **JSX Elements**: `<Button />` or `<div>content</div>`
+- **Component References**: `Button` or `MyComponent`
+- **Function Expressions**: `() => <button>Click</button>`
+
+### 4. Dependency Collection
+
+For each detected call, the plugin collects:
+
+- **Entry Code**: The source code passed to `createWorkspace`
+- **Local Definitions**: Variables, functions, or classes defined in the same file that the entry code depends on
+- **External Imports**: Third-party package imports (e.g., `react`, `lodash`)
+- **Internal Files**: Local file imports that need to be bundled
+
+### 5. Code Injection
+
+The plugin transforms the original call:
+
+```tsx
+// Before transformation
+createWorkspace(<Button />, { name: 'example.tsx' })
+
+// After transformation
+createWorkspace.call(
+  { __scanned: { entry: {...}, files: {...} } },
+  <Button />,
+  { name: 'example.tsx' }
+)
+```
+
+The `__scanned` context contains all collected dependency information, which `createWorkspace` uses at runtime to construct the workspace with proper file structure.
+
+## Example
+
+Consider a documentation page with an interactive component demo:
+
+```tsx title="components/button.tsx"
+export default function Button() {
+  return ...
+}
+```
+
+```tsx title="docs/button.tsx"
+import { createWorkspace } from '@codespark/react';
+import { Codespark } from '@codespark/react';
+
+import Button from './components/button';
+
+const ButtonDemo = () => <Button variant="primary">Click me</Button>;
+const workspace = createWorkspace(ButtonDemo, { name: 'demo.tsx' });
+
+export default function ButtonDocs() {
+  return <Codespark workspace={workspace} />;
+}
+```
+
+At build time, the plugin will:
+
+1. Detect the `createWorkspace(ButtonDemo, ...)` call
+2. Analyze `ButtonDemo` and find it uses `Button` from `./components/button`
+3. Collect the `Button` component source code
+4. Inject the collected information into the `createWorkspace` call
+
+The resulting workspace will contain both the demo code and the `Button` component source, enabling the live preview to render correctly.
+
+## Alias Resolution
+
+The plugin supports TypeScript path aliases defined in `tsconfig.json`. For example:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "paths": {
+      "@components/*": ["./src/components/*"]
+    }
+  }
+}
+```
+
+Imports using these aliases will be correctly resolved:
+
+```tsx
+import Button from '@components/button'; // Resolved to ./src/components/button
+```
+
+## Limitations
+
+- Only processes files with `.js`, `.jsx`, `.ts`, or `.tsx` extensions
+- Type-only imports are excluded from dependency collection
+- Circular dependencies are handled but may result in incomplete collection

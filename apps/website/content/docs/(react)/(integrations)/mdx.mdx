@@ -54,7 +54,6 @@ import createMDX from '@next/mdx';
 
 const withMDX = createMDX({
   options: {
-    providerImportSource: '@codespark/react', // [!code ++]
     remarkPlugins: [remarkCodespark], // [!code ++]
   },
 });
@@ -73,6 +72,7 @@ export default withMDX(nextConfig);
 
 ```ts title="source.config.ts"
 import { defineConfig } from 'fumadocs-mdx/config';
+import remarkCodespark from '@codespark/plugin-remark';
 
 export default defineConfig({
   mdxOptions: {
