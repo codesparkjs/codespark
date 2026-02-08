@@ -1,0 +1,54 @@
+{
+  "name": "@codespark/plugin-webpack",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Webpack plugin for codespark ecosystem",
+  "keywords": [
+    "webpack-plugin",
+    "turbopack-plugin",
+    "codespark"
+  ],
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./loader": {
+      "types": "./dist/loader.d.mts",
+      "import": "./dist/loader.mjs",
+      "require": "./dist/loader.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run"
+  },
+  "author": "TonyL1u",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/codesparkjs/codespark.git",
+    "directory": "packages/webpack"
+  },
+  "homepage": "https://codesparkjs.com",
+  "dependencies": {
+    "@babel/generator": "^7.28.5",
+    "@babel/parser": "^7.28.5",
+    "@babel/traverse": "^7.28.5",
+    "@babel/types": "^7.28.5"
+  },
+  "devDependencies": {
+    "@codespark/react": "workspace:*",
+    "@types/babel__generator": "^7.27.0",
+    "@types/babel__traverse": "^7.28.0",
+    "@types/mdx": "^2.0.13",
+    "@types/node": "^22.19.2",
+    "@types/react": "^19.2.7",
+    "tsdown": "^0.17.3",
+    "webpack": "^5.99.9"
+  }
+}
