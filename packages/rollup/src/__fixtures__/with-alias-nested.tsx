@@ -1,4 +1,4 @@
-import ButtonDefault from '@/button';
+import ButtonDefault from '@/alias-nested';
 
 const App = () => (
   <div>

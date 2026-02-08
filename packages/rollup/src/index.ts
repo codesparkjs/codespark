@@ -7,10 +7,11 @@ import { transformJsx } from './transform-jsx';
 export interface Options {
   enabled?: boolean;
   methods?: string[];
+  importSource?: string[];
 }
 
 export default function rollupPluginCodespark(options?: Options): Plugin {
-  const { enabled = true, methods } = options || {};
+  const { enabled = true, methods, importSource } = options || {};
 
   return {
     name: 'rollup-plugin-codespark',
@@ -18,7 +19,7 @@ export default function rollupPluginCodespark(options?: Options): Plugin {
       order: 'pre',
       handler(code, id) {
         if (['.js', '.jsx', '.ts', '.tsx'].includes(path.extname(id)) && enabled) {
-          const transformed = transformJsx(code, id, { methods });
+          const transformed = transformJsx(code, id, { methods, importSource });
 
           if (transformed) return { code: transformed };
         }

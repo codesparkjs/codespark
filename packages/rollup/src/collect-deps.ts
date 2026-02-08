@@ -97,6 +97,47 @@ const isLocalImport = (source: string): boolean => {
   return aliases.some(alias => source === alias || source.startsWith(alias + '/'));
 };
 
+const isAliasImport = (source: string): boolean => {
+  return !source.startsWith('.') && !source.startsWith('/') && isLocalImport(source);
+};
+
+const aliasToRelative = (source: string, resolved?: string): string => {
+  for (const alias of aliases) {
+    if (source.startsWith(alias + '/')) {
+      let rel = './' + source.slice(alias.length + 1);
+      if (resolved) {
+        const ext = path.extname(resolved);
+        if (ext && !rel.endsWith(ext)) rel += ext;
+      }
+      return rel;
+    }
+    if (source === alias) return '.';
+  }
+  return source;
+};
+
+const rewriteAliasImports = (code: string, filePath: string): string => {
+  let result = code;
+  const ast = parseCode(code);
+
+  for (const node of ast) {
+    if (node.type !== 'ImportDeclaration') continue;
+    const source = node.source.value;
+    if (!isAliasImport(source)) continue;
+
+    const resolved = resolveFile(source, filePath);
+    if (!resolved) continue;
+
+    let rel = path.relative(path.dirname(filePath), resolved);
+    if (!rel.startsWith('.')) rel = './' + rel;
+
+    result = result.replace(`'${source}'`, `'${rel}'`);
+    result = result.replace(`"${source}"`, `"${rel}"`);
+  }
+
+  return result;
+};
+
 const collectFromFile = (file: string, usedSources: Set<string>, result: Record<string, FileInfo>, visited: Set<string>): void => {
   if (visited.has(file)) return;
   visited.add(file);
@@ -121,10 +162,28 @@ const collectFromFile = (file: string, usedSources: Set<string>, result: Record<
       const childUsedSources = getUsedSources(childUsedIds, childImportMap);
       const externals = childImports.filter(i => i.importKind !== 'type' && !isLocalImport(i.source.value) && childUsedSources.has(i.source.value)).map(i => i.source.value);
 
-      result[source] = { code: childCode, resolved, externals };
+      result[source] = { code: rewriteAliasImports(childCode, resolved), resolved, externals };
       collectFromFile(resolved, childUsedSources, result, visited);
     }
   });
+};
+
+const generateImportStatement = (imp: ImportDeclaration, usedIds: Set<string>, sourcePath?: string): string | null => {
+  const usedSpecifiers = imp.specifiers.filter(s => usedIds.has(s.local.name));
+  if (usedSpecifiers.length === 0) return null;
+  const names = usedSpecifiers.map(s => {
+    if (s.type === 'ImportDefaultSpecifier') return s.local.name;
+    if (s.type === 'ImportNamespaceSpecifier') return `* as ${s.local.name}`;
+    return s.imported && 'name' in s.imported && s.imported.name !== s.local.name ? `${s.imported.name} as ${s.local.name}` : s.local.name;
+  });
+  const hasDefault = usedSpecifiers.some(s => s.type === 'ImportDefaultSpecifier');
+  const hasNamespace = usedSpecifiers.some(s => s.type === 'ImportNamespaceSpecifier');
+  const named = names.filter((_, i) => usedSpecifiers[i].type === 'ImportSpecifier');
+  const parts: string[] = [];
+  if (hasDefault) parts.push(names.find((_, i) => usedSpecifiers[i].type === 'ImportDefaultSpecifier')!);
+  if (hasNamespace) parts.push(names.find((_, i) => usedSpecifiers[i].type === 'ImportNamespaceSpecifier')!);
+  if (named.length) parts.push(`{ ${named.join(', ')} }`);
+  return `import ${parts.join(', ')} from '${sourcePath ?? imp.source.value}';`;
 };
 
 export function collectDependencies(code: string, hostFile: string): CollectResult {
@@ -181,32 +240,26 @@ export function collectDependencies(code: string, hostFile: string): CollectResu
     collectFromFile(file, usedSources, fileInfos, visited);
 
     const files: Record<string, string> = {};
-    for (const [alias, info] of Object.entries(fileInfos)) {
-      files[alias] = info.code;
+    for (const [source, info] of Object.entries(fileInfos)) {
+      const key = isAliasImport(source) ? aliasToRelative(source, info.resolved) : source;
+      files[key] = info.code;
     }
 
-    const externalImports = hostImports
-      .filter(imp => imp.importKind !== 'type' && !isLocalImport(imp.source.value) && usedSources.has(imp.source.value))
+    const aliasImports = hostImports
+      .filter(imp => imp.importKind !== 'type' && isAliasImport(imp.source.value) && usedSources.has(imp.source.value))
       .map(imp => {
-        const usedSpecifiers = imp.specifiers.filter(s => allUsedIds.has(s.local.name));
-        if (usedSpecifiers.length === 0) return null;
-        const names = usedSpecifiers.map(s => {
-          if (s.type === 'ImportDefaultSpecifier') return s.local.name;
-          if (s.type === 'ImportNamespaceSpecifier') return `* as ${s.local.name}`;
-          return s.imported && 'name' in s.imported && s.imported.name !== s.local.name ? `${s.imported.name} as ${s.local.name}` : s.local.name;
-        });
-        const hasDefault = usedSpecifiers.some(s => s.type === 'ImportDefaultSpecifier');
-        const hasNamespace = usedSpecifiers.some(s => s.type === 'ImportNamespaceSpecifier');
-        const named = names.filter((_, i) => usedSpecifiers[i].type === 'ImportSpecifier');
-        const parts: string[] = [];
-        if (hasDefault) parts.push(names.find((_, i) => usedSpecifiers[i].type === 'ImportDefaultSpecifier')!);
-        if (hasNamespace) parts.push(names.find((_, i) => usedSpecifiers[i].type === 'ImportNamespaceSpecifier')!);
-        if (named.length) parts.push(`{ ${named.join(', ')} }`);
-        return `import ${parts.join(', ')} from '${imp.source.value}';`;
+        const resolved = resolveFile(imp.source.value, file);
+        if (!resolved) return null;
+        return generateImportStatement(imp, allUsedIds, aliasToRelative(imp.source.value));
       })
       .filter((s): s is string => s !== null);
 
-    return { entry: { code, locals, imports: externalImports }, files };
+    const externalImports = hostImports
+      .filter(imp => imp.importKind !== 'type' && !isLocalImport(imp.source.value) && usedSources.has(imp.source.value))
+      .map(imp => generateImportStatement(imp, allUsedIds))
+      .filter((s): s is string => s !== null);
+
+    return { entry: { code, locals, imports: [...aliasImports, ...externalImports] }, files };
   } catch {
     return { entry: { code, locals: [], imports: [] }, files: {} };
   }

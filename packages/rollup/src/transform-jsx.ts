@@ -25,10 +25,11 @@ const resolveFile = (source: string, fromFile: string) => {
 
 interface TransformOptions {
   methods?: string[];
+  importSource?: string[];
 }
 
 export const transformJsx = (code: string, id: string, options: TransformOptions = {}) => {
-  const { methods = ['createWorkspace'] } = options;
+  const { methods = ['createWorkspace'], importSource = ['@codespark/react'] } = options;
   const ast = parse(code, { sourceType: 'module', plugins: ['jsx', 'typescript'] });
   const importMap = new Map<string, string>();
   const localNames = new Map<string, string>();
@@ -43,7 +44,7 @@ export const transformJsx = (code: string, id: string, options: TransformOptions
           const resolved = resolveFile(source, id);
           if (resolved) importMap.set(spec.local.name, resolved);
         }
-        if (source === '@codespark/react' && spec.type === 'ImportSpecifier' && t.isIdentifier(spec.imported)) {
+        if (importSource.includes(source) && spec.type === 'ImportSpecifier' && t.isIdentifier(spec.imported)) {
           if (methods.includes(spec.imported.name)) {
             localNames.set(spec.local.name, spec.imported.name);
           }

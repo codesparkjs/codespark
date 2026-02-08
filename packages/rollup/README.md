@@ -16,7 +16,16 @@ pnpm add @codespark/plugin-rollup
 
 ## Usage
 
-### Vite
+```ts
+// rollup.config.js
+import codespark from '@codespark/plugin-rollup';
+
+export default {
+  plugins: [codespark()]
+};
+```
+
+### With Vite
 
 ```ts
 // vite.config.ts
@@ -28,28 +37,19 @@ export default defineConfig({
 });
 ```
 
-### Rollup
-
-```ts
-// rollup.config.js
-import codespark from '@codespark/plugin-rollup';
-
-export default {
-  plugins: [codespark()]
-};
-```
-
 ## Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `enabled` | `boolean` | `true` | Enable/disable the plugin |
 | `methods` | `string[]` | `['createWorkspace']` | Method names to transform |
+| `importSource` | `string[]` | `['@codespark/react']` | Package names to detect imports from |
 
 ```ts
 codespark({
   enabled: true,
-  methods: ['createWorkspace']
+  methods: ['createWorkspace'],
+  importSource: ['@codespark/react']
 })
 ```
 

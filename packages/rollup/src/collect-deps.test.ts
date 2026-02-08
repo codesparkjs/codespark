@@ -54,10 +54,14 @@ describe('collectDependencies', () => {
     expect(result.entry.imports).toHaveLength(0);
   });
 
-  it('should handle alias imports', () => {
-    const code = '<App result={{ entry: { code: "" } }} />';
+  it('should convert alias import to relative path in files and imports', () => {
+    const code = 'App';
     const result = collectDependencies(code, path.join(fixturesDir, 'with-alias.tsx'));
     expect(result.entry.locals).toHaveLength(1);
+    expect(result.entry.imports).toHaveLength(1);
+    expect(result.entry.imports[0]).toBe("import ButtonDefault from './button';");
+    expect(result.files['./button.tsx']).toContain('export default function Button');
+    expect(result.files['@/button']).toBeUndefined();
   });
 
   it('should resolve import with explicit extension', () => {
@@ -67,4 +71,14 @@ describe('collectDependencies', () => {
     expect(result.files['./cd-button.tsx']).toContain('export const Button');
   });
 
+  it('should rewrite alias imports in nested files', () => {
+    const code = 'App';
+    const result = collectDependencies(code, path.join(fixturesDir, 'with-alias-nested.tsx'));
+    // alias-nested.tsx imports @/cd-button → should be collected with relative key
+    expect(result.files['./alias-nested.tsx']).toBeDefined();
+    expect(result.files['./cd-button.tsx']).toBeDefined();
+    // alias import inside alias-nested.tsx should be rewritten to relative path
+    expect(result.files['./alias-nested.tsx']).not.toContain('@/cd-button');
+    expect(result.files['./alias-nested.tsx']).toContain('./cd-button');
+  });
 });
