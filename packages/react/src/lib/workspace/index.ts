@@ -606,8 +606,9 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
     packedCode = entry.code;
   } else if (mode === 'source') {
     packedCode = Object.values(files)[0] || '';
+    const sourceEntry = Object.keys(files)[0] || '';
 
-    return new Workspace({ id, framework, entry: name, files: { [name]: packedCode } });
+    return new Workspace({ id, framework, entry: sourceEntry, files });
   } else {
     const { code, locals, imports } = entry;
     const depDefs = imports.join('\n');
