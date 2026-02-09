@@ -1,3 +1,9 @@
+## 1.0.2
+
+### Bug fix 🐛
+
+- remove initial imports & presets
+
 ## 1.0.1
 
 ### Features 🚀
