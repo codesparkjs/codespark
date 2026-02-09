@@ -7,5 +7,6 @@ export default [
   route('examples/*', 'routes/examples/index.ts'),
   route('llms.mdx/docs/*', 'routes/llms-mdx.ts'),
   route('llms-full.txt', 'routes/llms-full.ts'),
-  route('api/search', 'routes/docs/search.ts')
+  route('api/search', 'routes/docs/search.ts'),
+  route('sitemap.xml', 'routes/sitemap.ts')
 ] satisfies RouteConfig;
