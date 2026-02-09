@@ -1,6 +1,6 @@
 {
   "name": "@codespark/plugin-rollup",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Rollup plugin for codespark ecosystem",
   "keywords": [
