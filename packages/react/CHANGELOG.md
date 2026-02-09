@@ -1,3 +1,9 @@
+## 1.0.3
+
+### Bug fix 🐛
+
+- fix release bug
+
 ## 1.0.2
 
 ### Bug fix 🐛
