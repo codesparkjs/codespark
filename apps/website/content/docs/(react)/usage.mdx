@@ -84,7 +84,7 @@ export default function App() {
 
 ## Next.js Resolving
 
-For Next.js users, because `Codespark` is  a client side component, you should create a wrapping file and wrap the components' entry by adding `'use client'` directive. Then import the components from it.
+Since `Codespark` relies on React context API, it must run on the client side and be treated as **client component** in Next.js. Create a wrapper file with the `'use client'` directive and re-export the components:
 
 ```ts title="components/codespark.tsx"
 'use client' // [!code ++]
