@@ -87,7 +87,7 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
 const PREFLIGHT_STYLE = `
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.5;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -110,6 +110,7 @@ html {
 body {
   height: 100%;
   padding: 12px;
+  font-size: 14px;
   overflow: auto;
   box-sizing: border-box;
   display: flex;

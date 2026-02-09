@@ -1,3 +1,9 @@
+## 1.0.4
+
+### Bug fix 🐛
+
+- fix `preflight` fontSize style
+
 ## 1.0.3
 
 ### Bug fix 🐛

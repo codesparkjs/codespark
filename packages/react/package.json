@@ -1,6 +1,6 @@
 {
   "name": "@codespark/react",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "description": "React components for codespark ecosystem",
   "keywords": [
