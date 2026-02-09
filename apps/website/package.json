@@ -11,7 +11,7 @@
   "dependencies": {
     "@codespark/framework": "^1.0.0",
     "@codespark/plugin-remark": "^1.0.0",
-    "@codespark/react": "^1.0.2",
+    "@codespark/react": "^1.0.3",
     "@react-router/node": "7.10.1",
     "@react-router/serve": "7.10.1",
     "class-variance-authority": "^0.7.1",
