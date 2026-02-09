@@ -25,7 +25,7 @@ const projects: Project[] = [
     id: 'codespark-playground',
     title: 'Codespark Playground',
     description: 'A full-featured code playground built with Codespark',
-    image: '/showcase/live-editor.png',
+    image: '/showcase/codespark-playground.png',
     tags: ['React', 'Monaco', 'TypeScript', 'Playground', 'Codespark'],
     category: 'integration',
     demoUrl: 'https://codesparkjs.com/playground',
@@ -36,7 +36,7 @@ const projects: Project[] = [
     id: 'shadcx-ui',
     title: 'shadcx/ui',
     description: 'shadcn/ui docs with interactive components, powered by Codespark',
-    image: '/showcase/mdx-playground.png',
+    image: '/showcase/shadcx-ui.jpg',
     tags: ['shadcn/ui', 'Components', 'Design System', 'Documentation', 'React', 'Codespark'],
     category: 'component',
     demoUrl: 'https://shadcx-ui.vercel.app',
@@ -91,10 +91,7 @@ function ProjectCard({ project }: { project: Project }) {
     <div
       className={cn('group border-border bg-card relative flex flex-col overflow-hidden rounded-xl border border-dashed transition-all duration-300', 'hover:border-primary/50 hover:shadow-primary/5 hover:shadow-lg', project.featured && 'md:col-span-2')}>
       <div className="bg-muted relative aspect-video overflow-hidden">
-        <div className="from-primary/20 to-primary/10 absolute inset-0 bg-linear-to-br via-transparent" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Code2 className="text-muted-foreground/30 size-12" />
-        </div>
+        <img src={project.image} alt={project.title} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
         <div className="from-background/80 absolute inset-0 bg-linear-to-t via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         <div className="absolute right-4 bottom-4 left-4 flex translate-y-2 gap-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
           {project.demoUrl && (
