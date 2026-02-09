@@ -128,9 +128,9 @@ The hook returns an object with the following properties:
 
 Current files in the workspace.
 
-| Type |
-| ---- |
-| `Record<string, string>` |
+| Type | Since |
+| ---- | ----- |
+| `Record<string, string>` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -148,9 +148,9 @@ function App() {
 
 Currently active file in the editor.
 
-| Type |
-| ---- |
-| `FileNode` |
+| Type | Since |
+| ---- | ----- |
+| `FileNode` | v1.0.0 |
 
 ```ts
 interface FileNode {
@@ -166,17 +166,17 @@ interface FileNode {
 
 Compiled code string ready for execution in the preview iframe.
 
-| Type |
-| ---- |
-| `string` |
+| Type | Since |
+| ---- | ----- |
+| `string` | v1.0.0 |
 
 ### compileError
 
 Compilation error if the code failed to compile, `null` otherwise.
 
-| Type |
-| ---- |
-| `Error \| null` |
+| Type | Since |
+| ---- | ----- |
+| `Error \| null` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -197,9 +197,9 @@ function App() {
 
 Hierarchical file tree structure for rendering file explorer.
 
-| Type |
-| ---- |
-| `FileTreeNode[]` |
+| Type | Since |
+| ---- | ----- |
+| `FileTreeNode[]` | v1.0.0 |
 
 ```ts
 type FileTreeNode = FileNode | FolderNode;
@@ -216,9 +216,9 @@ interface FolderNode {
 
 Vendor resources extracted from the compilation process.
 
-| Type |
-| ---- |
-| `{ modules, styles, scripts, imports }` |
+| Type | Since |
+| ---- | ----- |
+| `{ modules, styles, scripts, imports }` | v1.0.0 |
 
 ```ts
 interface Vendor {
@@ -233,9 +233,9 @@ interface Vendor {
 
 The Workspace instance for programmatic control.
 
-| Type |
-| ---- |
-| `Workspace` |
+| Type | Since |
+| ---- | ----- |
+| `Workspace` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors

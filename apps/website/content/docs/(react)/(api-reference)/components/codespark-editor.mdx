@@ -35,9 +35,9 @@ export default function App() {
 
 Initial code content for the editor.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -50,9 +50,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Theme mode for the editor.
 
-| Type | Default |
-| ---- | ------- |
-| `'light' \| 'dark'` | Inherited from context |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `'light' \| 'dark'` | Inherited from context | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -65,9 +65,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Editor engine component to use.
 
-| Type | Default |
-| ---- | ------- |
-| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -81,9 +81,9 @@ import { Monaco } from '@codespark/react/Monaco';
 
 Height of the editor. For CodeMirror, pass a CSS string. For Monaco, pass a number (pixels).
 
-| Type | Default |
-| ---- | ------- |
-| `string \| number` | `200` / `'100%'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string \| number` | `200` / `'100%'` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -100,9 +100,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Width of the editor.
 
-| Type | Default |
-| ---- | ------- |
-| `string \| number` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string \| number` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -115,9 +115,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Toolbar configuration. Set to `false` to hide, `true` to show default tools, or pass a custom array.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` | v1.0.0 |
 
 Built-in tool IDs:
 - `'reset'` - Reset code to initial state
@@ -150,9 +150,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Workspace instance to use for file management.
 
-| Type | Default |
-| ---- | ------- |
-| `Workspace` | Inherited from context |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Workspace` | Inherited from context | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -170,9 +170,9 @@ const workspace = new Workspace({
 
 CSS class name for the editor element.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -185,9 +185,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Props to pass to the container div element.
 
-| Type | Default |
-| ---- | ------- |
-| `ComponentProps<'div'>` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `ComponentProps<'div'>` | - | v1.0.0 |
 
 ```tsx
 <CodesparkEditor containerProps={{ className: 'h-full' }} />
@@ -197,9 +197,9 @@ Props to pass to the container div element.
 
 Debounce wait time in milliseconds for triggering workspace updates on code changes.
 
-| Type | Default |
-| ---- | ------- |
-| `number` | `500` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `number` | `500` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -212,9 +212,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Unique identifier for the editor instance.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | Auto-generated |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | Auto-generated | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -231,9 +231,9 @@ These props only apply when using the default CodeMirror editor:
 
 Whether the editor is read-only.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `false` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `false` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -246,9 +246,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Font family for the editor.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | `'Fira Code'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | `'Fira Code'` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -261,9 +261,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Additional CodeMirror extensions.
 
-| Type | Default |
-| ---- | ------- |
-| `Extension[]` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Extension[]` | - | v1.0.0 |
 
 ```tsx
 import { javascript } from '@codemirror/lang-javascript';
@@ -275,9 +275,9 @@ import { javascript } from '@codemirror/lang-javascript';
 
 CodeMirror basic setup configuration.
 
-| Type | Default |
-| ---- | ------- |
-| `BasicSetupOptions` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `BasicSetupOptions` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -304,9 +304,9 @@ export default function App() {
 
 Callback fired when the editor content changes.
 
-| Type | Default |
-| ---- | ------- |
-| `(value: string, viewUpdate: ViewUpdate) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(value: string, viewUpdate: ViewUpdate) => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -319,9 +319,9 @@ import { CodesparkEditor } from '@codespark/react';
 
 Callback fired when the editor is mounted.
 
-| Type | Default |
-| ---- | ------- |
-| `(editor: EditorView) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(editor: EditorView) => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -338,9 +338,9 @@ These props only apply when using Monaco Editor:
 
 Monaco editor options.
 
-| Type | Default |
-| ---- | ------- |
-| `IStandaloneEditorConstructionOptions` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `IStandaloneEditorConstructionOptions` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -392,9 +392,9 @@ export default function App() {
 
 Props for the Monaco editor wrapper element.
 
-| Type | Default |
-| ---- | ------- |
-| `HTMLAttributes<HTMLDivElement>` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `HTMLAttributes<HTMLDivElement>` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -408,9 +408,9 @@ import { Monaco } from '@codespark/react/Monaco';
 
 Callback fired when the editor content changes.
 
-| Type | Default |
-| ---- | ------- |
-| `(value: string, event: IModelContentChangedEvent) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(value: string, event: IModelContentChangedEvent) => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -424,9 +424,9 @@ import { Monaco } from '@codespark/react/Monaco';
 
 Callback fired when the editor is mounted.
 
-| Type | Default |
-| ---- | ------- |
-| `(editor: IStandaloneCodeEditor, monaco: Monaco) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(editor: IStandaloneCodeEditor, monaco: Monaco) => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors

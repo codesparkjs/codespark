@@ -40,9 +40,9 @@ export default function App() {
 
 Source code content for single-file mode.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -55,9 +55,9 @@ import { Codespark } from '@codespark/react';
 
 File mapping for multi-file mode. Each key represents a file path, and the value contains the file content.
 
-| Type | Default |
-| ---- | ------- |
-| `Record<string, string>` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Record<string, string>` | - | v1.0.0 |
 
 <Callout title="File Name Convention" type="warn">
 All file names **must start with './'** to distinguish between local file dependencies and external package references.
@@ -92,9 +92,9 @@ export default function App() {
 
 Entry file path. This is the main file that will be compiled and rendered.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | `'./App.tsx'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | `'./App.tsx'` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -107,9 +107,9 @@ import { Codespark } from '@codespark/react';
 
 Framework to use for code analysis and compilation.
 
-| Type | Default |
-| ---- | ------- |
-| `Framework \| (new () => Framework) \| string` | `'react'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Framework \| (new () => Framework) \| string` | `'react'` | v1.0.0 |
 
 Currently supported frameworks:
 - `react` - React/JSX components
@@ -128,9 +128,9 @@ import { Codespark } from '@codespark/react';
 
 Theme mode for the editor and preview.
 
-| Type | Default |
-| ---- | ------- |
-| `'light' \| 'dark'` | `'light'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `'light' \| 'dark'` | `'light'` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -143,9 +143,9 @@ import { Codespark } from '@codespark/react';
 
 Layout orientation of the editor and preview areas.
 
-| Type | Default |
-| ---- | ------- |
-| `'vertical' \| 'horizontal'` | `'vertical'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `'vertical' \| 'horizontal'` | `'vertical'` | v1.0.0 |
 
 - `vertical`: Preview on top, editor on bottom
 - `horizontal`: Editor on left (2/3 width), preview on right (1/3 width)
@@ -161,9 +161,9 @@ import { Codespark } from '@codespark/react';
 
 Custom import map for external dependencies. Each key represents the module name used in import statements, and the value is a valid [esm.sh](https://esm.sh/) URL.
 
-| Type | Default |
-| ---- | ------- |
-| `Record<string, string>` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Record<string, string>` | - | v1.0.0 |
 
 Use this to pin specific package versions or override default package resolutions.
 
@@ -179,19 +179,27 @@ import { Codespark } from '@codespark/react';
 
 ### tailwindcss
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `true` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `true` | v1.0.0 |
 
 This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > tailwindcss](/docs/components/codespark-preview#tailwindcss) for usage details.
+
+### preflight
+
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `preflight` | `true` | v1.0.1 |
+
+This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > preflight](/docs/components/codespark-preview#preflight) for usage details.
 
 ### showEditor
 
 Whether to show the code editor.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `true` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `true` | v1.0.0 |
 
 Set to `false` to show only the preview area. Useful for documentation where you want to display the result without the editable code.
 
@@ -216,9 +224,9 @@ export default function App() {
 
 Whether to show the preview area.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `true` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `true` | v1.0.0 |
 
 Set to `false` to show only the code editor. Useful when you want users to write code without seeing the live preview.
 
@@ -239,9 +247,9 @@ export default function App() {
 
 Whether to show the file explorer sidebar.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `true` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `true` | v1.0.0 |
 
 The file explorer appears when you have multiple files. Set to `false` to hide it even in multi-file mode.
 
@@ -256,9 +264,9 @@ import { Codespark } from '@codespark/react';
 
 Whether to set the editor to read-only mode.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `false` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `false` | v1.0.0 |
 
 When `true`, users can view but not edit the code. The preview still works normally.
 
@@ -284,9 +292,9 @@ export default function App() {
 
 Whether the file explorer is expanded by default.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | Auto (based on file count) |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | Auto (based on file count) | v1.0.0 |
 
 When not set, the file explorer automatically expands if there are multiple files.
 
@@ -301,9 +309,9 @@ import { Codespark } from '@codespark/react';
 
 Height of the editor area.
 
-| Type | Default |
-| ---- | ------- |
-| `string \| number` | `200` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string \| number` | `200` | v1.0.0 |
 
 ```tsx twoslash preview
 // @noErrors
@@ -327,9 +335,9 @@ export default function App() {
 
 Height of the preview area.
 
-| Type | Default |
-| ---- | ------- |
-| `string \| number` | `200` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string \| number` | `200` | v1.0.0 |
 
 ```tsx twoslash preview
 // @noErrors
@@ -352,8 +360,8 @@ export default function App() {
 
 CSS class name for the container element.
 
-| Type | Default |
-| ---- | ------- |
+| Type | Default | Since |
+| ---- | ------- | ----- | v1.0.0 |
 | `string` | - |
 
 ```tsx twoslash
@@ -367,9 +375,9 @@ import { Codespark } from '@codespark/react';
 
 Editor engine component to use. Supports Monaco Editor or CodeMirror.
 
-| Type | Default |
-| ---- | ------- |
-| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` | v1.0.0 |
 
 CodeMirror is the default editor and is lighter weight. Monaco provides a more feature-rich experience similar to VS Code.
 
@@ -387,9 +395,9 @@ Monaco Editor requires additional setup. See the [Monaco Integration](/docs/mona
 
 ### toolbox
 
-| Type | Default |
-| ---- | ------- |
-| `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean \| (ToolboxItemId \| ToolboxItemConfig \| ReactElement)[]` | `['reset', 'format', 'copy']` | v1.0.0 |
 
 This prop is passed directly to the `CodesparkEditor` component. See [CodesparkEditor > Props > toolbox](/docs/components/codespark-editor#toolbox) for usage details.
 
@@ -397,9 +405,9 @@ This prop is passed directly to the `CodesparkEditor` component. See [CodesparkE
 
 Ref to get the Workspace instance for external control.
 
-| Type | Default |
-| ---- | ------- |
-| `RefObject<Workspace \| null>` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `RefObject<Workspace \| null>` | - | v1.0.0 |
 
 Use this to programmatically control the workspace, such as getting/setting files, listening to events, etc.
 
@@ -431,24 +439,24 @@ See the [Workspace API](/docs/workspace-api) for more details on available metho
 
 ### children
 
-| Type | Default |
-| ---- | ------- |
-| `ReactNode` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `ReactNode` | - | v1.0.0 |
 
 This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > children](/docs/components/codespark-preview#children) for usage details.
 
 ### onConsole
 
-| Type | Default |
-| ---- | ------- |
-| `(data: OnConsoleData) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(data: OnConsoleData) => void` | - | v1.0.0 |
 
 This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > onConsole](/docs/components/codespark-preview#onconsole) for usage details.
 
 ### onError
 
-| Type | Default |
-| ---- | ------- |
-| `(error: unknown) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(error: unknown) => void` | - | v1.0.0 |
 
 This prop is passed directly to the `CodesparkPreview` component. See [CodesparkPreview > Props > onError](/docs/components/codespark-preview#onerror) for usage details.

@@ -50,9 +50,9 @@ export default function App() {
 
 Source code to preview. Used when not providing a workspace instance.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -65,9 +65,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Workspace instance to use for compilation and file management.
 
-| Type | Default |
-| ---- | ------- |
-| `Workspace` | Inherited from context |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Workspace` | Inherited from context | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -85,9 +85,9 @@ const workspace = new Workspace({
 
 Theme mode for the preview.
 
-| Type | Default |
-| ---- | ------- |
-| `'light' \| 'dark'` | Inherited from context |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `'light' \| 'dark'` | Inherited from context | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -100,9 +100,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Framework to use for code analysis and compilation.
 
-| Type | Default |
-| ---- | ------- |
-| `Framework \| (new () => Framework) \| string` | Inherited from context |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Framework \| (new () => Framework) \| string` | Inherited from context | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -116,9 +116,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Whether to enable Tailwind CSS support in the preview.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `true` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `true` | v1.0.0 |
 
 When enabled, you can use any Tailwind CSS class in your preview code.
 
@@ -161,13 +161,89 @@ export default function App() {
 }
 ```
 
+### preflight
+
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `preflight` | `true` | v1.0.1 |
+
+Whether to apply preflight styles (base reset, font smoothing, layout defaults) in the preview iframe.
+
+```css
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+html {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+}
+
+body {
+  height: 100%;
+  padding: 12px;
+  overflow: auto;
+  box-sizing: border-box;
+  display: flex;
+}
+
+#root {
+  margin: auto;
+}
+```
+
+```tsx codespark-preview height=200
+import { CodesparkPreview } from '@codespark/react';
+import { useState } from 'react';
+
+const code = `export default function App() {
+  return (
+    <div className="text-center">
+      <h1 className="text-xl font-bold">Hello World</h1>
+      <p>This is my first Codes Park!</p>
+    </div>
+  );
+}`;
+
+export default function App() {
+  const [preflight, setPreflight] = useState(true);
+
+  return (
+    <div className="relative">
+      <label className="absolute top-0 right-0 z-10 inline-flex cursor-pointer items-center gap-2">
+        <span className="text-sm font-medium">Preflight</span>
+        <div className="relative">
+          <input type="checkbox" checked={preflight} onChange={e => setPreflight(e.target.checked)} className="peer sr-only" />
+          <div className="peer h-5 w-9 rounded-full bg-gray-200 transition-colors peer-checked:bg-black" />
+          <div className="absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+        </div>
+      </label>
+      <CodesparkPreview code={code} preflight={preflight} />
+    </div>
+  );
+}
+```
+
 ### imports
 
 Custom import map for external dependencies.
 
-| Type | Default |
-| ---- | ------- |
-| `Record<string, string>` | Inherited from context |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Record<string, string>` | Inherited from context | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -180,9 +256,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Height of the preview area in pixels.
 
-| Type | Default |
-| ---- | ------- |
-| `number` | `200` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `number` | `200` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -195,9 +271,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 CSS class name for the preview container.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -210,9 +286,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Child elements to inject into the preview iframe, such as `Script`, `Style`, or `Link` components.
 
-| Type | Default |
-| ---- | ------- |
-| `ReactNode` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `ReactNode` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -231,9 +307,9 @@ See the [Style](/docs/style), [Script](/docs/script), and [Link](/docs/link) com
 
 Callback fired when a runtime error occurs in the preview.
 
-| Type | Default |
-| ---- | ------- |
-| `(error: unknown) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(error: unknown) => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -250,9 +326,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Callback fired when the preview iframe is loaded and ready.
 
-| Type | Default |
-| ---- | ------- |
-| `(iframe: HTMLIFrameElement) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(iframe: HTMLIFrameElement) => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -269,9 +345,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Callback fired when the preview has finished rendering.
 
-| Type | Default |
-| ---- | ------- |
-| `() => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `() => void` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -288,9 +364,9 @@ import { CodesparkPreview } from '@codespark/react';
 
 Callback fired when console methods are called in the preview. Useful for capturing and displaying console output.
 
-| Type | Default |
-| ---- | ------- |
-| `(data: OnConsoleData) => void` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `(data: OnConsoleData) => void` | - | v1.0.0 |
 
 ```tsx
 interface OnConsoleData {

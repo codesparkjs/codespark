@@ -63,9 +63,9 @@ export default function App() {
 
 Workspace instance to use for file management and compilation.
 
-| Type | Default |
-| ---- | ------- |
-| `Workspace` | Auto-created |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Workspace` | Auto-created | v1.0.0 |
 
 If not provided, a default workspace is created with an empty `./App.tsx` file.
 
@@ -87,9 +87,9 @@ const workspace = new Workspace({
 
 Theme mode for the editor and preview.
 
-| Type | Default |
-| ---- | ------- |
-| `'light' \| 'dark'` | `'light'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `'light' \| 'dark'` | `'light'` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -104,9 +104,9 @@ import { CodesparkProvider } from '@codespark/react';
 
 Framework to use for code analysis and compilation.
 
-| Type | Default |
-| ---- | ------- |
-| `Framework \| (new () => Framework) \| string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Framework \| (new () => Framework) \| string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -122,9 +122,9 @@ import { CodesparkProvider } from '@codespark/react';
 
 Custom import map for external dependencies.
 
-| Type | Default |
-| ---- | ------- |
-| `Record<string, string>` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Record<string, string>` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -139,9 +139,9 @@ import { CodesparkProvider } from '@codespark/react';
 
 Default editor engine component to use (Monaco or CodeMirror).
 
-| Type | Default |
-| ---- | ------- |
-| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `typeof Monaco \| typeof CodeMirror` | `CodeMirror` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -157,9 +157,9 @@ import { Monaco } from '@codespark/react/Monaco';
 
 Child components that will receive the workspace context.
 
-| Type | Default |
-| ---- | ------- |
-| `ReactNode` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `ReactNode` | - | v1.0.0 |
 
 ## Layouts
 

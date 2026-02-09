@@ -463,17 +463,17 @@ new Workspace({
 
 The React component or element to create a workspace from.
 
-| Type | Required |
-| ---- | -------- |
-| `ComponentType \| ReactElement` | Yes |
+| Type | Required | Since |
+| ---- | -------- | ----- |
+| `ComponentType \| ReactElement` | Yes | v1.0.0 |
 
 ### config
 
 Configuration options for the workspace.
 
-| Type | Required |
-| ---- | -------- |
-| `CreateWorkspaceConfig` | No |
+| Type | Required | Since |
+| ---- | -------- | ----- |
+| `CreateWorkspaceConfig` | No | v1.0.0 |
 
 ## Config
 
@@ -481,9 +481,9 @@ Configuration options for the workspace.
 
 Unique identifier for the workspace instance.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | Auto-generated |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | Auto-generated | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -500,9 +500,9 @@ createWorkspace(MyComponent, { id: 'my-demo-workspace' });
 
 Entry file name/path for the workspace.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | `'./App.tsx'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | `'./App.tsx'` | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors
@@ -519,9 +519,9 @@ createWorkspace(MyComponent, { name: './Demo.tsx' });
 
 Code processing mode that determines how the source code is bundled.
 
-| Type | Default |
-| ---- | ------- |
-| `'raw' \| 'source' \| 'packed'` | `'packed'` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `'raw' \| 'source' \| 'packed'` | `'packed'` | v1.0.0 |
 
 - **`'packed'`**: Bundle imports, local definitions, and the component into a single file (recommended for most use cases)
 - **`'source'`**: Use only the original source file content without bundling dependencies
@@ -549,9 +549,9 @@ createWorkspace(MyComponent, { mode: 'raw' });
 
 Framework to use for code analysis and compilation.
 
-| Type | Default |
-| ---- | ------- |
-| `Framework \| (new () => Framework) \| string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Framework \| (new () => Framework) \| string` | - | v1.0.0 |
 
 ```tsx twoslash
 // @noErrors

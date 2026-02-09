@@ -30,7 +30,7 @@ const StandalonePreview = ({ code, height = 452, className }: StandalonePreviewP
     <CodesparkPreview code={processedCode} height={height} className={className} imports={codesparkDevImports}>
       <InjectionLink rel="preconnect" href="https://fonts.googleapis.com" />
       <InjectionLink rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <InjectionLink href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet" />
+      <InjectionLink rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" />
       <Style>{`body { padding: 0 } #root { width: 100% }`}</Style>
       <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
     </CodesparkPreview>

@@ -30,9 +30,9 @@ const workspace = new Workspace({
 
 Creates a new Workspace instance.
 
-| Parameter | Type | Description |
-| --------- | ---- | ----------- |
-| `config` | `WorkspaceInit` | Configuration object for the workspace |
+| Parameter | Type | Description | Since |
+| --------- | ---- | ----------- | ----- |
+| `config` | `WorkspaceInit` | Configuration object for the workspace | v1.0.0 |
 
 ```ts twoslash
 import { Workspace } from '@codespark/react';
@@ -55,9 +55,9 @@ const workspace = new Workspace({
 
 Entry file path, the main file to compile and render.
 
-| Type | Required |
-| ---- | -------- |
-| `string` | Yes |
+| Type | Required | Since |
+| ---- | -------- | ----- |
+| `string` | Yes | v1.0.0 |
 
 ```ts twoslash
 import { Workspace } from '@codespark/react';
@@ -72,9 +72,9 @@ new Workspace({
 
 Initial files mapping, where keys are file paths and values are file contents.
 
-| Type | Required |
-| ---- | -------- |
-| `Record<string, string>` | Yes |
+| Type | Required | Since |
+| ---- | -------- | ----- |
+| `Record<string, string>` | Yes | v1.0.0 |
 
 ```ts twoslash
 import { Workspace } from '@codespark/react';
@@ -92,9 +92,9 @@ new Workspace({
 
 Unique identifier for the workspace instance.
 
-| Type | Default |
-| ---- | ------- |
-| `string` | Auto-generated |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `string` | Auto-generated | v1.0.0 |
 
 ```ts twoslash
 import { Workspace } from '@codespark/react';
@@ -110,9 +110,9 @@ new Workspace({
 
 Framework to use for code analysis and compilation.
 
-| Type | Default |
-| ---- | ------- |
-| `Framework \| (new () => Framework) \| string` | - |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `Framework \| (new () => Framework) \| string` | - | v1.0.0 |
 
 ```ts twoslash
 import { html } from '@codespark/framework/html';
@@ -129,9 +129,9 @@ new Workspace({
 
 Whether to use Origin Private File System (OPFS) for file persistence.
 
-| Type | Default |
-| ---- | ------- |
-| `boolean` | `false` |
+| Type | Default | Since |
+| ---- | ------- | ----- |
+| `boolean` | `false` | v1.0.0 |
 
 ```ts twoslash
 import { Workspace } from '@codespark/react';
@@ -151,41 +151,41 @@ new Workspace({
 
 Unique identifier for the workspace instance.
 
-| Type |
-| ---- |
-| `string` |
+| Type | Since |
+| ---- | ----- |
+| `string` | v1.0.0 |
 
 ### workspace.entry
 
 Entry file path.
 
-| Type |
-| ---- |
-| `string` |
+| Type | Since |
+| ---- | ----- |
+| `string` | v1.0.0 |
 
 ### workspace.files
 
 Current files in the workspace.
 
-| Type |
-| ---- |
-| `Record<string, string>` |
+| Type | Since |
+| ---- | ----- |
+| `Record<string, string>` | v1.0.0 |
 
 ### workspace.framework
 
 Framework used for compilation.
 
-| Type |
-| ---- |
-| `Framework \| (new () => Framework) \| string` |
+| Type | Since |
+| ---- | ----- |
+| `Framework \| (new () => Framework) \| string` | v1.0.0 |
 
 ### workspace.currentFile
 
 Currently active file in the editor.
 
-| Type |
-| ---- |
-| `FileNode` |
+| Type | Since |
+| ---- | ----- |
+| `FileNode` | v1.0.0 |
 
 ```ts
 interface FileNode {
@@ -201,9 +201,9 @@ interface FileNode {
 
 The initial files mapping provided at construction time.
 
-| Type |
-| ---- |
-| `Record<string, string>` |
+| Type | Since |
+| ---- | ----- |
+| `Record<string, string>` | v1.0.0 |
 
 ## Methods
 
