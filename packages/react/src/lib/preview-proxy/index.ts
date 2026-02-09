@@ -204,8 +204,6 @@ export function usePreview(options?: UsePreviewOptions) {
       const proxy = new PreviewProxy({
         root: iframeRef.current,
         defaultTheme: theme,
-        defaultImports: imports,
-        defaultPresets: presets,
         handlers: {
           on_console: onConsole,
           on_fetch_progress: onFetchProgress,
