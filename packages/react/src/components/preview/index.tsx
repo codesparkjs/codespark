@@ -42,6 +42,12 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
    */
   tailwindcss?: boolean;
   /**
+   * Whether to apply preflight styles (base reset, font smoothing, layout defaults) in the preview iframe
+   *
+   * @default true
+   */
+  preflight?: boolean;
+  /**
    * Child elements to inject into the preview iframe, such as Script, Style, Link components
    *
    * @example
@@ -78,6 +84,42 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
   onConsole?: (data: OnConsoleData) => void;
 }
 
+const PREFLIGHT_STYLE = `
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+html {
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+}
+
+body {
+  height: 100%;
+  padding: 12px;
+  overflow: auto;
+  box-sizing: border-box;
+  display: flex;
+}
+
+#root {
+  margin: auto;
+}
+`;
+
 /**
  * CodesparkPreview - A sandboxed preview component that renders compiled code in an iframe.
  *
@@ -88,17 +130,18 @@ export interface CodesparkPreviewProps extends ConfigContextValue, Pick<Workspac
 export function CodesparkPreview(props: CodesparkPreviewProps) {
   const { imports: globalImports, theme: globalTheme } = useConfig();
   const { workspace: contextWorkspace, imports: contextImports, theme: contextTheme, framework: contextFramework } = useCodespark() || {};
-  const { code = '', framework = contextFramework, className, tailwindcss = true, imports, theme = contextTheme ?? globalTheme ?? 'light', children, height, onError, onLoad, onRendered, onConsole } = props;
+  const { code = '', framework = contextFramework, className, tailwindcss = true, preflight = true, imports, theme = contextTheme ?? globalTheme ?? 'light', children, height, onError, onLoad, onRendered, onConsole } = props;
   const { compiled, vendor, workspace } = useWorkspace(props.workspace ?? contextWorkspace ?? new Workspace({ entry: './App.tsx', files: { './App.tsx': code }, framework }));
   const { mount: mountTailwind, unmount: unmountTailwind } = useTailwindCSS();
   const injections = useInjections(children);
   const { iframeRef, readyRef, preview, running } = usePreview({
     theme,
     presets: [
+      preflight ? `<style>${PREFLIGHT_STYLE}</style>` : '',
       ...injections,
       ...vendor.styles.map(({ content, attributes }) => `<style${serializeAttributes(attributes)}>${content}</style>`),
       ...vendor.scripts.map(({ content, attributes }) => `<script${serializeAttributes(attributes)}>${content}</script>`)
-    ],
+    ].filter(Boolean),
     imports: {
       ...vendor.imports,
       ...globalImports,
@@ -138,7 +181,7 @@ export function CodesparkPreview(props: CodesparkPreviewProps) {
   }, [compiled]);
 
   return (
-    <div className={cn('relative flex h-50 items-center justify-center', className)} style={{ height }}>
+    <div className={cn('relative flex h-[200px] items-center justify-center', className)} style={{ height }}>
       {running ? (
         <div className="absolute right-2 bottom-2 z-10 h-8 w-8 **:box-border">
           <div className="flex -translate-x-1 translate-y-[9px] scale-[0.13] **:absolute **:h-24 **:w-24">

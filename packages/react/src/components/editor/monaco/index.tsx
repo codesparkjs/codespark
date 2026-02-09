@@ -17,7 +17,86 @@ const addedLibs = new Set<string>();
 
 const dtsCacheMap = new Map<string, string>();
 
-const setup = async () => {
+const suggestionPathsMap = new Map<string, string[]>();
+
+let suggestionProvider: { dispose(): void } | null = null;
+
+const getRelativePath = (from: string, to: string): string => {
+  const fromParts = from.replace(/^\.\//, '').split('/').slice(0, -1);
+  const toParts = to.replace(/^\.\//, '').split('/');
+
+  let commonLength = 0;
+  while (commonLength < fromParts.length && commonLength < toParts.length - 1 && fromParts[commonLength] === toParts[commonLength]) {
+    commonLength++;
+  }
+
+  const upCount = fromParts.length - commonLength;
+  const relativeParts = upCount > 0 ? Array(upCount).fill('..') : ['.'];
+  return relativeParts.concat(toParts.slice(commonLength)).join('/');
+};
+
+const ensureSuggestionProvider = (monacoInst: typeof monaco) => {
+  if (suggestionProvider) return;
+  suggestionProvider = monacoInst.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
+    triggerCharacters: ['/', "'", '"'],
+    provideCompletionItems(model, position) {
+      const textUntilPosition = model.getValueInRange({
+        startLineNumber: position.lineNumber,
+        startColumn: 1,
+        endLineNumber: position.lineNumber,
+        endColumn: position.column
+      });
+
+      const importMatch = textUntilPosition.match(/(?:import\s+.*?\s+from\s+|import\s+)(['"])(\.[^'"]*?)$/);
+      if (!importMatch) return { suggestions: [] };
+
+      const editorId = model.uri.path.split('/')[1];
+      const paths = suggestionPathsMap.get(editorId) || [];
+
+      const typedPath = importMatch[2];
+      const filePaths = paths.filter(p => !p.endsWith('/'));
+      const suggestions: monaco.languages.CompletionItem[] = [];
+      const addedPaths = new Set<string>();
+
+      const currentPath = model.uri.path.replace(/^\/[^/]+\//, './');
+
+      for (const filePath of filePaths) {
+        if (filePath === currentPath) continue;
+
+        const relativePath = getRelativePath(currentPath, filePath);
+        if (!relativePath.startsWith(typedPath)) continue;
+
+        let displayPath = relativePath;
+        if (/\.(tsx?|jsx?)$/.test(displayPath)) {
+          displayPath = displayPath.replace(/\.(tsx?|jsx?)$/, '');
+        }
+
+        if (!addedPaths.has(displayPath)) {
+          addedPaths.add(displayPath);
+          suggestions.push({
+            label: displayPath,
+            kind: monacoInst.languages.CompletionItemKind.File,
+            insertText: displayPath.slice(typedPath.length),
+            range: {
+              startLineNumber: position.lineNumber,
+              startColumn: position.column,
+              endLineNumber: position.lineNumber,
+              endColumn: position.column
+            }
+          });
+        }
+      }
+
+      return { suggestions };
+    }
+  });
+};
+
+let setupPromise: ReturnType<typeof setupOnce> | null = null;
+
+const setup = () => (setupPromise ??= setupOnce());
+
+const setupOnce = async () => {
   if (typeof window === 'undefined') return;
 
   const [mod, highlighter] = await Promise.all([
@@ -185,71 +264,9 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
       });
     };
 
-    const addSuggestions = (paths: string[]) => {
-      const getRelativePath = (from: string, to: string): string => {
-        const fromParts = from.replace(/^\.\//, '').split('/').slice(0, -1);
-        const toParts = to.replace(/^\.\//, '').split('/');
-
-        let commonLength = 0;
-        while (commonLength < fromParts.length && commonLength < toParts.length - 1 && fromParts[commonLength] === toParts[commonLength]) {
-          commonLength++;
-        }
-
-        const upCount = fromParts.length - commonLength;
-        const relativeParts = upCount > 0 ? Array(upCount).fill('..') : ['.'];
-        return relativeParts.concat(toParts.slice(commonLength)).join('/');
-      };
-
-      return monacoInstance!.languages.registerCompletionItemProvider(['typescript', 'typescriptreact', 'javascript', 'javascriptreact'], {
-        triggerCharacters: ['/', "'", '"'],
-        provideCompletionItems(model, position) {
-          const textUntilPosition = model.getValueInRange({
-            startLineNumber: position.lineNumber,
-            startColumn: 1,
-            endLineNumber: position.lineNumber,
-            endColumn: position.column
-          });
-
-          const importMatch = textUntilPosition.match(/(?:import\s+.*?\s+from\s+|import\s+)(['"])(\.[^'"]*?)$/);
-          if (!importMatch) return { suggestions: [] };
-
-          const typedPath = importMatch[2];
-          const filePaths = paths.filter(p => !p.endsWith('/'));
-          const suggestions: monaco.languages.CompletionItem[] = [];
-          const addedPaths = new Set<string>();
-
-          const currentPath = model.uri.path.replace(/^\/[^/]+\//, './');
-
-          for (const filePath of filePaths) {
-            if (filePath === currentPath) continue;
-
-            const relativePath = getRelativePath(currentPath, filePath);
-            if (!relativePath.startsWith(typedPath)) continue;
-
-            let displayPath = relativePath;
-            if (/\.(tsx?|jsx?)$/.test(displayPath)) {
-              displayPath = displayPath.replace(/\.(tsx?|jsx?)$/, '');
-            }
-
-            if (!addedPaths.has(displayPath)) {
-              addedPaths.add(displayPath);
-              suggestions.push({
-                label: displayPath,
-                kind: monacoInstance!.languages.CompletionItemKind.File,
-                insertText: displayPath.slice(typedPath.length),
-                range: {
-                  startLineNumber: position.lineNumber,
-                  startColumn: position.column,
-                  endLineNumber: position.lineNumber,
-                  endColumn: position.column
-                }
-              });
-            }
-          }
-
-          return { suggestions };
-        }
-      });
+    const updateSuggestionPaths = (editorId: string, paths: string[]) => {
+      suggestionPathsMap.set(editorId, paths);
+      ensureSuggestionProvider(monacoInstance!);
     };
 
     useEffect(() => {
@@ -267,9 +284,11 @@ export const Monaco: EditorEngineComponent<EditorEngine.Monaco, MonacoProps, mon
       if (typeof window === 'undefined' || !monacoInstance || !id) return;
 
       createModels(files);
-      const provider = addSuggestions(Object.keys(files || {}));
+      updateSuggestionPaths(id, Object.keys(files || {}));
 
-      return () => provider?.dispose();
+      return () => {
+        suggestionPathsMap.delete(id);
+      };
     }, [files, monacoInstance]);
 
     useEffect(() => {

@@ -114,6 +114,12 @@ export interface CodesparkProps extends Pick<ConfigContextValue, 'theme'>, Pick<
    * @default 'vertical'
    */
   orientation?: 'vertical' | 'horizontal';
+  /**
+   * Whether to apply preflight styles (base reset, font smoothing, layout defaults) in the preview iframe
+   *
+   * @default true
+   */
+  preflight?: boolean;
 }
 
 /**
@@ -145,7 +151,8 @@ export function Codespark(props: CodesparkProps) {
     getWorkspace,
     editorHeight,
     previewHeight,
-    orientation = 'vertical'
+    orientation = 'vertical',
+    preflight
   } = props;
   const { workspace, fileTree, compileError } = useWorkspace({ entry: name, files: files ?? { [name]: code || '' }, framework });
   const [runtimeError, setRuntimeError] = useState<Error | null>(null);
@@ -199,7 +206,8 @@ export function Codespark(props: CodesparkProps) {
                 onError?.(error);
                 setRuntimeError(error as Error);
               }}
-              height={previewHeight}>
+              height={previewHeight}
+              preflight={preflight}>
               {children}
             </CodesparkPreview>
           ) : null}
