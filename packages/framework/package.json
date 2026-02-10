@@ -1,6 +1,6 @@
 {
   "name": "@codespark/framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Framework registration API for codespark ecosystem",
   "keywords": [

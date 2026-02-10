@@ -21,7 +21,7 @@ export class Framework extends Base {
   }
 
   compile() {
-    const transformed = this.transformModulesToBlob([...this.getOutput(LoaderType.ESModule)].reverse());
+    const transformed = this.transformModulesToBlob([...this.getOutput(LoaderType.ESModule)]);
     const builder = this.createBuilder(transformed);
     const ast = parse(transformed, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 

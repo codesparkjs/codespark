@@ -68,7 +68,7 @@ describe('analyze', () => {
     });
     const esModules = outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[];
     expect(esModules).toHaveLength(2);
-    expect(esModules[0].dependencies['./button.tsx']).toBe('./button.tsx');
+    expect(esModules[1].dependencies['./button.tsx']).toBe('./button.tsx');
   });
 
   it('should resolve import without extension', () => {
@@ -78,7 +78,7 @@ describe('analyze', () => {
     });
     const esModules = outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[];
     expect(esModules).toHaveLength(2);
-    expect(esModules[0].dependencies['./button']).toBe('./button.tsx');
+    expect(esModules[1].dependencies['./button']).toBe('./button.tsx');
   });
 
   it('should resolve import to folder index', () => {
@@ -88,7 +88,7 @@ describe('analyze', () => {
     });
     const esModules = outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[];
     expect(esModules).toHaveLength(2);
-    expect(esModules[0].dependencies['./button']).toBe('./button/index.tsx');
+    expect(esModules[1].dependencies['./button']).toBe('./button/index.tsx');
   });
 
   it('should handle nested internal deps', () => {
@@ -205,6 +205,6 @@ describe('analyze', () => {
     });
     const esModules = outputs.get(LoaderType.ESModule) as Output<LoaderType.ESModule>[];
     expect(esModules).toHaveLength(2);
-    expect(esModules[0].dependencies['./data.json']).toBe('./data.json');
+    expect(esModules[1].dependencies['./data.json']).toBe('./data.json');
   });
 });

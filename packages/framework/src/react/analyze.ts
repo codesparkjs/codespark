@@ -81,10 +81,10 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
   switch (output.type) {
     case LoaderType.ESModule: {
       const { content, dependencies, externals } = output;
-      getOutputList(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals });
       for (const depPath of Object.values(dependencies)) {
         processFile(depPath, files, outputs, visited);
       }
+      getOutputList(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals });
       break;
     }
     case LoaderType.Style: {
