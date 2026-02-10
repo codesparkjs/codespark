@@ -1,3 +1,9 @@
+## 1.0.5
+
+### Bug fix 🐛
+
+- merge the same externals source
+
 ## 1.0.4
 
 ### Bug fix 🐛

@@ -505,6 +505,13 @@ export function useWorkspace(init?: WorkspaceInit | Workspace): UseWorkspaceRetu
       const modules = framework.getOutput(LoaderType.ESModule);
       const styles = framework.getOutput(LoaderType.Style);
       const scripts = framework.getOutput(LoaderType.Script);
+      const externals = modules
+        .flatMap(({ externals }) => externals)
+        .reduce<Record<string, Set<string>>>((acc, { name, imported }) => {
+          if (!acc[name]) acc[name] = new Set();
+          imported.forEach(i => acc[name].add(i));
+          return acc;
+        }, {});
 
       return {
         fileTree,
@@ -515,20 +522,17 @@ export function useWorkspace(init?: WorkspaceInit | Workspace): UseWorkspaceRetu
           styles,
           scripts,
           imports: {
-            ...modules
-              .map(({ externals }) => externals)
-              .flat()
-              .reduce<Record<string, string>>((pre, { name, imported }) => {
-                return {
-                  ...pre,
-                  [name]: constructESMUrl({
-                    pkg: name,
-                    version: '',
-                    external: Object.keys(framework.imports),
-                    exports: imported.length ? imported : undefined
-                  })
-                };
-              }, {}),
+            ...Object.entries(externals).reduce<Record<string, string>>((pre, [name, importedSet]) => {
+              const imported = Array.from(importedSet);
+              pre[name] = constructESMUrl({
+                pkg: name,
+                version: '',
+                external: Object.keys(framework.imports),
+                exports: imported.length ? imported : undefined
+              });
+
+              return pre;
+            }, {}),
             ...framework.imports
           }
         }
@@ -556,7 +560,7 @@ export function useWorkspace(init?: WorkspaceInit | Workspace): UseWorkspaceRetu
 /**
  * Configuration options for createWorkspace function
  */
-export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'framework'> {
+export interface CreateWorkspaceConfig extends Omit<WorkspaceInit, 'entry' | 'files'> {
   /**
    * Entry file name/path
    *
@@ -593,10 +597,10 @@ export interface CreateWorkspaceConfig extends Pick<WorkspaceInit, 'id' | 'frame
  * ```
  */
 export function createWorkspace(this: { __scanned?: CollectResult } | void, source: ComponentType | ReactElement, config?: CreateWorkspaceConfig) {
-  const { id, framework, name = './App.tsx', mode = 'packed' } = config || {};
+  const { name = './App.tsx', mode = 'packed', ...workspaceInit } = config || {};
 
   if (!this?.__scanned) {
-    return new Workspace({ id, entry: name, files: { [name]: source.toString() } });
+    return new Workspace({ entry: name, files: { [name]: source.toString() } });
   }
 
   const { entry, files } = this.__scanned;
@@ -608,7 +612,7 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
     packedCode = Object.values(files)[0] || '';
     const sourceEntry = Object.keys(files)[0] || '';
 
-    return new Workspace({ id, framework, entry: sourceEntry, files });
+    return new Workspace({ entry: sourceEntry, files, ...workspaceInit });
   } else {
     const { code, locals, imports } = entry;
     const depDefs = imports.join('\n');
@@ -616,5 +620,5 @@ export function createWorkspace(this: { __scanned?: CollectResult } | void, sour
     packedCode = [depDefs, localDefs, isElement(source) || isFragment(source) ? `export default function App() {\n  return ${code}\n};` : `export default ${code};`].filter(Boolean).join('\n\n');
   }
 
-  return new Workspace({ id, framework, entry: name, files: { [name]: packedCode, ...files } });
+  return new Workspace({ entry: name, files: { [name]: packedCode, ...files }, ...workspaceInit });
 }

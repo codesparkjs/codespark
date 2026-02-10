@@ -1,6 +1,6 @@
 {
   "name": "@codespark/react",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "description": "React components for codespark ecosystem",
   "keywords": [
@@ -27,7 +27,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown",
+    "release": "pnpm build && npm publish --access public"
   },
   "author": "TonyL1u",
   "license": "MIT",
