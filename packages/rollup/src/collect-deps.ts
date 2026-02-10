@@ -171,6 +171,15 @@ function rewriteAliasImports(code: string, filePath: string) {
       rel = './' + rel;
     }
 
+    // Keep extension only if original source has extension
+    const sourceExt = path.extname(source);
+    if (!sourceExt) {
+      const ext = path.extname(rel);
+      if (ext) {
+        rel = rel.slice(0, -ext.length);
+      }
+    }
+
     result = result.replace(`'${source}'`, `'${rel}'`);
     result = result.replace(`"${source}"`, `"${rel}"`);
   }
