@@ -1,6 +1,6 @@
 {
   "name": "@codespark/plugin-webpack",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Webpack plugin for codespark ecosystem",
   "keywords": [
@@ -25,7 +25,8 @@
   },
   "scripts": {
     "build": "tsdown",
-    "test": "vitest run"
+    "test": "vitest run",
+    "release": "pnpm build && npm publish --access public"
   },
   "author": "TonyL1u",
   "license": "MIT",
