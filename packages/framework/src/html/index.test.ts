@@ -8,8 +8,8 @@ const ENTRY = './index.html';
 
 describe('Framework lite mode', () => {
   it('should wrap HTML fragment with full document structure', () => {
-    const framework = new Framework({ liteMode: { enabled: true } });
-    framework.analyze(ENTRY, {
+    const framework = new Framework({ liteMode: { enabled: true, htmlEntry: ENTRY } });
+    framework.analyze({
       [ENTRY]: '<div id="app">Hello</div>',
       './index.js': 'console.log("hello")',
       './index.css': 'body { color: red; }'
@@ -21,8 +21,8 @@ describe('Framework lite mode', () => {
   });
 
   it('should auto-include default script entry as ES module', () => {
-    const framework = new Framework({ liteMode: { enabled: true } });
-    framework.analyze(ENTRY, {
+    const framework = new Framework({ liteMode: { enabled: true, htmlEntry: ENTRY } });
+    framework.analyze({
       [ENTRY]: '<div id="app"></div>',
       './index.js': 'console.log("hello")',
       './index.css': ''
@@ -34,8 +34,8 @@ describe('Framework lite mode', () => {
   });
 
   it('should auto-include default style entry', () => {
-    const framework = new Framework({ liteMode: { enabled: true } });
-    framework.analyze(ENTRY, {
+    const framework = new Framework({ liteMode: { enabled: true, htmlEntry: ENTRY } });
+    framework.analyze({
       [ENTRY]: '<div id="app"></div>',
       './index.js': '',
       './index.css': 'body { margin: 0; }'
@@ -50,11 +50,12 @@ describe('Framework lite mode', () => {
     const framework = new Framework({
       liteMode: {
         enabled: true,
+        htmlEntry: ENTRY,
         scriptEntry: './main.ts',
         styleEntry: './styles.css'
       }
     });
-    framework.analyze(ENTRY, {
+    framework.analyze({
       [ENTRY]: '<div id="app"></div>',
       './main.ts': 'export const x = 1;',
       './styles.css': '.app { display: flex; }'
@@ -70,8 +71,8 @@ describe('Framework lite mode', () => {
   });
 
   it('should handle empty HTML fragment', () => {
-    const framework = new Framework({ liteMode: { enabled: true } });
-    framework.analyze(ENTRY, {
+    const framework = new Framework({ liteMode: { enabled: true, htmlEntry: ENTRY } });
+    framework.analyze({
       [ENTRY]: '',
       './index.js': 'console.log("hello")',
       './index.css': ''
@@ -82,8 +83,8 @@ describe('Framework lite mode', () => {
   });
 
   it('should handle missing entry file', () => {
-    const framework = new Framework({ liteMode: { enabled: true } });
-    framework.analyze(ENTRY, {
+    const framework = new Framework({ liteMode: { enabled: true, htmlEntry: ENTRY } });
+    framework.analyze({
       './index.js': 'console.log("hello")',
       './index.css': ''
     });
@@ -93,8 +94,8 @@ describe('Framework lite mode', () => {
   });
 
   it('should process script dependencies in lite mode', () => {
-    const framework = new Framework({ liteMode: { enabled: true } });
-    framework.analyze(ENTRY, {
+    const framework = new Framework({ liteMode: { enabled: true, htmlEntry: ENTRY } });
+    framework.analyze({
       [ENTRY]: '<div id="app"></div>',
       './index.js': "import { helper } from './utils.js';\nhelper();",
       './utils.js': 'export const helper = () => {}',
@@ -110,7 +111,7 @@ describe('Framework lite mode', () => {
 
   it('should not wrap HTML when liteMode is false', () => {
     const framework = new Framework({ liteMode: { enabled: false } });
-    framework.analyze(ENTRY, {
+    framework.analyze({
       [ENTRY]: '<div id="app">Hello</div>',
       './index.js': 'console.log("hello")',
       './index.css': ''
@@ -123,7 +124,7 @@ describe('Framework lite mode', () => {
 
   it('should not wrap HTML when liteMode is not specified', () => {
     const framework = new Framework();
-    framework.analyze(ENTRY, {
+    framework.analyze({
       [ENTRY]: '<div id="app">Hello</div>',
       './index.js': 'console.log("hello")',
       './index.css': ''
@@ -137,28 +138,28 @@ describe('Framework lite mode', () => {
 describe('Framework compile with external scripts', () => {
   it('should compile external URL ES module script with src attribute', () => {
     const framework = new Framework();
-    framework.analyze(ENTRY, {
+    framework.analyze({
       [ENTRY]: '<script type="module" src="https://esm.sh/tsx"></script>'
     });
 
-    const result = framework.compile();
+    const result = framework.compile(ENTRY);
     expect(result).toContain('src=\\"https://esm.sh/tsx\\"');
     expect(result).toContain('type=\\"module\\"');
   });
 
   it('should compile external URL regular script with src attribute', () => {
     const framework = new Framework();
-    framework.analyze(ENTRY, {
+    framework.analyze({
       [ENTRY]: '<script src="https://cdn.example.com/lib.js"></script>'
     });
 
-    const result = framework.compile();
+    const result = framework.compile(ENTRY);
     expect(result).toContain('src=\\"https://cdn.example.com/lib.js\\"');
   });
 
   it('should compile mixed local and external scripts', () => {
     const framework = new Framework();
-    framework.analyze(ENTRY, {
+    framework.analyze({
       [ENTRY]: `
         <script type="module" src="./app.js"></script>
         <script type="module" src="https://esm.sh/react"></script>
@@ -167,7 +168,7 @@ describe('Framework compile with external scripts', () => {
       './app.js': 'console.log("local")'
     });
 
-    const result = framework.compile();
+    const result = framework.compile(ENTRY);
     expect(result).toContain('src=\\"https://esm.sh/react\\"');
     expect(result).toContain('src=\\"https://cdn.example.com/lib.js\\"');
     expect(result).toContain('console.log');

@@ -9,15 +9,16 @@ export class Framework extends Base {
   readonly imports = {};
   outputs: Outputs = new Map();
 
-  analyze(entry: string, files: Record<string, string>) {
-    this.outputs = analyze(entry, files);
+  analyze(files: Record<string, string>) {
+    this.outputs = analyze(files);
   }
 
-  compile() {
+  compile(entry: string) {
     const assets = this.getOutput(LoaderType.Asset);
+    const entryAsset = assets.find(a => a.path === entry);
 
     return this.createBuilder()
-      .setHTML(JSON.stringify(assets.map(({ content }) => content).join('')))
+      .setHTML(JSON.stringify(entryAsset?.content ?? ''))
       .done();
   }
 }
