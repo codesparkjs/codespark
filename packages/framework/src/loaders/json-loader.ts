@@ -6,6 +6,6 @@ export class JSONLoader implements Loader<LoaderType.ESModule> {
   readonly test = /\.json$/;
 
   transform(source: string): ESModuleLoaderOutput {
-    return { type: LoaderType.ESModule, content: `export default ${source};`, dependencies: {}, externals: [] };
+    return { type: LoaderType.ESModule, content: `export default ${source};`, dependencies: {}, externals: [], raw: source };
   }
 }

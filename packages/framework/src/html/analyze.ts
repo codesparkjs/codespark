@@ -107,7 +107,8 @@ function processESModule(path: string, files: Record<string, string>, outputs: O
     path,
     content: output.content,
     dependencies: output.dependencies,
-    externals: output.externals
+    externals: output.externals,
+    raw: source
   });
 
   for (const depPath of Object.values(output.dependencies)) {
@@ -184,7 +185,8 @@ function processModuleScript(el: ParsedElement, entry: string, files: Record<str
     path: virtualPath,
     content: output.content,
     dependencies: output.dependencies,
-    externals: output.externals
+    externals: output.externals,
+    raw: el.content
   });
 
   for (const depPath of Object.values(output.dependencies)) {
@@ -249,26 +251,28 @@ function processLinkElement(el: ParsedElement, files: Record<string, string>, ou
   }
 }
 
-export function analyze(entry: string, files: Record<string, string>) {
+export function analyze(files: Record<string, string>) {
   const outputs = createOutputs();
 
-  const html = files[entry];
-  if (!html) return outputs;
+  for (const path of Object.keys(files)) {
+    if (!path.endsWith('.html')) continue;
 
-  const { elements, bodyContent } = parseHTML(html);
+    const html = files[path];
+    const { elements, bodyContent } = parseHTML(html);
 
-  for (const el of elements) {
-    if (el.type === 'script') {
-      processScriptElement(el, entry, files, outputs);
-    } else if (el.type === 'style') {
-      processStyleElement(el, entry, outputs);
-    } else if (el.type === 'link') {
-      processLinkElement(el, files, outputs);
+    for (const el of elements) {
+      if (el.type === 'script') {
+        processScriptElement(el, path, files, outputs);
+      } else if (el.type === 'style') {
+        processStyleElement(el, path, outputs);
+      } else if (el.type === 'link') {
+        processLinkElement(el, files, outputs);
+      }
     }
-  }
 
-  if (bodyContent) {
-    getOutputArray(outputs, LoaderType.Asset).push({ path: entry, content: bodyContent });
+    if (bodyContent) {
+      getOutputArray(outputs, LoaderType.Asset).push({ path, content: bodyContent });
+    }
   }
 
   return outputs;

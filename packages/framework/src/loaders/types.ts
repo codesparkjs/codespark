@@ -13,6 +13,7 @@ interface BaseLoaderOutput<T extends LoaderType> {
 export interface ESModuleLoaderOutput extends BaseLoaderOutput<LoaderType.ESModule> {
   dependencies: Record<string, string>;
   externals: { name: string; imported: string[] }[];
+  raw: string;
 }
 
 export interface StyleLoaderOutput extends BaseLoaderOutput<LoaderType.Style> {

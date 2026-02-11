@@ -9,19 +9,25 @@ import { analyze } from './analyze';
 export class Framework extends Base {
   readonly name = 'react';
   readonly imports = {
-    react: 'https://esm.sh/react@18.2.0',
-    'react/jsx-runtime': 'https://esm.sh/react@18.2.0/jsx-runtime',
-    'react-dom/client': 'https://esm.sh/react-dom@18.2.0/client'
+    react: 'https://esm.sh/react',
+    'react/jsx-runtime': 'https://esm.sh/react/jsx-runtime',
+    'react-dom/client': 'https://esm.sh/react-dom/client'
   };
   outputs: Outputs = new Map();
   private blobUrlMap = new Map<string, string>();
 
-  analyze(entry: string, files: Record<string, string>) {
-    this.outputs = analyze(entry, files);
+  analyze(files: Record<string, string>) {
+    this.outputs = analyze(files);
   }
 
-  compile() {
-    const transformed = this.transformModulesToBlob([...this.getOutput(LoaderType.ESModule)]);
+  compile(entry: string) {
+    const modules = this.getOutput(LoaderType.ESModule);
+    const entryModule = modules.find(m => m.path === entry);
+    if (!entryModule) {
+      throw new Error(`Entry module not found: ${entry}`);
+    }
+
+    const transformed = this.transformModulesToBlob(entry, modules);
     const builder = this.createBuilder(transformed);
     const ast = parse(transformed, { sourceType: 'module', plugins: ['jsx', 'typescript'] }).program.body;
 
@@ -66,19 +72,38 @@ export class Framework extends Base {
     return builder.toString();
   }
 
-  private transformModulesToBlob(modules: Output<LoaderType.ESModule>[]) {
-    let entryCode = '';
+  private transformModulesToBlob(entry: string, modules: Output<LoaderType.ESModule>[]) {
+    const moduleMap = new Map(modules.map(m => [m.path, m]));
+    const orderedModules: Output<LoaderType.ESModule>[] = [];
+    const visited = new Set<string>();
 
-    modules.forEach((mod, index) => {
+    const visit = (path: string) => {
+      if (visited.has(path)) return;
+      visited.add(path);
+
+      const mod = moduleMap.get(path);
+      if (!mod) return;
+
+      for (const depPath of Object.values(mod.dependencies)) {
+        visit(depPath);
+      }
+      orderedModules.push(mod);
+    };
+
+    visit(entry);
+
+    let entryCode = '';
+    for (let i = 0; i < orderedModules.length; i++) {
+      const mod = orderedModules[i];
       const code = this.transformCodeWithBlobUrls(mod);
 
-      if (index === modules.length - 1) {
+      if (i === orderedModules.length - 1) {
         entryCode = code;
       } else {
         const blob = new Blob([code], { type: 'application/javascript' });
         this.blobUrlMap.set(mod.path, URL.createObjectURL(blob));
       }
-    });
+    }
 
     return entryCode;
   }

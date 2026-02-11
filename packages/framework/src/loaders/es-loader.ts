@@ -72,14 +72,7 @@ export class ESLoader implements Loader<LoaderType.ESModule> {
   readonly name = 'es-loader';
   readonly test = /\.(tsx?|jsx?)$/;
 
-  private jsxPreset: ESLoaderOptions['jsxPreset'];
-  private isTSX: boolean;
-
-  constructor(options?: ESLoaderOptions) {
-    const { jsxPreset, isTSX = false } = options || {};
-    this.jsxPreset = jsxPreset;
-    this.isTSX = isTSX;
-  }
+  constructor(private options?: ESLoaderOptions) {}
 
   transform(source: string, ctx: LoaderContext): ESModuleLoaderOutput {
     const ast = parseCode(source);
@@ -103,13 +96,14 @@ export class ESLoader implements Loader<LoaderType.ESModule> {
       if (resolved) dependencies[importPath] = resolved;
     }
 
+    const { jsxPreset, isTSX = false } = this.options || {};
     const { typescript } = availablePresets;
-    const defaultPresets = [typescript, { isTSX: this.isTSX, allExtensions: true }];
+    const defaultPresets = [typescript, { isTSX, allExtensions: true }];
     const { code } = transform(source, {
       filename: ctx.resourcePath,
-      presets: this.jsxPreset ? [this.jsxPreset, defaultPresets] : [defaultPresets]
+      presets: jsxPreset ? [jsxPreset, defaultPresets] : [defaultPresets]
     });
 
-    return { type: LoaderType.ESModule, content: code || '', dependencies, externals };
+    return { type: LoaderType.ESModule, content: code || '', dependencies, externals, raw: source };
   }
 }

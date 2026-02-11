@@ -1,6 +1,6 @@
 {
   "name": "@codespark/framework",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Framework registration API for codespark ecosystem",
   "keywords": [
@@ -51,6 +51,6 @@
     "@types/babel__standalone": "^7.1.9",
     "@types/node": "^22.19.2",
     "domhandler": "^5.0.3",
-    "tsdown": "^0.17.3"
+    "tsdown": "^0.20.3"
   }
 }

@@ -29,21 +29,24 @@ export class Framework extends Base {
   outputs: Outputs = new Map();
 
   private blobUrlMap = new Map<string, string>();
+  private LITE_DEFAULT_ENTRY = './index.html';
+  private LITE_DEFAULT_SCRIPT = './index.js';
+  private LITE_DEFAULT_STYLE = './index.css';
 
   constructor(private config?: FrameworkConfig) {
     super();
   }
 
-  analyze(entry: string, files: Record<string, string>) {
-    const { enabled, htmlEntry = entry } = this.config?.liteMode ?? {};
-    if (enabled) {
-      this.outputs = analyze(entry, { ...files, [htmlEntry]: this.wrapInLiteModeTemplate(files[htmlEntry] ?? '') });
+  analyze(files: Record<string, string>) {
+    const { enabled, htmlEntry = this.LITE_DEFAULT_ENTRY } = this.config?.liteMode ?? {};
+    if (enabled && htmlEntry) {
+      this.outputs = analyze({ ...files, [htmlEntry]: this.wrapInLiteModeTemplate(files[htmlEntry] ?? '') });
     } else {
-      this.outputs = analyze(entry, files);
+      this.outputs = analyze(files);
     }
   }
 
-  compile(): string {
+  compile(entry: string): string {
     const builder = this.createBuilder();
 
     const assets = this.getOutput(LoaderType.Asset);
@@ -51,7 +54,8 @@ export class Framework extends Base {
     const scripts = this.getOutput(LoaderType.Script);
     const modules = this.getOutput(LoaderType.ESModule);
 
-    let htmlContent = assets.map(a => a.content).join('');
+    const entryAsset = assets.find(a => a.path === entry);
+    let htmlContent = entryAsset?.content ?? '';
 
     for (const style of styles) {
       if (style.href) {
@@ -89,7 +93,7 @@ export class Framework extends Base {
   }
 
   private wrapInLiteModeTemplate(htmlFragment: string) {
-    const { scriptEntry = './index.js', styleEntry = './index.css' } = this.config?.liteMode ?? {};
+    const { scriptEntry = this.LITE_DEFAULT_SCRIPT, styleEntry = this.LITE_DEFAULT_STYLE } = this.config?.liteMode ?? {};
 
     return `<!DOCTYPE html>
 <html>

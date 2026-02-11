@@ -24,13 +24,16 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
   (outputs.get(output.type) as Output<LoaderType.Asset>[]).push(result);
 }
 
-export function analyze(entry: string, files: Record<string, string>) {
+export function analyze(files: Record<string, string>) {
   const outputs: Outputs = new Map();
   outputs.set(LoaderType.ESModule, []);
   outputs.set(LoaderType.Style, []);
   outputs.set(LoaderType.Script, []);
   outputs.set(LoaderType.Asset, []);
-  processFile(entry, files, outputs);
+
+  for (const path of Object.keys(files)) {
+    processFile(path, files, outputs);
+  }
 
   return outputs;
 }

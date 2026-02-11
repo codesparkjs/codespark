@@ -84,7 +84,7 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
       for (const depPath of Object.values(dependencies)) {
         processFile(depPath, files, outputs, visited);
       }
-      getOutputList(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals });
+      getOutputList(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals, raw: source });
       break;
     }
     case LoaderType.Style: {
@@ -104,14 +104,23 @@ export default function MarkdownContent() {
   return _jsx('div', { dangerouslySetInnerHTML: { __html: ${JSON.stringify(content)} } });
 }`,
         dependencies: {},
-        externals: []
+        externals: [],
+        raw: content
       });
     }
   }
 }
 
-export function analyze(entry: string, files: Record<string, string>) {
+export function analyze(files: Record<string, string>) {
   const outputs = createOutputsMap();
-  processFile(entry, files, outputs, new Set());
+  const visited = new Set<string>();
+
+  for (const path of Object.keys(files)) {
+    const loader = matchLoader(path);
+    if (loader) {
+      processFile(path, files, outputs, visited);
+    }
+  }
+
   return outputs;
 }
