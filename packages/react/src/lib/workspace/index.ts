@@ -499,8 +499,8 @@ export function useWorkspace(init?: WorkspaceInit | Workspace): UseWorkspaceRetu
     })();
 
     try {
-      framework.analyze(workspace.entry, files);
-      const compiled = framework.compile();
+      framework.analyze(files);
+      const compiled = framework.compile(workspace.entry);
       workspace[INTERNAL_EMIT]('compiled', compiled);
       const modules = framework.getOutput(LoaderType.ESModule);
       const styles = framework.getOutput(LoaderType.Style);
