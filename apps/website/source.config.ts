@@ -23,7 +23,7 @@ export default defineConfig({
         dark: 'github-dark',
         light: 'github-light'
       },
-      transformers: [...(rehypeCodeDefaultOptions.transformers ?? []), transformerTwoslash()],
+      transformers: [...(rehypeCodeDefaultOptions.transformers ?? [])],
       langs: ['js', 'jsx', 'ts', 'tsx'],
       parseMetaString(meta) {
         const regex = /(?<=^|\s)(?<name>\w+)(?:=(?:"([^"]*)"|'([^']*)'|(\S+)))?/g;

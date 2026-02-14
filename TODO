@@ -1,0 +1,16 @@
+1. 无法监听首次compiled事件
+2. playground里修改了代码，然后再切换embedded还是之前旧的代码
+3. workspace.mdx demo写的有问题 done
+
+skills
+1. git commit
+2. 文档撰写
+3. 测试覆盖率
+
+新特性支持
+1. HTML Framework - Done
+2. Framework自定义loader
+3. 切换entry
+4. markdown Framework自定义插件，支持代码语法高亮等
+5. markdown Framework支持样式定制，传入css
+6. HTML Framework初始化如果有报错，无法继续渲染

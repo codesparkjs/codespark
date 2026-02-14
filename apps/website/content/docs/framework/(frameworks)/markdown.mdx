@@ -3,7 +3,7 @@ title: Markdown
 description: A framework for rendering Markdown content as sanitized HTML in the preview panel.
 ---
 
-The Markdown framework transforms Markdown source files into sanitized HTML output, enabling you to preview formatted documentation directly within CodeSpark.
+The Markdown framework transforms Markdown source files into sanitized HTML output, enabling you to preview formatted documentation directly within Codespark.
 
 ```ts
 import { Framework, markdown } from '@codespark/framework/markdown';
@@ -19,6 +19,7 @@ import { Codespark } from '@codespark/react';
 
 <Codespark
   framework={markdown}
+  name="index.md" // [!code highlight]
   code={`# Hello World
 
 This is a **Markdown** preview.`}

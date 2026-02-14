@@ -5,6 +5,8 @@ import { Icons } from '~/components/icons';
 import { Button } from '~/components/ui/button';
 
 import { Features } from './features';
+import Test from './test';
+import Test2 from './test2';
 
 export function meta() {
   return [{ title: 'Spark Code to Your Life - codespark' }, { name: 'description', content: 'Edit and preview React components in real-time' }];
@@ -32,13 +34,14 @@ export default function Home() {
             Edit. Preview. & Ship.
           </div>
           <h1 className="text-foreground mb-6 text-5xl font-semibold tracking-tight md:text-7xl">
-            <span className="bg-linear-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">Code</span>
-            <span className="relative mx-3 inline-block">
-              <span className="absolute -inset-1 animate-pulse rounded-lg bg-emerald-500/20 blur-md" />
-              <Icons.logo className="size-12 text-emerald-400" />
-            </span>
-            <span className="bg-linear-to-r from-teal-500 to-cyan-400 bg-clip-text text-transparent">Spark</span>
-            <br />
+            <div className="flex items-center justify-center">
+              <span className="bg-linear-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent">Code</span>
+              <span className="relative mx-3 inline-block">
+                <span className="absolute -inset-1 animate-pulse rounded-lg bg-emerald-500/20 blur-md" />
+                <Icons.logo className="size-10 text-emerald-400 md:size-12" />
+              </span>
+              <span className="bg-linear-to-r from-teal-500 to-cyan-400 bg-clip-text text-transparent">Spark</span>
+            </div>
             The Park for Your Codes
           </h1>
           <p className="text-muted-foreground mb-8 max-w-2xl text-lg md:text-xl">A live-running code playground sparks your ideas to life with real-time preview, automatic dependency resolution, and instant hot reload</p>
@@ -57,6 +60,8 @@ export default function Home() {
         <section className="mt-20">
           <Features />
         </section>
+        <Test />
+        <Test2 />
         <section className="border-border text-muted-foreground mt-20 space-x-1 border-t pt-10 text-center text-sm">
           &copy; {new Date().getFullYear()} <span className="text-emerald-400">✦</span> codespark, Inc. All rights reserved.
         </section>

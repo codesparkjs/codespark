@@ -1,6 +1,7 @@
 {
   "pages": [
     "monaco",
-    "mdx"
+    "mdx",
+    "almostnode"
   ]
 }

@@ -3,7 +3,12 @@ import './styles/monaco.css';
 
 import { rewritePath } from 'fumadocs-core/negotiation';
 import { RootProvider } from 'fumadocs-ui/provider/react-router';
+import { MessageCircleIcon } from 'lucide-react';
 import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
+
+import { AISearch, AISearchPanel, AISearchTrigger } from '~/components/ai/search';
+import { buttonVariants } from '~/components/ui/button';
+import { cn } from '~/lib/utils';
 
 import type { Route } from './+types/root';
 
@@ -29,6 +34,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <RootProvider>{children}</RootProvider>
         <ScrollRestoration />
         <Scripts />
+        <AISearch>
+          <AISearchPanel />
+          <AISearchTrigger
+            position="float"
+            className={cn(
+              buttonVariants({
+                variant: 'secondary',
+                className: 'text-fd-muted-foreground rounded-2xl'
+              })
+            )}>
+            <MessageCircleIcon className="size-4.5" />
+            Ask AI
+          </AISearchTrigger>
+        </AISearch>
       </body>
     </html>
   );

@@ -1,23 +1,12 @@
-import { availablePresets } from '@babel/standalone';
-
-import { CSSLoader } from '../loaders/css-loader';
+import { CSSLoader } from '../loaders';
 import { ESLoader } from '../loaders/es-loader';
 import { JSONLoader } from '../loaders/json-loader';
-import { MarkdownLoader } from '../loaders/markdown-loader';
 import { LoaderType } from '../loaders/types';
 import type { Output, Outputs } from '../registry';
 
-const EXTENSIONS = ['.tsx', '.ts', '.jsx', '.js'] as const;
+const EXTENSIONS = ['.ts', '.js', '.mjs', '.cjs'] as const;
 
-const LOADERS = [
-  new ESLoader({
-    jsxPreset: [availablePresets.react, { runtime: 'automatic' }],
-    isTSX: true
-  }),
-  new CSSLoader(),
-  new JSONLoader(),
-  new MarkdownLoader()
-];
+const LOADERS = [new ESLoader({ transform: true, isTSX: true }), new JSONLoader(), new CSSLoader()];
 
 function matchLoader(path: string) {
   return LOADERS.find(loader => loader.test.test(path)) ?? null;
@@ -48,12 +37,15 @@ export function resolve(source: string, from: string, files: Record<string, stri
   }
   const resolved = fromDir.join('/') || '.';
 
+  // Try exact path
   if (files[resolved] !== undefined) return resolved;
 
+  // Try with extensions
   for (const ext of EXTENSIONS) {
     if (files[resolved + ext] !== undefined) return resolved + ext;
   }
 
+  // Try index files
   for (const ext of EXTENSIONS) {
     const indexPath = `${resolved}/index${ext}`;
     if (files[indexPath] !== undefined) return indexPath;
@@ -81,6 +73,7 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
   switch (output.type) {
     case LoaderType.ESModule: {
       const { content, dependencies, externals } = output;
+      // Process internal dependencies first
       for (const depPath of Object.values(dependencies)) {
         processFile(depPath, files, outputs, visited);
       }
@@ -95,19 +88,15 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
       }
       break;
     }
-    default: {
-      const { content } = output;
-      getOutputArray(outputs, LoaderType.ESModule).push({
-        path,
-        content: `import { jsx as _jsx } from 'react/jsx-runtime';
-export default function MarkdownContent() {
-  return _jsx('div', { dangerouslySetInnerHTML: { __html: ${JSON.stringify(content)} } });
-}`,
-        dependencies: {},
-        externals: [],
-        raw: content
-      });
+  }
+
+  if (output.type === LoaderType.ESModule) {
+    const { content, dependencies, externals } = output;
+    // Process internal dependencies first
+    for (const depPath of Object.values(dependencies)) {
+      processFile(depPath, files, outputs, visited);
     }
+    getOutputArray(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals, raw: source });
   }
 }
 
@@ -116,9 +105,13 @@ export function analyze(files: Record<string, string>) {
   const visited = new Set<string>();
 
   for (const path of Object.keys(files)) {
-    const loader = matchLoader(path);
-    if (loader) {
-      processFile(path, files, outputs, visited);
+    if (path.endsWith('.html')) {
+      getOutputArray(outputs, LoaderType.Asset).push({ path, content: files[path] });
+    } else {
+      const loader = matchLoader(path);
+      if (loader) {
+        processFile(path, files, outputs, visited);
+      }
     }
   }
 

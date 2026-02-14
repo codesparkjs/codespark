@@ -8,15 +8,15 @@ export class MonacoEditorAdapter implements EditorAdapter<EditorEngine.Monaco> {
     public instance: monaco.editor.IStandaloneCodeEditor
   ) {}
 
-  getValue(): string {
+  getValue() {
     return this.instance.getModel()?.getValue() ?? '';
   }
 
-  setValue(value: string, _addToHistory?: boolean): void {
+  setValue(value: string, _addToHistory?: boolean) {
     this.instance.getModel()?.setValue(value);
   }
 
-  async format(): Promise<void> {
+  async format() {
     await this.instance.getAction('editor.action.formatDocument')?.run();
   }
 }
