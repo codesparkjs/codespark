@@ -1,11 +1,11 @@
-import { type Framework, type Output, registry } from '@codespark/framework';
+import { type Framework, type Output } from '@codespark/framework';
 import { LoaderType } from '@codespark/framework/loaders';
 import { type ComponentType, type ReactElement, useId, useMemo, useSyncExternalStore } from 'react';
 import { isElement, isFragment } from 'react-is';
 
 import { useCodespark } from '@/context';
 import type { EditorAdapter } from '@/lib/editor-adapter';
-import { constructESMUrl, getLanguageFromFile } from '@/lib/utils';
+import { constructESMUrl, getLanguageFromFile, useFramework } from '@/lib/utils';
 
 import { INTERNAL_BOUND, INTERNAL_EMIT, INTERNAL_REGISTER_EDITOR, INTERNAL_SET_ID, INTERNAL_SUBSCRIBE, INTERNAL_UNREGISTER_EDITOR, NOOP_SUBSCRIBE } from './internals';
 import { OPFS } from './opfs';
@@ -431,20 +431,8 @@ export function useWorkspace(init?: WorkspaceInit | Workspace): UseWorkspaceRetu
     return ws;
   }, []);
   if (!workspace) throw Error('Can not find any workspace instance. Make sure provide a workspace during runtime.');
-
-  const framework = useMemo(() => {
-    const fwInput = workspace.framework;
-
-    if (typeof fwInput === 'string') return registry.get(fwInput);
-
-    if (typeof fwInput === 'function') return new fwInput();
-
-    return fwInput;
-  }, []);
-  if (!framework) throw new Error(`Framework not found: ${workspace.framework}`);
-
-  const standalone = context ? false : !workspace[INTERNAL_BOUND]();
-  const subscribe = useMemo(() => (standalone ? (cb: () => void) => workspace[INTERNAL_SUBSCRIBE](cb) : NOOP_SUBSCRIBE), []);
+  const framework = useFramework(workspace);
+  const subscribe = useMemo(() => ((context ? false : !workspace[INTERNAL_BOUND]()) ? (cb: () => void) => workspace[INTERNAL_SUBSCRIBE](cb) : NOOP_SUBSCRIBE), []);
   const files = useSyncExternalStore(
     subscribe,
     () => workspace.files,

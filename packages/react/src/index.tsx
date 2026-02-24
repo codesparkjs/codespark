@@ -11,6 +11,7 @@ import { EditorEngine } from '@/lib/editor-adapter';
 import { cn } from '@/lib/utils';
 import { useWorkspace, type Workspace } from '@/lib/workspace';
 
+export * from '@/components/browser';
 export * from '@/components/editor';
 export * from '@/components/file-explorer';
 export { Link, type LinkProps, Script, type ScriptProps, Style, type StyleProps } from '@/components/inject';
@@ -197,8 +198,8 @@ export function Codespark(props: CodesparkProps) {
   return (
     <CodesparkProvider workspace={workspace} theme={theme}>
       <div className={cn('border-border relative grid w-full overflow-hidden rounded-lg border', orientation === 'horizontal' && 'grid-cols-[2fr_1fr]', className)}>
-        <div className={cn('border-border relative', showPreview && showEditor ? (orientation === 'vertical' ? 'border-b' : 'border-l') : '', orientation === 'horizontal' && 'order-2')}>
-          {showPreview ? (
+        {showPreview ? (
+          <div className={cn('border-border relative', showPreview && showEditor ? (orientation === 'vertical' ? 'border-b' : 'border-l') : '', orientation === 'horizontal' && 'order-2')}>
             <CodesparkPreview
               tailwindcss={tailwindcss}
               onConsole={onConsole}
@@ -210,14 +211,14 @@ export function Codespark(props: CodesparkProps) {
               preflight={preflight}>
               {children}
             </CodesparkPreview>
-          ) : null}
-          {runtimeError ? (
-            <div className="bg-background absolute inset-0 z-20 overflow-auto p-6">
-              <div className="text-2xl text-red-500">{runtimeError.name}</div>
-              <div className="mt-3 font-mono">{runtimeError.stack || runtimeError.message}</div>
-            </div>
-          ) : null}
-        </div>
+            {runtimeError ? (
+              <div className="bg-background absolute inset-0 z-20 overflow-auto p-6">
+                <div className="text-2xl text-red-500">{runtimeError.name}</div>
+                <div className="mt-3 font-mono">{runtimeError.stack || runtimeError.message}</div>
+              </div>
+            ) : null}
+          </div>
+        ) : null}
         {showEditor ? (
           <div className={cn('flex h-full w-full divide-x', orientation === 'horizontal' && 'order-1')}>
             {expanded && showFileExplorer ? <CodesparkFileExplorer /> : null}

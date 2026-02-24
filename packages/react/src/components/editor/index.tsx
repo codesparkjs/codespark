@@ -18,6 +18,7 @@ type ToolboxItemId = 'reset' | 'format' | 'copy';
 
 export interface ToolboxItemConfig {
   tooltip?: string;
+  disabled?: boolean;
   icon?: ReactNode;
   asChild?: boolean;
   onClick?: (editor: EditorAdapter | null) => void;
@@ -235,7 +236,7 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
       {toolbox ? (
         <div className="border-border flex items-center justify-between p-2">
           <div className="[&_svg]:text-code-foreground flex items-center gap-x-2 px-2 [&_svg]:size-4 [&_svg]:opacity-70">
-            {getIconForLanguageExtension('typescript')}
+            {getIconForLanguageExtension(currentFile.language ?? 'typescript')}
             <span className="text-card-foreground">{currentFile.path.replace(/^(\.\.?\/)+/, '')}</span>
           </div>
           {isValidElement(toolbox) ? (
@@ -248,19 +249,21 @@ export function CodesparkEditor(props: CodesparkEditorProps<EditorEngine> & { ed
                 const item = typeof t === 'string' ? toolboxItems[t as ToolboxItemId] : (t as ToolboxItemConfig);
                 if (!item) return null;
 
-                const { tooltip, icon, asChild = true, onClick, render } = item;
+                const { tooltip, disabled = false, icon, asChild = true, onClick, render } = item;
 
                 function renderTriggerContent(): ReactNode {
                   if (icon) {
                     return (
-                      <Button variant="ghost" size="icon-sm" onClick={() => onClick?.(editorRef.current)}>
+                      <Button variant="ghost" size="icon-sm" disabled={disabled} onClick={() => onClick?.(editorRef.current)}>
                         {icon}
                       </Button>
                     );
                   }
+
                   if (render) {
                     return render(editorRef.current);
                   }
+
                   return null;
                 }
 
