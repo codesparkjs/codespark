@@ -8,11 +8,11 @@ export class CodeMirrorEditorAdapter implements EditorAdapter<EditorEngine.CodeM
     public instance: ReactCodeMirrorRef
   ) {}
 
-  getValue(): string {
+  getValue() {
     return this.instance.view?.state.doc.toString() ?? '';
   }
 
-  setValue(value: string, addToHistory = false): void {
+  setValue(value: string, addToHistory = false) {
     const view = this.instance.view;
     if (!view) return;
 
@@ -22,7 +22,7 @@ export class CodeMirrorEditorAdapter implements EditorAdapter<EditorEngine.CodeM
     });
   }
 
-  async format(): Promise<void> {
+  async format() {
     // CodeMirror doesn't have built-in format
   }
 }

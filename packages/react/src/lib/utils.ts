@@ -1,6 +1,9 @@
+import { registry } from '@codespark/framework';
 import { type ClassValue, clsx } from 'clsx';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
+
+import type { Workspace } from '@/lib/workspace';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -62,6 +65,22 @@ export function useLatest<T>(value: T) {
   ref.current = value;
 
   return ref;
+}
+
+export function useFramework(workspace: Workspace) {
+  const framework = useMemo(() => {
+    const fwInput = workspace.framework;
+
+    if (typeof fwInput === 'string') return registry.get(fwInput);
+
+    if (typeof fwInput === 'function') return new fwInput();
+
+    return fwInput;
+  }, []);
+
+  if (!framework) throw new Error(`Framework not found: ${workspace.framework}`);
+
+  return framework;
 }
 
 export function getLanguageFromFile(name: string) {

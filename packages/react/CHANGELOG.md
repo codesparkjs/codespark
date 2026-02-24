@@ -1,3 +1,13 @@
+## 1.0.8
+
+### Features 🚀
+
+- new `CodesparkBrowser` component for `@codespark/framework/node` preview
+
+### Bug fix 🐛
+
+- fix file icon reveal error
+
 ## 1.0.7
 
 Update packages
