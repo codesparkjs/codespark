@@ -21,6 +21,20 @@ const LOADERS = {
   css: new CSSLoader()
 };
 
+function getOutputArray<T extends LoaderType>(outputs: Outputs, type: T) {
+  return outputs.get(type) as Output<T>[];
+}
+
+function createOutputs() {
+  const outputs: Outputs = new Map();
+  outputs.set(LoaderType.ESModule, []);
+  outputs.set(LoaderType.Style, []);
+  outputs.set(LoaderType.Script, []);
+  outputs.set(LoaderType.Asset, []);
+
+  return outputs;
+}
+
 function isExternalUrl(url: string) {
   return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//');
 }
@@ -136,20 +150,6 @@ function processStylesheet(path: string, files: Record<string, string>, outputs:
   for (const depPath of output.imports) {
     processStylesheet(depPath, files, outputs, visited);
   }
-}
-
-function getOutputArray<T extends LoaderType>(outputs: Outputs, type: T) {
-  return outputs.get(type) as Output<T>[];
-}
-
-function createOutputs() {
-  const outputs: Outputs = new Map();
-  outputs.set(LoaderType.ESModule, []);
-  outputs.set(LoaderType.Style, []);
-  outputs.set(LoaderType.Script, []);
-  outputs.set(LoaderType.Asset, []);
-
-  return outputs;
 }
 
 function processScriptElement(el: ParsedElement, entry: string, files: Record<string, string>, outputs: Outputs, visited = new Set<string>()) {

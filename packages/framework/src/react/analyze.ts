@@ -23,7 +23,7 @@ function matchLoader(path: string) {
   return LOADERS.find(loader => loader.test.test(path)) ?? null;
 }
 
-function getOutputList<T extends LoaderType>(outputs: Outputs, type: T) {
+function getOutputArray<T extends LoaderType>(outputs: Outputs, type: T) {
   return outputs.get(type) as Output<T>[];
 }
 
@@ -84,12 +84,12 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
       for (const depPath of Object.values(dependencies)) {
         processFile(depPath, files, outputs, visited);
       }
-      getOutputList(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals, raw: source });
+      getOutputArray(outputs, LoaderType.ESModule).push({ path, content, dependencies, externals, raw: source });
       break;
     }
     case LoaderType.Style: {
       const { content, imports, attributes } = output;
-      getOutputList(outputs, LoaderType.Style).push({ path, content, imports, attributes });
+      getOutputArray(outputs, LoaderType.Style).push({ path, content, imports, attributes });
       for (const depPath of imports) {
         processFile(depPath, files, outputs, visited);
       }
@@ -97,7 +97,7 @@ function processFile(path: string, files: Record<string, string>, outputs: Outpu
     }
     default: {
       const { content } = output;
-      getOutputList(outputs, LoaderType.ESModule).push({
+      getOutputArray(outputs, LoaderType.ESModule).push({
         path,
         content: `import { jsx as _jsx } from 'react/jsx-runtime';
 export default function MarkdownContent() {

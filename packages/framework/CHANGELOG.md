@@ -1,3 +1,9 @@
+## 1.0.3
+
+### Features 🚀
+
+- New framework: `framework/node`: an integration with [almostnode](https://almostnode.dev/), support Node.js in browser
+
 ## 1.0.2
 
 ### Breaking change ❗️

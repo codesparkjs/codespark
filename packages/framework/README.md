@@ -123,6 +123,7 @@ enum LoaderType {
 | React | `@codespark/framework/react` | React with JSX/TSX support |
 | HTML | `@codespark/framework/html` | HTML with inline scripts and styles |
 | Markdown | `@codespark/framework/markdown` | Markdown to HTML |
+| Node | `@codespark/framework/node` | Node.js in browser |
 
 ## License
 

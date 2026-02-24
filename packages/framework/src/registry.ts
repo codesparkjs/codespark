@@ -12,8 +12,8 @@ export abstract class Framework {
   abstract readonly imports: Record<string, string>;
   abstract outputs: Outputs;
 
-  abstract analyze(entry: string, files: Record<string, string>): void;
-  abstract compile(): string;
+  abstract analyze(files: Record<string, string>): void;
+  abstract compile(entry: string): string;
 
   protected createBuilder(init?: string) {
     return new RuntimeBuilder(init);
