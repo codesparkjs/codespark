@@ -3,6 +3,7 @@ import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { Monaco } from '@codespark/react/monaco';
 import { ChevronsUpDown, Trash2 } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import TW_ANIMATE_CSS from 'node_modules/tw-animate-css/dist/tw-animate.css?raw';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type PanelImperativeHandle, usePanelRef } from 'react-resizable-panels';
 
@@ -176,6 +177,7 @@ export default function Playground({ loaderData }: Route.ComponentProps) {
                       <Link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" />
                       <Style>{isMobile ? CUSTOM_MOBILE_STYLES : CUSTOM_STYLES}</Style>
                       <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
+                      <Style type="text/tailwindcss">{TW_ANIMATE_CSS}</Style>
                     </CodesparkPreview>
                     {runtimeError && (
                       <div className="bg-background absolute inset-0 z-20 overflow-auto p-6">
