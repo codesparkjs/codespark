@@ -5,6 +5,5 @@ export default defineConfig({
     index: 'src/index.ts',
     loader: 'src/loader.ts'
   },
-  format: ['esm', 'cjs'],
-  dts: true
+  format: ['esm', 'cjs']
 });

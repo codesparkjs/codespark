@@ -1,5 +1,5 @@
 import { type Framework, registry } from '@codespark/framework';
-import { HttpFramework, ViteFramework } from '@codespark/framework/node';
+import type { HttpFramework, ViteFramework } from '@codespark/framework/node';
 import { useEffect, useMemo, useState } from 'react';
 
 import { useCodespark } from '@/context';
