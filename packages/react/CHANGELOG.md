@@ -1,3 +1,9 @@
+## 1.0.9
+
+### Bug fix 🐛
+
+- Mark `monaco-editor` as external to reduce bundle size of dts files
+
 ## 1.0.8
 
 ### Features 🚀
