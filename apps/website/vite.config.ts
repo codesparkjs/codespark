@@ -10,5 +10,5 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import * as MdxConfig from './source.config';
 
 export default defineConfig({
-  plugins: [tailwindcss(), reactRouter(), tsconfigPaths(), netlifyReactRouter(), netlify(), mdx(MdxConfig), codespark()]
+  plugins: [tailwindcss(), reactRouter(), netlify(), netlifyReactRouter(), tsconfigPaths(), mdx(MdxConfig), codespark()]
 });

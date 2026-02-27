@@ -7,11 +7,14 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { DocsBody, DocsDescription, DocsPage, DocsTitle, PageLastUpdate } from 'fumadocs-ui/layouts/docs/page';
 import defaultMdxComponents from 'fumadocs-ui/mdx';
 import { Boxes, Layers } from 'lucide-react';
+import { MessageCircleIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { LLMCopyButton, ViewOptions } from '~/components/ai/page-actions';
+import { AISearch, AISearchPanel, AISearchTrigger } from '~/components/ai/search';
 import { Icons } from '~/components/icons';
 import { mdxComponents } from '~/components/mdx-components';
+import { buttonVariants } from '~/components/ui/button';
 import { source } from '~/lib/source';
 import { cn } from '~/lib/utils';
 
@@ -109,6 +112,20 @@ export default function Docs({ loaderData }: { loaderData: Awaited<ReturnType<ty
         }}>
         <Content url={url} path={path} lastModified={lastModified} />
       </DocsLayout>
+      <AISearch>
+        <AISearchPanel />
+        <AISearchTrigger
+          position="float"
+          className={cn(
+            buttonVariants({
+              variant: 'secondary',
+              className: 'text-fd-muted-foreground rounded-2xl'
+            })
+          )}>
+          <MessageCircleIcon className="size-4.5" />
+          Ask AI
+        </AISearchTrigger>
+      </AISearch>
     </ConfigProvider>
   );
 }

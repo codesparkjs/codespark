@@ -1,6 +1,7 @@
 import { Codespark, CodesparkEditor, type CodesparkEditorProps, CodesparkPreview, type CodesparkPreviewProps, type CodesparkProps, Link as InjectionLink, Style } from '@codespark/react';
 import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
 import { Codepen, SquareArrowOutUpRight, Wind } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import TW_ANIMATE_CSS from 'node_modules/tw-animate-css/dist/tw-animate.css?raw';
@@ -168,5 +169,7 @@ export const mdxComponents = {
   pre: MdxPre,
   Codespark: MdxCodespark,
   CodesparkEditor: MdxCodesparkEditor,
-  CodesparkPreview: MdxCodesparkPreview
+  CodesparkPreview: MdxCodesparkPreview,
+  Step,
+  Steps
 };
