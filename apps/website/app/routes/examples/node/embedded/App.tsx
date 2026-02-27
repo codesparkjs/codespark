@@ -9,7 +9,7 @@ const files = {
 console.log(_.capitalize('hello world'));`,
   './package.json': JSON.stringify(
     {
-      name: 'codespark-node-demo',
+      name: 'codespark-node',
       version: '1.0.0',
       type: 'module',
       dependencies: {

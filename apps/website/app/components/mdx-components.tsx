@@ -3,6 +3,7 @@ import CODESPARK_STYLES from '@codespark/react/index.css?raw';
 import { CodeBlock, Pre } from 'fumadocs-ui/components/codeblock';
 import { Codepen, SquareArrowOutUpRight, Wind } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import TW_ANIMATE_CSS from 'node_modules/tw-animate-css/dist/tw-animate.css?raw';
 import { type HTMLAttributes, type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
@@ -33,6 +34,7 @@ const StandalonePreview = ({ code, height = 452, className }: StandalonePreviewP
       <InjectionLink rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" />
       <Style>{`body { padding: 0 } #root { width: 100% }`}</Style>
       <Style type="text/tailwindcss">{CODESPARK_STYLES}</Style>
+      <Style type="text/tailwindcss">{TW_ANIMATE_CSS}</Style>
     </CodesparkPreview>
   );
 };
