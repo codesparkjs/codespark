@@ -8,5 +8,6 @@ export default [
   route('llms.mdx/docs/*', 'routes/llms-mdx.ts'),
   route('llms-full.txt', 'routes/llms-full.ts'),
   route('api/search', 'routes/docs/search.ts'),
+  route('api/chat', 'routes/docs/chat.ts'),
   route('sitemap.xml', 'routes/sitemap.ts')
 ] satisfies RouteConfig;
