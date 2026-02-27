@@ -19,6 +19,7 @@ import { Codespark } from '@codespark/react';
 
 <Codespark
   framework={html}
+  name="index.html" // [!code highlight]
   code={`<!DOCTYPE html>
 <html>
 <head>
@@ -43,6 +44,7 @@ export default function App() {
       framework={html}
       editorHeight={400}
       orientation="horizontal"
+      name="index.html"
       code={`<!DOCTYPE html>
 <html>
 <head>
@@ -123,7 +125,7 @@ By default, Lite Mode uses `./index.js` and `./index.css` from files as the main
 
 ### Lite Mode Example
 
-```tsx
+```tsx preview="html-lite"
 import { Codespark } from '@codespark/react';
 import { Framework } from '@codespark/framework/html';
 

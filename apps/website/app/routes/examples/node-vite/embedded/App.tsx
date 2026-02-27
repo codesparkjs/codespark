@@ -14,34 +14,6 @@ const workspace = new Workspace({
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
 .card {
   padding: 2em;
 }
@@ -229,7 +201,7 @@ export default function App() {
   return (
     <CodesparkProvider workspace={workspace}>
       <div className="border-border relative flex w-full divide-x overflow-hidden rounded-lg border">
-        <div className="flex flex-1">
+        <div className="border-border flex flex-1">
           <CodesparkFileExplorer defaultOpen />
           <div className="border-border flex w-0 flex-1 flex-col border-l">
             <CodesparkEditor height="400px" />

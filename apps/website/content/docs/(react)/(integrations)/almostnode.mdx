@@ -1,0 +1,356 @@
+---
+title: almostnode
+description: Integrate almostnode with Codespark to run Node.js code in the browser
+---
+
+[almostnode](https://almostnode.dev/) is a lightweight, browser-native Node.js runtime environment. It allows you to run Node.js code, install npm packages, and develop with Vite or Next.js directly in the browser.
+
+Compared to other technologies like WebContainers, almostnode is more lightweight and streamlined, making it ideal for simple browser-based live code demonstrations.
+
+<Callout title="Notice" type="warn">The almostnode project is experimental and may contain bugs. Use with caution in production environments.</Callout>
+
+## Features
+
+- **Browser-native Node.js runtime** - Execute Node.js code directly in the browser without server-side infrastructure
+- **NPM package support** - Install and use npm packages with a built-in package manager
+- **Virtual file system** - Full file system simulation for realistic Node.js development
+- **ESM syntax supported** - Support both commonjs and esmodule syntax in Node.js
+- **HTTP server support** - Create and run HTTP servers entirely in the browser
+- **Vite dev server** - Run Vite development server with HMR (Hot Module Replacement) support
+- **Node.js module shims** - Built-in shims for common Node.js modules (`fs`, `path`, `http`, `crypto`, etc.)
+
+## Installation
+
+Codespark provides a Node.js framework built on top of almostnode.
+
+```npm
+npm install @codespark/framework
+```
+
+```ts
+import { node } from '@codespark/framework/node';
+```
+
+## Usage
+
+### Basic Usage
+
+You can use the node framework just like any other Codespark framework. Use `node.install()` to install dependencies and `node.run()` to execute code.
+
+```tsx
+import { node } from '@codespark/framework/node';
+
+<Codespark framework={node} />
+
+// Install dependencies
+node.install()
+
+// Execute code
+node.run()
+```
+
+```tsx preview height=351
+import { node } from '@codespark/framework/node';
+import { Codespark } from '@codespark/react';
+import { Play } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+export default function App() {
+  const [logs, setLogs] = useState<{ time: number; message: string }[]>([]);
+
+  useEffect(() => {
+    node.on('log', message => {
+      setLogs(logs => [...logs, { time: Date.now(), message }]);
+    });
+  }, []);
+
+  return (
+    <div className="border-border divide-y rounded-lg border">
+      <div className="border-border h-25 flex-1 overflow-y-auto font-mono text-xs">
+        {logs.length > 0 ? (
+          <>
+            {logs.map(({ time, message }, index) => (
+              <div key={index} className="hover:bg-muted/50 flex gap-2 px-2 py-1">
+                <span className="text-muted-foreground/50 shrink-0">[{new Date(time).toLocaleTimeString()}]</span>
+                <span className="text-foreground/90 break-all">{message}</span>
+              </div>
+            ))}
+          </>
+        ) : (
+          <div className="px-4 py-2">Click Run button to execute the script...</div>
+        )}
+      </div>
+      <Codespark
+        framework={node}
+        showPreview={false}
+        className="border-none"
+        name="./index.ts"
+        code={`import _ from 'lodash-es';
+
+console.log(_.capitalize('hello world'));`}
+        toolbox={[
+          {
+            tooltip: 'Run',
+            icon: <Play className="size-3.5" />,
+            onClick: async () => {
+              setLogs([]);
+              await node.install();
+              await node.run();
+            }
+          }
+        ]}
+      />
+    </div>
+  );
+}
+```
+
+### Using package.json
+
+You can also specify dependencies by creating a `package.json` file.
+
+```tsx
+const files = {
+  './index.ts': `import _ from 'lodash-es';
+
+console.log(_.capitalize('hello world'));`,
+  './package.json': JSON.stringify(
+    {
+      name: 'codespark-node',
+      version: '1.0.0',
+      type: 'module',
+      dependencies: {
+        'lodash-es': '^4.17.21'
+      }
+    },
+    null,
+    2
+  )
+};
+
+<Codespark framework={node} files={files} />
+```
+
+## HTTP Server
+
+With almostnode's capabilities, you can create simple HTTP servers in Codespark. Unlike `node`, you need to use the `http.start()` method to start the HTTP server.
+
+```ts
+import { http } from '@codespark/framework/node';
+
+// Start the server
+http.start();
+```
+
+Once the HTTP server is started, you can use the `http.request()` method to make requests to the server. This method returns a blob URL that can be passed to an iframe to render the server's response.
+
+```tsx preview height=452
+import { http } from '@codespark/framework/node';
+import { Codespark } from '@codespark/react';
+import { Home, Play, Zap } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+export default function App() {
+  const [running, setRunning] = useState(false);
+  const [src, setSrc] = useState('about:blank');
+
+  useEffect(() => {
+    http.on('serverReady', () => {
+      setRunning(true);
+    });
+  }, []);
+
+  return (
+    <div className="border-border flex rounded-lg border">
+      <Codespark
+        framework={http}
+        showPreview={false}
+        name="./index.ts"
+        className="border-none w-0 flex-1"
+        editorHeight={400}
+        code={`import http from 'http';
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/api/time') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ time: new Date().toISOString() }));
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end(\`
+    <body style="font-family:system-ui;padding:2rem;background:#f8f9fa">
+      <h1>Hello from the browser!</h1>
+      <p>This server runs entirely in your browser.</p>
+    </body>
+  \`);
+});
+
+server.listen(3001);`}
+        toolbox={[
+          {
+            tooltip: 'Start Server',
+            icon: <Play className="size-3.5" />,
+            onClick: async () => {
+              await http.start();
+            }
+          },
+          {
+            tooltip: '/',
+            icon: <Home className="size-3.5" />,
+            disabled: !running,
+            onClick: async () => {
+              const src = await http.request('/');
+              setSrc(src);
+            }
+          },
+          {
+            tooltip: '/api/time',
+            icon: <Zap className="size-3.5" />,
+            disabled: !running,
+            onClick: async () => {
+              const src = await http.request('/api/time');
+              setSrc(src);
+            }
+          }
+        ]}
+      />
+      <div className="border-border w-75 border-l">
+        {src === 'about:blank' ? (
+          <div className="flex h-full flex-col items-center justify-center gap-y-1.5 p-6 text-sm">
+            <div className="flex items-center gap-2">
+              <span className={`size-2 rounded-full ${running ? 'bg-green-500' : 'bg-muted-foreground/30'}`} />
+              <span className="text-muted-foreground">{running ? 'Server ready' : 'Click run to start'}</span>
+            </div>
+            <div className="text-muted-foreground/70 flex flex-col gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5">
+                <Home size={12} />
+                <span className="font-mono">/</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Zap size={12} />
+                <span className="font-mono">/api/time</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <iframe src={src} className="h-full w-full" />
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+## Vite Dev Server
+
+You can also create a Vite development server with HMR support. Similar to `http`, you need to use `vite.start()` to start the server.
+
+```ts preview="node-vite"
+import { vite } from '@codespark/framework/node';
+
+// Start the server
+vite.start();
+```
+
+## CodesparkBrowser
+
+When using `http` or `vite`, it's recommended to use the built-in `CodesparkBrowser` component. This component includes an address bar that allows you to simulate requests to different URL endpoints.
+
+This component must be used within a `CodesparkProvider` and requires the framework to be set to `http` or `vite`.
+
+```ts
+import { CodesparkBrowser } from '@codespark/react';
+```
+
+```tsx preview="node-http"
+import { http } from '@codespark/framework/node';
+import { CodesparkBrowser, CodesparkProvider } from '@codespark/react';
+
+<CodesparkProvider framework={http}>
+  <CodesparkBrowser />
+</CodesparkProvider>
+```
+
+```tsx codespark-preview
+import { http } from '@codespark/framework/node';
+import { CodesparkBrowser, CodesparkEditor, CodesparkProvider, Workspace } from '@codespark/react';
+import { Play, Square } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
+const workspace = new Workspace({
+  framework: http,
+  entry: './index.ts',
+  files: {
+    './index.ts': `import http from 'http';
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/api/time') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ time: new Date().toISOString() }));
+    return;
+  }
+  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.end(\`
+    <body style="font-family:system-ui;padding:2rem;background:#f8f9fa">
+      <h1>Hello from the browser!</h1>
+      <p>This server runs entirely in your browser.</p>
+      <a href="/api/time">Check /api/time →</a>
+    </body>
+  \`);
+});
+
+server.listen(3001);`
+  }
+});
+
+export default function App() {
+  const [running, setRunning] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    http.on('serverReady', () => {
+      setRunning(true);
+    });
+
+    http.on('serverShutdown', () => {
+      setRunning(false);
+    });
+  }, []);
+
+  return (
+    <CodesparkProvider workspace={workspace}>
+      <div className="border-border relative flex w-full divide-x overflow-hidden rounded-lg border">
+        <div className="border-border flex w-0 flex-1 flex-col">
+          <CodesparkEditor
+            height="400px"
+            toolbox={[
+              <button
+                key="run-btn"
+                disabled={loading}
+                className="bg-secondary text-secondary-foreground hover:bg-secondary/80 focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 has-[>svg]:px-2.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+                onClick={async () => {
+                  if (running) {
+                    http.stop();
+                  } else {
+                    setLoading(true);
+                    await http.install({ includeDev: true });
+                    await http.start();
+                    setLoading(false);
+                  }
+                }}>
+                {running ? <Square className="size-3.5" /> : <Play className="size-3.5" />}
+                {running ? 'Stop' : 'Run'}
+              </button>
+            ]}
+          />
+        </div>
+        <CodesparkBrowser loading={loading} className="w-75" />
+      </div>
+    </CodesparkProvider>
+  );
+}
+```
+
+## API
+
+For more API reference details, please visit [Node framework documentation](/docs/framework/node).

@@ -43,10 +43,11 @@ export default defineConfig({
 | `enabled` | `boolean` | `true` | Enable or disable the plugin |
 | `methods` | `string[]` | `['createWorkspace']` | Function names to transform |
 
-```js
+```ts
 codespark({
   enabled: true,
-  methods: ['createWorkspace']
+  methods: ['createWorkspace'],
+  importSource: ['@codespark/react']
 })
 ```
 
@@ -129,29 +130,3 @@ At build time, the plugin will:
 4. Inject the collected information into the `createWorkspace` call
 
 The resulting workspace will contain both the demo code and the `Button` component source, enabling the live preview to render correctly.
-
-## Alias Resolution
-
-The plugin supports TypeScript path aliases defined in `tsconfig.json`. For example:
-
-```json title="tsconfig.json"
-{
-  "compilerOptions": {
-    "paths": {
-      "@components/*": ["./src/components/*"]
-    }
-  }
-}
-```
-
-Imports using these aliases will be correctly resolved:
-
-```tsx
-import Button from '@components/button'; // Resolved to ./src/components/button
-```
-
-## Limitations
-
-- Only processes files with `.js`, `.jsx`, `.ts`, or `.tsx` extensions
-- Type-only imports are excluded from dependency collection
-- Circular dependencies are handled but may result in incomplete collection
